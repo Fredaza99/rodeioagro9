@@ -42,6 +42,26 @@
           alert('Erro de login: ' + error.message);
         });
     });
+    // Credenciais padrão
+    const defaultUsername = 'rodeio';
+    const defaultPassword = 'zerodeio';
+
+    // Verifica o login
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username === defaultUsername && password === defaultPassword) {
+        // Salva o estado de login no localStorage
+        localStorage.setItem('isLoggedIn', 'true');
+        // Redireciona para a página principal (ex: pedidos.html)
+        window.location.href = 'index.html';
+      } else {
+        alert('Usuário ou senha incorretos!');
+      }
+    });
   </script>
   <style>
     body {
@@ -93,32 +113,12 @@
       <button type="submit">Entrar</button>
     </form>
   </div>
-
-  <script>
-    // Credenciais padrão
-    const defaultUsername = 'rodeio';
-    const defaultPassword = 'zerodeio';
-
-    // Verifica o login
-    document.getElementById('loginForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      if (username === defaultUsername && password === defaultPassword) {
-        // Salva o estado de login no localStorage
-        localStorage.setItem('isLoggedIn', 'true');
-        // Redireciona para a página principal (ex: pedidos.html)
-        window.location.href = 'index.html';
-      } else {
-        alert('Usuário ou senha incorretos!');
-      }
-    });
-  </script>
-
+  <script type="module" src="script.js"></script>
 </body>
+
 </html>
+
+
 
   </script>
 
