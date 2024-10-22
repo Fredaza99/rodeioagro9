@@ -9,25 +9,22 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script>
-      
       // Verifica se o usuário está logado
       if (!localStorage.getItem('isLoggedIn')) {
         // Se não estiver logado, redireciona para a página de login
         window.location.href = 'login.html';
       }
     </script>
-    
-  </head>
+</head>
 <body>
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+
     // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -37,10 +34,32 @@
       appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
       measurementId: "G-FM9TP3QF6N"
     };
-  
+
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+
+    // Function to handle form submission
+    document.getElementById('stockForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); // Prevent the default form submission
+
+      const productData = {
+        productName: document.getElementById('productName').value,
+        productQuantity: document.getElementById('productQuantity').value,
+        entryDate: document.getElementById('entryDate').value,
+      };
+
+      // Add the product data to Firestore
+      try {
+        const docRef = await addDoc(collection(db, 'products'), productData);
+        console.log("Document written with ID: ", docRef.id);
+        // Optionally, you can reset the form after submission
+        document.getElementById('stockForm').reset();
+      } catch (error) {
+        console.error("Error adding document: ", error);
+      }
+    });
   </script>
 
   <!-- Barra de Navegação com Logo -->
@@ -64,38 +83,36 @@
     <label for="productQuantity">Quantidade:</label>
     <input type="number" id="productQuantity" required>
   
-    <label for="entryDate">Data de Entrada:</label> <!-- Campo novo para a data de entrada -->
+    <label for="entryDate">Data de Entrada:</label>
     <input type="date" id="entryDate" required>
   
     <button type="submit">Adicionar Produto</button>
   </form>
   
-
   <!-- Barra de pesquisa de produtos -->
-<input type="text" id="stockSearchInput" placeholder="Pesquisar produtos...">
+  <input type="text" id="stockSearchInput" placeholder="Pesquisar produtos...">
 
-<!-- Dropdown de filtro de produtos -->
-<select id="stockFilter">
-  <option value="">Todos os Produtos</option>
-  <!-- As opções serão preenchidas via JavaScript -->
-</select>
+  <!-- Dropdown de filtro de produtos -->
+  <select id="stockFilter">
+    <option value="">Todos os Produtos</option>
+    <!-- As opções serão preenchidas via JavaScript -->
+  </select>
 
-<!-- Tabela de Estoque -->
-<table id="stockTable">
-  <thead>
-    <tr>
-      <th>Nome do Produto</th>
-      <th>Quantidade Total</th>
-      <th>Data de Entrada</th>
-      <th>Quantidade da Entrada</th>
-      <th>Ações</th> <!-- Coluna para ações como exclusão -->
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Linhas serão preenchidas dinamicamente pelo JavaScript -->
-  </tbody>
-</table>
-
+  <!-- Tabela de Estoque -->
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>Nome do Produto</th>
+        <th>Quantidade Total</th>
+        <th>Data de Entrada</th>
+        <th>Quantidade da Entrada</th>
+        <th>Ações</th> <!-- Coluna para ações como exclusão -->
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Linhas serão preenchidas dinamicamente pelo JavaScript -->
+    </tbody>
+  </table>
 
   <!-- Rodapé -->
   <footer>
@@ -106,4 +123,5 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
