@@ -13,11 +13,9 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+
     // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -27,10 +25,39 @@
       appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
       measurementId: "G-FM9TP3QF6N"
     };
-  
+
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+
+    // Function to load orders from Firestore
+    async function loadOrdersFromFirestore() {
+      const ordersCollection = collection(db, 'orders'); // Reference to the 'orders' collection
+      const querySnapshot = await getDocs(ordersCollection); // Fetch documents
+
+      const ordersTableBody = document.getElementById('ordersTable').querySelector('tbody');
+      ordersTableBody.innerHTML = ''; // Clear the table before populating
+
+      querySnapshot.forEach((doc) => {
+        const order = doc.data();
+        const row = document.createElement('tr'); // Create a new row for each order
+        row.innerHTML = `
+          <td>${order.clientName}</td>
+          <td>${order.productName}</td>
+          <td>${order.entryDate}</td>
+          <td>${order.exitDate || 'N/A'}</td>
+          <td>${order.entryQuantity || 0}</td>
+          <td>${order.exitQuantity || 0}</td>
+          <td>${(order.entryQuantity || 0) - (order.exitQuantity || 0)}</td>
+          <td><button class="delete-order" data-id="${doc.id}">Excluir</button></td>
+        `;
+        ordersTableBody.appendChild(row); // Append the new row to the table body
+      });
+    }
+
+    // Call the function to load orders when the page is loaded
+    loadOrdersFromFirestore();
   </script>
 
   <!-- Barra de Navegação com Logo -->
@@ -57,12 +84,12 @@
       <tr>
         <th>Nome do Cliente</th>
         <th>Produto</th>
-        <th>Data de Entrada</th> <!-- Coluna de Data de Entrada -->
-        <th>Data de Saída</th> <!-- Coluna de Data de Saída -->
+        <th>Data de Entrada</th>
+        <th>Data de Saída</th>
         <th>Quantidade Entrada</th>
         <th>Quantidade Retirada</th>
-        <th>Saldo</th> <!-- Saldo após as quantidades -->
-        <th>Ações</th> <!-- Coluna para o botão de exclusão -->
+        <th>Saldo</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
