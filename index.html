@@ -6,14 +6,17 @@
   <link rel="stylesheet" href="styles.css"> <!-- Fechamento da tag corrigido -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <title>Rodeio</title>
-
-  <!-- Firebase App (core) SDK -->
-  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"></script>
-  <!-- Firebase Firestore SDK -->
-  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
   
-  <script>
-    // Configuração do Firebase
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -23,13 +26,11 @@
       appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
       measurementId: "G-FM9TP3QF6N"
     };
-
-    // Inicializar Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
   </script>
-</head>
-<body>
   
   <!-- Aqui você pode colocar outros elementos do corpo -->
 
@@ -83,6 +84,7 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
