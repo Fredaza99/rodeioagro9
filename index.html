@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css"> <!-- Fechamento da tag corrigido -->
+  <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <title>Rodeio</title>
 </head>
@@ -12,11 +12,9 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore
+
     // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -30,11 +28,32 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+
+    // Function to handle form submission
+    document.getElementById('clientForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      const clientData = {
+        name: document.getElementById('clientName').value,
+        productName: document.getElementById('productName').value,
+        entryDate: document.getElementById('entryDate').value,
+        entryQuantity: document.getElementById('entryQuantity').value,
+        exitQuantity: document.getElementById('exitQuantity').value,
+        exitDate: document.getElementById('exitDate').value,
+      };
+      
+      // Add the client data to Firestore
+      try {
+        const docRef = await db.collection('clients').add(clientData);
+        console.log("Document written with ID: ", docRef.id);
+      } catch (error) {
+        console.error("Error adding document: ", error);
+      }
+    });
   </script>
   
-  <!-- Aqui você pode colocar outros elementos do corpo -->
-
-  <!-- Barra de Navegação com Logo -->
+  <!-- Navigation Bar -->
   <nav>
     <ul class="navbar">
       <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
@@ -52,7 +71,7 @@
     </div>
   </header>
 
-  <!-- Formulário para adicionar clientes -->
+  <!-- Form to add clients -->
   <form id="clientForm">
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
@@ -69,21 +88,22 @@
     <label for="exitQuantity">Quantidade Retirada:</label>
     <input type="number" id="exitQuantity">
 
-    <label for="exitDate">Data de Saída:</label> <!-- Novo campo de Data de Saída -->
+    <label for="exitDate">Data de Saída:</label>
     <input type="date" id="exitDate">
 
     <button type="submit">Adicionar Cliente</button>
   </form>
 
-  <!-- Rodapé -->
+  <!-- Footer -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
   </footer>
 
-  <!-- Referência ao JavaScript -->
+  <!-- Reference to the main JavaScript file -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
