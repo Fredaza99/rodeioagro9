@@ -50,7 +50,7 @@ if (window.location.pathname.includes('index.html')) {
     await addClientToFirestore(client);
 
     // Redirect to the orders page after registration
-    window.location.href = 'pedidos.html';
+    window.location.href = 'cliente.html';
   });
 }
 
