@@ -1,43 +1,38 @@
-import { getFirestore } from "firebase/firestore";
+// Import Firestore functions
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// Assuming you have initialized your Firebase app
+// Initialize Firestore
 const db = getFirestore();
 
-
-// Declarar 'clients' e 'stock' como arrays vazios (carregaremos do Firestore)
+// Arrays to hold clients and stock data
 let clients = [];
 let stock = [];
 
-// Função para salvar clientes no Firestore
-function addClientToFirestore(client) {
-  db.collection('clients').add(client)
-    .then(() => {
-      console.log('Cliente salvo no Firestore');
-    })
-    .catch((error) => {
-      console.error('Erro ao salvar cliente: ', error);
-    });
+// Function to save clients to Firestore
+async function addClientToFirestore(client) {
+  try {
+    await addDoc(collection(db, 'clients'), client);
+    console.log('Cliente salvo no Firestore');
+  } catch (error) {
+    console.error('Erro ao salvar cliente: ', error);
+  }
 }
 
-// Função para salvar estoque no Firestore
-function addStockToFirestore(product) {
-  db.collection('stock').add(product)
-    .then(() => {
-      console.log('Produto salvo no Firestore');
-    })
-    .catch((error) => {
-      console.error('Erro ao salvar produto: ', error);
-    });
+// Function to save stock to Firestore
+async function addStockToFirestore(product) {
+  try {
+    await addDoc(collection(db, 'stock'), product);
+    console.log('Produto salvo no Firestore');
+  } catch (error) {
+    console.error('Erro ao salvar produto: ', error);
+  }
 }
-
-// O resto do seu código permanece o mesmo...
-
 
 // ------------------------------
 // Cadastro de Clientes e Redirecionamento para a Lista de Pedidos (index.html)
 // ------------------------------
 if (window.location.pathname.includes('index.html')) {
-  document.getElementById('clientForm').addEventListener('submit', function (e) {
+  document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const clientName = document.getElementById('clientName').value;
@@ -48,13 +43,13 @@ if (window.location.pathname.includes('index.html')) {
     const exitDate = document.getElementById('exitDate').value || 'Não definido';
     const saldo = entryQuantity - exitQuantity;
 
-    // Criar objeto do cliente com todas as informações
+    // Create a client object with all information
     const client = { clientName, productName, entryDate, entryQuantity, exitQuantity, saldo, exitDate };
     
-    // Salvar o cliente no Firestore
-    addClientToFirestore(client);
+    // Save the client in Firestore
+    await addClientToFirestore(client);
 
-    // Redirecionar para a página de pedidos após o cadastro
+    // Redirect to the orders page after registration
     window.location.href = 'pedidos.html';
   });
 }
@@ -64,11 +59,12 @@ if (window.location.pathname.includes('index.html')) {
 // ------------------------------
 if (window.location.pathname.includes('pedidos.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
-  table.innerHTML = ''; // Limpar a tabela antes de preenchê-la
+  table.innerHTML = ''; // Clear the table before filling it
 
-  // Função para carregar os clientes do Firestore
-  function loadClientsFromFirestore() {
-    db.collection('clients').get().then((querySnapshot) => {
+  // Function to load clients from Firestore
+  async function loadClientsFromFirestore() {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'clients'));
       querySnapshot.forEach((doc) => {
         const client = doc.data();
         const newRow = table.insertRow();
@@ -80,85 +76,89 @@ if (window.location.pathname.includes('pedidos.html')) {
         newRow.insertCell(5).textContent = client.exitQuantity;
         newRow.insertCell(6).textContent = client.saldo;
 
-        // Adicionar botão de exclusão
+        // Add delete button
         const deleteCell = newRow.insertCell(7);
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Excluir';
         deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', () => {
-          db.collection('clients').doc(doc.id).delete()
-            .then(() => {
-              console.log('Cliente removido com sucesso');
-              window.location.reload(); // Recarregar a página para atualizar a tabela
-            })
-            .catch((error) => {
-              console.error('Erro ao remover cliente: ', error);
-            });
+        deleteButton.addEventListener('click', async () => {
+          try {
+            await deleteDoc(doc(db, 'clients', doc.id));
+            console.log('Cliente removido com sucesso');
+            window.location.reload(); // Reload the page to update the table
+          } catch (error) {
+            console.error('Erro ao remover cliente: ', error);
+          }
         });
         deleteCell.appendChild(deleteButton);
       });
-    });
+    } catch (error) {
+      console.error('Erro ao carregar clientes: ', error);
+    }
   }
 
-  // Carregar os clientes quando a página de pedidos for acessada
+  // Load clients when the orders page is accessed
   loadClientsFromFirestore();
 }
 
 // ------------------------------
-// Controle de Estoque (estoque.html) - Nova Ordem da Tabela
+// Controle de Estoque (estoque.html)
 // ------------------------------
 if (window.location.pathname.includes('estoque.html')) {
-  document.getElementById('stockForm').addEventListener('submit', function (e) {
+  document.getElementById('stockForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const productName = document.getElementById('productName').value;
     const productQuantity = parseInt(document.getElementById('productQuantity').value);
     const entryDate = document.getElementById('entryDate').value;
 
-    // Criar objeto do produto para o Firestore
+    // Create a product object for Firestore
     const product = { productName, productQuantity, entryDate };
-    addStockToFirestore(product); // Salvar no Firestore
-    window.location.reload(); // Recarregar a página para atualizar a tabela
+    await addStockToFirestore(product); // Save to Firestore
+    window.location.reload(); // Reload the page to update the table
   });
 
-  // Função para carregar o estoque do Firestore
-  function loadStockFromFirestore() {
+  // Function to load stock from Firestore
+  async function loadStockFromFirestore() {
     const stockTable = document.getElementById('stockTable').getElementsByTagName('tbody')[0];
-    stockTable.innerHTML = ''; // Limpar a tabela antes de preenchê-la
+    stockTable.innerHTML = ''; // Clear the table before filling it
 
-    db.collection('stock').get().then((querySnapshot) => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'stock'));
       querySnapshot.forEach((doc) => {
         const product = doc.data();
         const newRow = stockTable.insertRow();
         
-        newRow.insertCell(0).textContent = product.productName; // Nome do Produto
-        newRow.insertCell(1).textContent = product.entryDate; // Data da Entrada
-        newRow.insertCell(2).textContent = product.productQuantity; // Quantidade de Entrada
-        newRow.insertCell(3).textContent = product.productQuantity; // Quantidade Total (exibindo como quantidade de entrada no momento)
+        newRow.insertCell(0).textContent = product.productName; // Product Name
+        newRow.insertCell(1).textContent = product.entryDate; // Entry Date
+        newRow.insertCell(2).textContent = product.productQuantity; // Entry Quantity
+        newRow.insertCell(3).textContent = product.productQuantity; // Total Quantity (displaying as entry quantity for now)
 
-        // Adicionar botão de exclusão
-        const deleteCell = newRow.insertCell(4); // Ações
+        // Add delete button
+        const deleteCell = newRow.insertCell(4); // Actions
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Excluir';
         deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', () => {
-          db.collection('stock').doc(doc.id).delete()
-            .then(() => {
-              console.log('Produto removido com sucesso');
-              window.location.reload(); // Recarregar a página para atualizar a tabela
-            })
-            .catch((error) => {
-              console.error('Erro ao remover produto: ', error);
-            });
+        deleteButton.addEventListener('click', async () => {
+          try {
+            await deleteDoc(doc(db, 'stock', doc.id));
+            console.log('Produto removido com sucesso');
+            window.location.reload(); // Reload the page to update the table
+          } catch (error) {
+            console.error('Erro ao remover produto: ', error);
+          }
         });
         deleteCell.appendChild(deleteButton);
       });
-    });
+    } catch (error) {
+      console.error('Erro ao carregar estoque: ', error);
+    }
   }
 
-  // Carregar o estoque ao acessar a página
+  // Load stock when accessing the page
   loadStockFromFirestore();
-  }
+}
+
 
 
 
