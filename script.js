@@ -4,17 +4,19 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https
 // Initialize Firestore
 const db = getFirestore();
 
-// Arrays to hold clients and stock data
-let clients = [];
-let stock = [];
+// ------------------------------
+// Funções para Clientes e Estoque
+// ------------------------------
 
 // Function to save clients to Firestore
 async function addClientToFirestore(client) {
   try {
     await addDoc(collection(db, 'clients'), client);
     console.log('Cliente salvo no Firestore');
+    alert('Cliente salvo com sucesso!');
   } catch (error) {
     console.error('Erro ao salvar cliente: ', error);
+    alert('Erro ao salvar cliente!');
   }
 }
 
@@ -23,13 +25,15 @@ async function addStockToFirestore(product) {
   try {
     await addDoc(collection(db, 'stock'), product);
     console.log('Produto salvo no Firestore');
+    alert('Produto salvo com sucesso!');
   } catch (error) {
     console.error('Erro ao salvar produto: ', error);
+    alert('Erro ao salvar produto!');
   }
 }
 
 // ------------------------------
-// Cadastro de Clientes e Redirecionamento para a Lista de Pedidos (index.html)
+// Cadastro de Clientes e Redirecionamento para a Lista de Clientes (index.html)
 // ------------------------------
 if (window.location.pathname.includes('index.html')) {
   document.getElementById('clientForm').addEventListener('submit', async function (e) {
@@ -49,15 +53,15 @@ if (window.location.pathname.includes('index.html')) {
     // Save the client in Firestore
     await addClientToFirestore(client);
 
-    // Redirect to the orders page after registration
+    // Redirect to the client list page after registration
     window.location.href = 'cliente.html';
   });
 }
 
 // ------------------------------
-// Lista de Pedidos (pedidos.html)
+// Lista de Pedidos (cliente.html)
 // ------------------------------
-if (window.location.pathname.includes('pedidos.html')) {
+if (window.location.pathname.includes('cliente.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
   table.innerHTML = ''; // Clear the table before filling it
 
@@ -71,7 +75,7 @@ if (window.location.pathname.includes('pedidos.html')) {
         newRow.insertCell(0).textContent = client.clientName;
         newRow.insertCell(1).textContent = client.productName;
         newRow.insertCell(2).textContent = client.entryDate;
-        newRow.insertCell(3).textContent = client.exitDate;
+        newRow.insertCell(3).textContent = client.exitDate || 'N/A';
         newRow.insertCell(4).textContent = client.entryQuantity;
         newRow.insertCell(5).textContent = client.exitQuantity;
         newRow.insertCell(6).textContent = client.saldo;
@@ -85,9 +89,11 @@ if (window.location.pathname.includes('pedidos.html')) {
           try {
             await deleteDoc(doc(db, 'clients', docSnapshot.id));
             console.log('Cliente removido com sucesso');
+            alert('Cliente removido com sucesso!');
             window.location.reload(); // Reload the page to update the table
           } catch (error) {
             console.error('Erro ao remover cliente: ', error);
+            alert('Erro ao remover cliente!');
           }
         });
         deleteCell.appendChild(deleteButton);
@@ -97,7 +103,7 @@ if (window.location.pathname.includes('pedidos.html')) {
     }
   }
 
-  // Load clients when the orders page is accessed
+  // Load clients when the client page is accessed
   loadClientsFromFirestore();
 }
 
@@ -132,7 +138,7 @@ if (window.location.pathname.includes('estoque.html')) {
         newRow.insertCell(0).textContent = product.productName; // Product Name
         newRow.insertCell(1).textContent = product.entryDate; // Entry Date
         newRow.insertCell(2).textContent = product.productQuantity; // Entry Quantity
-        newRow.insertCell(3).textContent = product.productQuantity; // Total Quantity (displaying as entry quantity for now)
+        newRow.insertCell(3).textContent = product.productQuantity; // Total Quantity
 
         // Add delete button
         const deleteCell = newRow.insertCell(4); // Actions
@@ -143,9 +149,11 @@ if (window.location.pathname.includes('estoque.html')) {
           try {
             await deleteDoc(doc(db, 'stock', docSnapshot.id));
             console.log('Produto removido com sucesso');
+            alert('Produto removido com sucesso!');
             window.location.reload(); // Reload the page to update the table
           } catch (error) {
             console.error('Erro ao remover produto: ', error);
+            alert('Erro ao remover produto!');
           }
         });
         deleteCell.appendChild(deleteButton);
