@@ -6,14 +6,13 @@
     <title>Pesquisar Clientes - Agronegócio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
 </head>
 <body>
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -42,8 +41,8 @@
 
       const productsSet = new Set(); // To store product names for the dropdown
 
-      querySnapshot.forEach((doc) => {
-        const client = doc.data();
+      querySnapshot.forEach((docSnapshot) => {
+        const client = docSnapshot.data();
         const row = document.createElement('tr'); // Create a new row for each client
         row.innerHTML = `
           <td>${client.clientName}</td>
@@ -53,6 +52,7 @@
           <td>${client.entryQuantity || 0}</td>
           <td>${client.exitQuantity || 0}</td>
           <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+          <td><button class="delete-client" data-id="${docSnapshot.id}">Excluir</button></td>
         `;
         clientHistoryTableBody.appendChild(row); // Append the new row to the table body
         productsSet.add(client.productName); // Add the product to the set
@@ -65,6 +65,21 @@
         option.value = productName;
         option.textContent = productName;
         productFilterDropdown.appendChild(option);
+      });
+
+      // Add delete functionality to the buttons
+      document.querySelectorAll('.delete-client').forEach(button => {
+        button.addEventListener('click', async () => {
+          const clientId = button.getAttribute('data-id');
+          try {
+            await deleteDoc(doc(db, 'clients', clientId));
+            alert('Cliente excluído com sucesso!');
+            loadClientsFromFirestore(); // Reload the table after deletion
+          } catch (error) {
+            console.error('Erro ao excluir cliente: ', error);
+            alert('Erro ao excluir cliente.');
+          }
+        });
       });
     }
 
@@ -130,6 +145,7 @@
         <th>Quantidade Entrada</th>
         <th>Quantidade Retirada</th>
         <th>Saldo</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
