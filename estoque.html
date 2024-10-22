@@ -8,7 +8,13 @@
     <title>Controle de Estoque - Agronegócio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+    <script>
+      // Verifica se o usuário está logado
+      if (!localStorage.getItem('isLoggedIn')) {
+        // Se não estiver logado, redireciona para a página de login
+        window.location.href = 'login.html';
+      }
+    </script>
 </head>
 <body>
   <script type="module">
@@ -97,9 +103,9 @@
     <thead>
       <tr>
         <th>Nome do Produto</th>
-        <th>Quantidade Total</th>
-        <th>Data de Entrada</th>
-        <th>Quantidade da Entrada</th>
+        <th>Data</th>
+        <th>Movimentação</th>
+        <th>Total</th>
         <th>Ações</th> <!-- Coluna para ações como exclusão -->
       </tr>
     </thead>
@@ -117,5 +123,6 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
