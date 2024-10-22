@@ -23,8 +23,8 @@
     };
 
      // Inicializar Firebase
-     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+     const app = firebase.initializeApp(firebaseConfig);
+     const db = firebase.firestore();
   </script>
      
 </head>
@@ -33,11 +33,6 @@
   <!-- Aqui você pode colocar outros elementos do corpo -->
 
   <!-- Inclua o script.js aqui, após o Firebase estar carregado -->
-  <script type="module" src="script.js"></script>
-</body>
-</html>
-</head>
-<body>
   
 
   <!-- Barra de Navegação com Logo -->
@@ -92,7 +87,7 @@
   </footer>
 
   <!-- Referência ao JavaScript -->
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
 
