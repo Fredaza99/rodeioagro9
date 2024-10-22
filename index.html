@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rodeio Agronegócio</title>
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Firebase App (necessário) -->
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<!-- Firebase Authentication (opcional, se for usar login) -->
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-<!-- Firebase Firestore (banco de dados) -->
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
-<script>
-const firebaseConfig = {
+  <title>Meu Projeto</title>
+
+  <!-- Firebase App (necessário para inicializar o Firebase) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+
+  <!-- Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
+  <!-- Firebase Authentication -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+
+  <script>
+    // Configuração do Firebase, copie os dados do seu projeto Firebase aqui
+    const firebaseConfig = {
   apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
   authDomain: "rodeioagro-fee43.firebaseapp.com",
   projectId: "rodeioagro-fee43",
@@ -23,15 +29,11 @@ const firebaseConfig = {
   measurementId: "G-FM9TP3QF6N"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-    // Verifica se o usuário está logado
-    if (!localStorage.getItem('isLoggedIn')) {
-      // Se não estiver logado, redireciona para a página de login
-      window.location.href = 'login.html';
-    }
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig); // Inicializa o Firebase App
+    const db = firebase.firestore(); // Inicializa o Firestore
   </script>
+
   
 </head>
 <body>
@@ -92,3 +94,4 @@ const analytics = getAnalytics(app);
   <script src="script.js"></script>
 </body>
 </html>
+
