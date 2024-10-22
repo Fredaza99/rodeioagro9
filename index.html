@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meu Projeto</title>
+  <link rel="stylesheet" href="styles.css"
+  <title>Rodeio</title>
 
-  <!-- Firebase App (necessário para inicializar o Firebase) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-
-  <!-- Firebase Firestore -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-
-  <!-- Firebase Authentication -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-
-  <script>
-    // Configuração do Firebase, copie os dados do seu projeto Firebase aqui
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
-  apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-  authDomain: "rodeioagro-fee43.firebaseapp.com",
-  projectId: "rodeioagro-fee43",
-  storageBucket: "rodeioagro-fee43.appspot.com",
-  messagingSenderId: "981787707311",
-  appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-  measurementId: "G-FM9TP3QF6N"
-};
-
-    // Inicializar Firebase
-    const app = firebase.initializeApp(firebaseConfig); // Inicializa o Firebase App
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
   </script>
 
   
@@ -93,5 +90,6 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
