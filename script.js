@@ -1,168 +1,148 @@
-// Import Firestore functions
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+// Import Firestore and Firebase functions
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// Initialize Firestore
-const db = getFirestore();
+// Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+};
 
-// Arrays to hold clients and stock data
-let clients = [];
-let stock = [];
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
 
-gtag('config', 'GA_TRACKING_ID', {
-  'cookie_domain': 'rodeioagro-gilt.vercel.app' // Substitua pelo seu domínio correto
+// Configure Google Analytics with the correct domain
+gtag('config', 'SUA_MEASUREMENT_ID', {
+  'cookie_domain': 'rodeioagro-gilt.vercel.app' // Ajuste para o domínio correto
 });
 
+// ------------------------------
+// Funções de Clientes
+// ------------------------------
 
-// Function to save clients to Firestore
+// Função para carregar os clientes do Firestore
+async function loadClientsFromFirestore() {
+  const clientsCollection = collection(db, 'clients');
+  const querySnapshot = await getDocs(clientsCollection);
+
+  const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+  clientHistoryTableBody.innerHTML = '';
+
+  querySnapshot.forEach((docSnapshot) => {
+    const client = docSnapshot.data();
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${client.clientName}</td>
+      <td>${client.productName}</td>
+      <td>${client.entryDate}</td>
+      <td>${client.exitDate || 'N/A'}</td>
+      <td>${client.entryQuantity || 0}</td>
+      <td>${client.exitQuantity || 0}</td>
+      <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+      <td><button class="delete-client" data-id="${docSnapshot.id}">Excluir</button></td>
+    `;
+    clientHistoryTableBody.appendChild(row);
+  });
+
+  // Adicionar funcionalidade de exclusão de clientes
+  document.querySelectorAll('.delete-client').forEach(button => {
+    button.addEventListener('click', async () => {
+      const clientId = button.getAttribute('data-id');
+      try {
+        await deleteDoc(doc(db, 'clients', clientId));
+        alert('Cliente excluído com sucesso!');
+        loadClientsFromFirestore(); // Recarregar a tabela após a exclusão
+      } catch (error) {
+        console.error('Erro ao excluir cliente: ', error);
+        alert('Erro ao excluir cliente.');
+      }
+    });
+  });
+}
+
+// Função para adicionar clientes ao Firestore
 async function addClientToFirestore(client) {
   try {
     await addDoc(collection(db, 'clients'), client);
-    console.log('Cliente salvo no Firestore');
+    alert('Cliente adicionado com sucesso!');
+    loadClientsFromFirestore(); // Recarrega a lista de clientes
   } catch (error) {
-    console.error('Erro ao salvar cliente: ', error);
+    console.error('Erro ao adicionar cliente: ', error);
+    alert('Erro ao adicionar cliente.');
   }
 }
 
-// Function to save stock to Firestore
+// ------------------------------
+// Funções de Estoque
+// ------------------------------
+
+// Função para carregar o estoque do Firestore
+async function loadStockFromFirestore() {
+  const stockCollection = collection(db, 'stock');
+  const querySnapshot = await getDocs(stockCollection);
+
+  const stockTableBody = document.getElementById('stockTable').querySelector('tbody');
+  stockTableBody.innerHTML = '';
+
+  querySnapshot.forEach((docSnapshot) => {
+    const product = docSnapshot.data();
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${product.productName}</td>
+      <td>${product.entryDate}</td>
+      <td>${product.productQuantity}</td>
+      <td><button class="delete-product" data-id="${docSnapshot.id}">Excluir</button></td>
+    `;
+    stockTableBody.appendChild(row);
+  });
+
+  // Adicionar funcionalidade de exclusão de produtos
+  document.querySelectorAll('.delete-product').forEach(button => {
+    button.addEventListener('click', async () => {
+      const productId = button.getAttribute('data-id');
+      try {
+        await deleteDoc(doc(db, 'stock', productId));
+        alert('Produto excluído com sucesso!');
+        loadStockFromFirestore(); // Recarregar a tabela de estoque após a exclusão
+      } catch (error) {
+        console.error('Erro ao excluir produto: ', error);
+        alert('Erro ao excluir produto.');
+      }
+    });
+  });
+}
+
+// Função para adicionar produtos ao Firestore
 async function addStockToFirestore(product) {
   try {
     await addDoc(collection(db, 'stock'), product);
-    console.log('Produto salvo no Firestore');
+    alert('Produto adicionado ao estoque com sucesso!');
+    loadStockFromFirestore(); // Recarrega a lista de estoque
   } catch (error) {
-    console.error('Erro ao salvar produto: ', error);
+    console.error('Erro ao adicionar produto: ', error);
+    alert('Erro ao adicionar produto.');
   }
 }
 
 // ------------------------------
-// Cadastro de Clientes e Redirecionamento para a Lista de Pedidos (index.html)
+// Eventos ao carregar a página
 // ------------------------------
-if (window.location.pathname.includes('index.html')) {
-  document.getElementById('clientForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const clientName = document.getElementById('clientName').value;
-    const productName = document.getElementById('productName').value;
-    const entryDate = document.getElementById('entryDate').value;
-    const entryQuantity = parseInt(document.getElementById('entryQuantity').value);
-    const exitQuantity = parseInt(document.getElementById('exitQuantity').value || 0);
-    const exitDate = document.getElementById('exitDate').value || 'Não definido';
-    const saldo = entryQuantity - exitQuantity;
-
-    // Create a client object with all information
-    const client = { clientName, productName, entryDate, entryQuantity, exitQuantity, saldo, exitDate };
-    
-    // Save the client in Firestore
-    await addClientToFirestore(client);
-
-    // Redirect to the orders page after registration
-    window.location.href = 'pedidos.html';
-  });
-}
-
-// ------------------------------
-// Lista de Pedidos (pedidos.html)
-// ------------------------------
-if (window.location.pathname.includes('pedidos.html')) {
-  const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
-  table.innerHTML = ''; // Clear the table before filling it
-
-  // Function to load clients from Firestore
-  async function loadClientsFromFirestore() {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'clients'));
-      querySnapshot.forEach((docSnapshot) => {
-        const client = docSnapshot.data();
-        const newRow = table.insertRow();
-        newRow.insertCell(0).textContent = client.clientName;
-        newRow.insertCell(1).textContent = client.productName;
-        newRow.insertCell(2).textContent = client.entryDate;
-        newRow.insertCell(3).textContent = client.exitDate;
-        newRow.insertCell(4).textContent = client.entryQuantity;
-        newRow.insertCell(5).textContent = client.exitQuantity;
-        newRow.insertCell(6).textContent = client.saldo;
-
-        // Add delete button
-        const deleteCell = newRow.insertCell(7);
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', async () => {
-          try {
-            await deleteDoc(doc(db, 'clients', docSnapshot.id));
-            console.log('Cliente removido com sucesso');
-            window.location.reload(); // Reload the page to update the table
-          } catch (error) {
-            console.error('Erro ao remover cliente: ', error);
-          }
-        });
-        deleteCell.appendChild(deleteButton);
-      });
-    } catch (error) {
-      console.error('Erro ao carregar clientes: ', error);
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  // Carregar clientes e estoque ao carregar a página
+  if (window.location.pathname.includes('cliente.html')) {
+    loadClientsFromFirestore(); // Carregar lista de clientes
+  } else if (window.location.pathname.includes('estoque.html')) {
+    loadStockFromFirestore(); // Carregar lista de estoque
   }
-
-  // Load clients when the orders page is accessed
-  loadClientsFromFirestore();
-}
-
-// ------------------------------
-// Controle de Estoque (estoque.html)
-// ------------------------------
-if (window.location.pathname.includes('estoque.html')) {
-  document.getElementById('stockForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const productName = document.getElementById('productName').value;
-    const productQuantity = parseInt(document.getElementById('productQuantity').value);
-    const entryDate = document.getElementById('entryDate').value;
-
-    // Create a product object for Firestore
-    const product = { productName, productQuantity, entryDate };
-    await addStockToFirestore(product); // Save to Firestore
-    window.location.reload(); // Reload the page to update the table
-  });
-
-  // Function to load stock from Firestore
-  async function loadStockFromFirestore() {
-    const stockTable = document.getElementById('stockTable').getElementsByTagName('tbody')[0];
-    stockTable.innerHTML = ''; // Clear the table before filling it
-
-    try {
-      const querySnapshot = await getDocs(collection(db, 'stock'));
-      querySnapshot.forEach((docSnapshot) => {
-        const product = docSnapshot.data();
-        const newRow = stockTable.insertRow();
-        
-        newRow.insertCell(0).textContent = product.productName; // Product Name
-        newRow.insertCell(1).textContent = product.entryDate; // Entry Date
-        newRow.insertCell(2).textContent = product.productQuantity; // Entry Quantity
-        newRow.insertCell(3).textContent = product.productQuantity; // Total Quantity (displaying as entry quantity for now)
-
-        // Add delete button
-        const deleteCell = newRow.insertCell(4); // Actions
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', async () => {
-          try {
-            await deleteDoc(doc(db, 'stock', docSnapshot.id));
-            console.log('Produto removido com sucesso');
-            window.location.reload(); // Reload the page to update the table
-          } catch (error) {
-            console.error('Erro ao remover produto: ', error);
-          }
-        });
-        deleteCell.appendChild(deleteButton);
-      });
-    } catch (error) {
-      console.error('Erro ao carregar estoque: ', error);
-    }
-  }
-
-  // Load stock when accessing the page
-  loadStockFromFirestore();
-}
+});
 
 
 
