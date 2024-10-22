@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Pedidos - Agronegócio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script>
+    // Verifica se o usuário está logado
+    if (!localStorage.getItem('isLoggedIn')) {
+      // Se não estiver logado, redireciona para a página de login
+      window.location.href = 'login.html';
+    }
+  </script>
+  
+</head>
+<body>
+
+  <!-- Barra de Navegação com Logo -->
+  <nav>
+    <div class="navbar-container">
+      <ul class="navbar">
+        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+        <li><a href="pedidos.html"><span class="material-icons">list_alt</span> Lista de Pedidos</a></li>
+        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+        <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <h1><span class="material-icons">list_alt</span> Lista de Pedidos</h1>
+
+  <!-- Campo de pesquisa -->
+  <h2>Pesquisar Pedido</h2>
+  <input type="text" id="orderSearchInput" placeholder="Digite palavras-chave para filtrar...">
+
+  <!-- Tabela de pedidos -->
+  <table id="ordersTable">
+    <thead>
+      <tr>
+        <th>Nome do Cliente</th>
+        <th>Produto</th>
+        <th>Data de Entrada</th> <!-- Coluna de Data de Entrada -->
+        <th>Data de Saída</th> <!-- Coluna de Data de Saída -->
+        <th>Quantidade Entrada</th>
+        <th>Quantidade Retirada</th>
+        <th>Saldo</th> <!-- Saldo após as quantidades -->
+        <th>Ações</th> <!-- Coluna para o botão de exclusão -->
+      </tr>
+    </thead>
+    <tbody>
+      <!-- As linhas da tabela serão preenchidas dinamicamente pelo JavaScript -->
+    </tbody>
+  </table>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Referência ao JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

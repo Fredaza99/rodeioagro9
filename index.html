@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rodeio Agronegócio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Firebase App (necessário) -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<!-- Firebase Authentication (opcional, se for usar login) -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+<!-- Firebase Firestore (banco de dados) -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+  authDomain: "rodeioagro-fee43.firebaseapp.com",
+  projectId: "rodeioagro-fee43",
+  storageBucket: "rodeioagro-fee43.appspot.com",
+  messagingSenderId: "981787707311",
+  appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+  measurementId: "G-FM9TP3QF6N"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+    // Verifica se o usuário está logado
+    if (!localStorage.getItem('isLoggedIn')) {
+      // Se não estiver logado, redireciona para a página de login
+      window.location.href = 'login.html';
+    }
+  </script>
+  
+</head>
+<body>
+  
+
+  <!-- Barra de Navegação com Logo -->
+  <nav>
+  
+      <ul class="navbar">
+        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+        <li><a href="pedidos.html"><span class="material-icons">list_alt</span> Lista de Pedidos</a></li>
+        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+        <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+
+      </ul>
+
+    </div>
+  </nav>
+  <header>
+    <div class="row">
+      <div class="logo-row">
+        <img class="logo" src="img/LOGO RODEIO AGRONEGOCIO BRANCA 2017.png" alt="logo-rodeio"> 
+      </div>
+    </div>
+  </header>
+
+
+
+  <!-- Formulário para adicionar clientes -->
+  <form id="clientForm">
+    <label for="clientName">Nome do Cliente:</label>
+    <input type="text" id="clientName" required>
+
+    <label for="productName">Nome do Produto:</label>
+    <input type="text" id="productName" required>
+
+    <label for="entryDate">Data de Entrada:</label>
+    <input type="date" id="entryDate" required>
+
+    <label for="entryQuantity">Quantidade Entrada:</label>
+    <input type="number" id="entryQuantity" required>
+
+    <label for="exitQuantity">Quantidade Retirada:</label>
+    <input type="number" id="exitQuantity">
+
+    <label for="exitDate">Data de Saída:</label> <!-- Novo campo de Data de Saída -->
+    <input type="date" id="exitDate">
+
+    <button type="submit">Adicionar Cliente</button>
+  </form>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Referência ao JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

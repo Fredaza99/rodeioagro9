@@ -1,0 +1,234 @@
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    background: #3D3B40;
+
+     margin: 0;
+    padding: 0;
+  }
+  
+  h1, h2 {
+    color: whitesmoke;
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  nav {
+    background-color: #202122;
+    padding: 5px 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+    
+  .logo-row{
+    text-align: center;
+  }
+  .logo {
+    width: 100px;
+    height: 100px;
+    text-align: center;
+  }
+  
+  .navbar {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 5px;
+  }
+  
+  .navbar li {
+    display: inline;
+  }
+  
+  .navbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  
+  .navbar a:hover {
+    color: #18bc9c;
+  }
+  
+  .material-icons {
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  
+  /* Form Styles */
+  form {
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #F3F8FF;
+    padding: 37px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  form label {
+    display:grid;
+    margin-bottom: 5px;
+    color: #333;
+  }
+  
+  form input[type="text"], form input[type="date"], form input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  form button {
+    padding: 10px 20px;
+    background-color: #00ADB5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  form button:hover {
+    background-color: #16a085;
+  }
+  
+  /* Table Styles */
+  table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #F3F8FF;
+  }
+  
+  table th, table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  table th {
+    background-color: #527853;
+    color: white;
+  }
+  
+  .delete-btn {
+    background-color: #e92c17;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .delete-btn:hover {
+    background-color: #c0392b;
+  }
+  
+  /* Barra de Pesquisa */
+  #orderSearchInput {
+    width: 40%;
+    padding: 10px;
+    margin: 20px auto;
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  #orderSearchInput:focus {
+    border-color: #18bc9c;
+    outline: none;
+    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+  }
+  
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 0px;
+    background-color: transparent;
+    color: white;
+    position:static;
+    width: 100%;
+    bottom: 0;
+    font-size: 13px;
+  }
+
+  /* Estilo para a barra de pesquisa de clientes */
+#clientSearchInput {
+  width: 50%; /* Aumentar o tamanho para ser mais visível */
+  padding: 10px;
+  margin: 20px auto; /* Centralizar o campo */
+  display: block; /* Definir como block para aplicar margens corretamente */
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#clientSearchInput:focus {
+  border-color: #18bc9c;
+  outline: none;
+  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Estilo para o dropdown de produtos */
+#productFilter {
+  width: 50%; /* Mesma largura da barra de pesquisa */
+  padding: 10px;
+  margin: 20px auto; /* Centralizar o dropdown */
+  display: block; /* Para que o dropdown fique na mesma linha que a barra */
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #F3F8FF; /* Fundo branco para destacar o dropdown */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#productFilter:focus {
+  border-color: #18bc9c;
+  outline: none;
+  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Estilo para a barra de pesquisa de produtos no estoque */
+#stockSearchInput {
+  width: 50%; /* Largura aumentada para destacar */
+  padding: 10px;
+  margin: 20px auto; /* Centralizado com margem superior e inferior */
+  display: block; /* Para centralizar o campo */
+  border: 1px solid #F3F8FF;
+  border-radius: 5px;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#stockSearchInput:focus {
+  border-color: #18bc9c;
+  outline: none;
+  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Estilo para o dropdown de produtos no estoque */
+#stockFilter {
+  width: 50%; /* Mesma largura da barra de pesquisa */
+  padding: 10px;
+  margin: 20px auto; /* Centralizado */
+  display: block; /* Para que o dropdown também fique centralizado */
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: white; /* Fundo branco para destacar o dropdown */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#stockFilter:focus {
+  border-color: #18bc9c;
+  outline: none;
+  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+
+  
