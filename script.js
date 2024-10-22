@@ -159,6 +159,27 @@ if (window.location.pathname.includes('estoque.html')) {
   loadStockFromFirestore();
 }
 
+// Função de login
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const user = 'rodeio'; // Defina seu email fixo aqui
+    const password = 'zerodeio'; // Defina sua senha fixa aqui
+
+    // Firebase Authentication
+    signInWithEmailAndPassword(auth, user, password)
+      .then((userCredential) => {
+        // Login bem-sucedido
+        localStorage.setItem('isLoggedIn', 'true'); // Save login state
+        window.location.href = 'index.html'; // Redireciona para a página principal
+      })
+      .catch((error) => {
+        alert('Erro de login: ' + error.message);
+      });
+  });
+});
+
 
 
 
