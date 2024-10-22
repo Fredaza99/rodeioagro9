@@ -156,11 +156,8 @@ if (window.location.pathname.includes('estoque.html')) {
 
   // Carregar o estoque ao acessar a página
   loadStockFromFirestore();
-}
 
 
-  // Carregar o estoque ao acessar a página
-  loadStockFromFirestore();
 
 
 
