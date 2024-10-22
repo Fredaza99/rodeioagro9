@@ -159,6 +159,23 @@ if (window.location.pathname.includes('estoque.html')) {
   loadStockFromFirestore();
 }
 
+function loadClientsFromFirestore() {
+  const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
+  table.innerHTML = ''; // Clear the table before populating it
+
+  db.collection('clients').get().then((querySnapshot) => {
+    console.log(`Found ${querySnapshot.size} clients.`); // Log the number of clients found
+    querySnapshot.forEach((doc) => {
+      const client = doc.data();
+      const newRow = table.insertRow();
+      // Populate the table with client data...
+    });
+  }).catch((error) => {
+    console.error('Erro ao carregar clientes: ', error);
+  });
+}
+
+
 
 
 
