@@ -8,6 +8,11 @@ const db = getFirestore();
 let clients = [];
 let stock = [];
 
+gtag('config', 'GA_TRACKING_ID', {
+  'cookie_domain': 'rodeioagro-gilt.vercel.app' // Substitua pelo seu domínio correto
+});
+
+
 // Function to save clients to Firestore
 async function addClientToFirestore(client) {
   try {
