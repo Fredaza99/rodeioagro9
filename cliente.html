@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,24 +10,6 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-
-    // Configuração do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
-    };
-
-     // Inicializar Firebase
-     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
 
       // Função para carregar os clientes do Firestore
 function loadClientsFromFirestore() {
@@ -51,6 +34,29 @@ loadClientsFromFirestore();
     
   </head>
 <body>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
 
   <!-- Barra de Navegação com Logo -->
   <nav>
@@ -102,5 +108,6 @@ loadClientsFromFirestore();
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
