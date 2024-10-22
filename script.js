@@ -1,5 +1,4 @@
-// Inicializar Firebase
-const db = firebase.firestore(); // Firestore para o banco de dados
+
 
 // O Firebase já está disponível globalmente após o carregamento do script no HTML
 
@@ -154,6 +153,11 @@ if (window.location.pathname.includes('estoque.html')) {
       });
     });
   }
+
+  // Carregar o estoque ao acessar a página
+  loadStockFromFirestore();
+}
+
 
   // Carregar o estoque ao acessar a página
   loadStockFromFirestore();
