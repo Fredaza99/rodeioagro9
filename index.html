@@ -6,11 +6,13 @@
   <link rel="stylesheet" href="styles.css"> <!-- Fechamento da tag corrigido -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <title>Rodeio</title>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 
+  <!-- Firebase App (core) SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"></script>
+  <!-- Firebase Firestore SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"></script>
+  
+  <script>
     // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
@@ -22,32 +24,25 @@
       measurementId: "G-FM9TP3QF6N"
     };
 
-     // Inicializar Firebase
-     const app = firebase.initializeApp(firebaseConfig);
-     const db = firebase.firestore();
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
   </script>
-     
 </head>
 <body>
   
   <!-- Aqui você pode colocar outros elementos do corpo -->
 
-  <!-- Inclua o script.js aqui, após o Firebase estar carregado -->
-  
-
   <!-- Barra de Navegação com Logo -->
   <nav>
-  
-      <ul class="navbar">
-        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-        <li><a href="pedidos.html"><span class="material-icons">list_alt</span> Lista de Pedidos</a></li>
-        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-        <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
-
-      </ul>
-
-    </div>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="pedidos.html"><span class="material-icons">list_alt</span> Lista de Pedidos</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
   </nav>
+
   <header>
     <div class="row">
       <div class="logo-row">
@@ -55,8 +50,6 @@
       </div>
     </div>
   </header>
-
-
 
   <!-- Formulário para adicionar clientes -->
   <form id="clientForm">
@@ -87,9 +80,10 @@
   </footer>
 
   <!-- Referência ao JavaScript -->
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
