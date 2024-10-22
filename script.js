@@ -65,8 +65,8 @@ if (window.location.pathname.includes('pedidos.html')) {
   async function loadClientsFromFirestore() {
     try {
       const querySnapshot = await getDocs(collection(db, 'clients'));
-      querySnapshot.forEach((doc) => {
-        const client = doc.data();
+      querySnapshot.forEach((docSnapshot) => {
+        const client = docSnapshot.data();
         const newRow = table.insertRow();
         newRow.insertCell(0).textContent = client.clientName;
         newRow.insertCell(1).textContent = client.productName;
@@ -83,7 +83,7 @@ if (window.location.pathname.includes('pedidos.html')) {
         deleteButton.classList.add('delete-btn');
         deleteButton.addEventListener('click', async () => {
           try {
-            await deleteDoc(doc(db, 'clients', doc.id));
+            await deleteDoc(doc(db, 'clients', docSnapshot.id));
             console.log('Cliente removido com sucesso');
             window.location.reload(); // Reload the page to update the table
           } catch (error) {
@@ -125,8 +125,8 @@ if (window.location.pathname.includes('estoque.html')) {
 
     try {
       const querySnapshot = await getDocs(collection(db, 'stock'));
-      querySnapshot.forEach((doc) => {
-        const product = doc.data();
+      querySnapshot.forEach((docSnapshot) => {
+        const product = docSnapshot.data();
         const newRow = stockTable.insertRow();
         
         newRow.insertCell(0).textContent = product.productName; // Product Name
@@ -141,7 +141,7 @@ if (window.location.pathname.includes('estoque.html')) {
         deleteButton.classList.add('delete-btn');
         deleteButton.addEventListener('click', async () => {
           try {
-            await deleteDoc(doc(db, 'stock', doc.id));
+            await deleteDoc(doc(db, 'stock', docSnapshot.id));
             console.log('Produto removido com sucesso');
             window.location.reload(); // Reload the page to update the table
           } catch (error) {
@@ -158,6 +158,8 @@ if (window.location.pathname.includes('estoque.html')) {
   // Load stock when accessing the page
   loadStockFromFirestore();
 }
+
+
 
 
 
