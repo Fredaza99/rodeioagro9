@@ -1,6 +1,8 @@
+import { getFirestore } from "firebase/firestore";
 
+// Assuming you have initialized your Firebase app
+const db = getFirestore();
 
-// O Firebase já está disponível globalmente após o carregamento do script no HTML
 
 // Declarar 'clients' e 'stock' como arrays vazios (carregaremos do Firestore)
 let clients = [];
@@ -157,6 +159,8 @@ if (window.location.pathname.includes('estoque.html')) {
   // Carregar o estoque ao acessar a página
   loadStockFromFirestore();
   }
+
+
 
 
 
