@@ -1,70 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Simples</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-    }
-    .login-container {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .login-container input {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .login-container button {
-      padding: 10px;
-      width: 100%;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="login-container">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Nome de Usuário">
-    <input type="password" id="password" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-    <p id="error-message" style="color: red;"></p>
-  </div>
+    <h1>Login</h1>
+    <div id="error-message" style="color: red;"></div>
+    <form id="loginForm" onsubmit="login(event)">
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" required>
+        
+        <label for="password">Senha:</label>
+        <input type="password" id="password" required>
+        
+        <button type="submit">Entrar</button>
+    </form>
 
-  <script>
-   function login() {
-  const username = document.getElementById('rodeioagronegocio@terra.com.br').value;
-  const password = document.getElementById('Zerodeio').value;
+    <script>
+        function login(event) {
+            event.preventDefault(); // Impede o envio do formulário
 
-  // Substitua esses valores pelos seus
-  const validUsername = 'usuario';
-  const validPassword = 'senha123';
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-  if (username === validUsername && password === validPassword) {
-    // Marca o usuário como autenticado
-    sessionStorage.setItem('loggedIn', 'true');
-    // Redireciona para a página principal ou qualquer outra página
-    window.location.href = 'index.html';
-  } else {
-    document.getElementById('error-message').textContent = 'Usuário ou senha incorretos!';
-  }
-}
+            // Substitua pelos valores corretos
+            const validUsername = 'rodeioagronegocio@terra.com.br';  // Insira seu nome de usuário
+            const validPassword = 'zerodeio';  // Insira sua senha
 
-  </script>
+            if (username === validUsername && password === validPassword) {
+                // Marca o usuário como autenticado
+                sessionStorage.setItem('loggedIn', 'true');
+                // Redireciona para a página principal ou qualquer outra página
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('error-message').textContent = 'Usuário ou senha incorretos!';
+            }
+        }
+    </script>
 </body>
 </html>
+
 
 
