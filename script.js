@@ -118,46 +118,80 @@ if (window.location.pathname.includes('estoque.html')) {
     window.location.reload(); // Reload the page to update the table
   });
 
-  // Function to load stock from Firestore
-  async function loadStockFromFirestore() {
+ // Function to load stock from Firestore and fill the dropdown
+async function loadStockFromFirestore() {
     const stockTable = document.getElementById('stockTable').getElementsByTagName('tbody')[0];
-    stockTable.innerHTML = ''; // Clear the table before filling it
+    const productFilter = document.getElementById('productFilter'); // Dropdown para o filtro de produtos
+    stockTable.innerHTML = ''; // Limpa a tabela
+    productFilter.innerHTML = '<option value="">Todos os Produtos</option>'; // Adiciona a opção padrão "Todos os Produtos"
 
     try {
-      const querySnapshot = await getDocs(collection(db, 'stock'));
-      querySnapshot.forEach((docSnapshot) => {
-        const product = docSnapshot.data();
-        const newRow = stockTable.insertRow();
-        
-        newRow.insertCell(0).textContent = product.productName; // Product Name
-        newRow.insertCell(1).textContent = product.entryDate; // Entry Date
-        newRow.insertCell(2).textContent = product.productQuantity; // Entry Quantity
-        newRow.insertCell(3).textContent = product.productQuantity; // Total Quantity (displaying as entry quantity for now)
+        const querySnapshot = await getDocs(collection(db, 'stock'));
+        const products = [];
 
-        // Add delete button
-        const deleteCell = newRow.insertCell(4); // Actions
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', async () => {
-          try {
-            await deleteDoc(doc(db, 'stock', docSnapshot.id));
-            console.log('Produto removido com sucesso');
-            window.location.reload(); // Reload the page to update the table
-          } catch (error) {
-            console.error('Erro ao remover produto: ', error);
-          }
+        querySnapshot.forEach((docSnapshot) => {
+            const product = docSnapshot.data();
+            products.push(product); // Armazena os produtos em um array
+
+            // Preenche a tabela com os dados do estoque
+            const newRow = stockTable.insertRow();
+            newRow.insertCell(0).textContent = product.productName;
+            newRow.insertCell(1).textContent = product.entryDate;
+            newRow.insertCell(2).textContent = product.productQuantity;
+            newRow.insertCell(3).textContent = product.productQuantity;
+
+            // Botão de exclusão
+            const deleteCell = newRow.insertCell(4);
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Excluir';
+            deleteButton.classList.add('delete-btn');
+            deleteButton.addEventListener('click', async () => {
+                try {
+                    await deleteDoc(doc(db, 'stock', docSnapshot.id));
+                    console.log('Produto removido com sucesso');
+                    window.location.reload(); // Recarrega a página
+                } catch (error) {
+                    console.error('Erro ao remover produto: ', error);
+                }
+            });
+            deleteCell.appendChild(deleteButton);
         });
-        deleteCell.appendChild(deleteButton);
-      });
-    } catch (error) {
-      console.error('Erro ao carregar estoque: ', error);
-    }
-  }
 
-  // Load stock when accessing the page
-  loadStockFromFirestore();
+        // Preencher o dropdown de filtro com os nomes dos produtos
+        const uniqueProducts = [...new Set(products.map(product => product.productName))]; // Garante que não haja produtos duplicados
+        uniqueProducts.forEach(productName => {
+            const option = document.createElement('option');
+            option.value = productName;
+            option.textContent = productName;
+            productFilter.appendChild(option); // Adiciona as opções ao dropdown
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar estoque: ', error);
+    }
 }
+
+// Evento de mudança no dropdown para filtrar a tabela
+document.getElementById('productFilter').addEventListener('change', function () {
+    const selectedProduct = this.value.toLowerCase(); // Obtém o valor selecionado e converte para minúsculas
+
+    const tableRows = document.getElementById('stockTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of tableRows) {
+        const productNameCell = row.cells[0].textContent.toLowerCase(); // Nome do produto da linha
+
+        // Verifica se o produto da linha corresponde ao selecionado
+        if (selectedProduct === '' || productNameCell === selectedProduct) {
+            row.style.display = ''; // Mostra a linha se corresponder ou se a opção for "Todos os Produtos"
+        } else {
+            row.style.display = 'none'; // Oculta a linha se não corresponder
+        }
+    }
+});
+
+// Carrega os dados do estoque e preenche o dropdown ao carregar a página
+window.addEventListener('DOMContentLoaded', loadStockFromFirestore);
+
 
 
 
