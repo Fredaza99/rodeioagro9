@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <title>Login - Rodeio</title>
+</head>
+<body>
+  <!-- Script do Firebase e autenticação -->
+  <script type="module">
+    // Import Firebase functions
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+
+    // Função para login
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('Usuário logado: ', userCredential.user);
+        window.location.href = 'index.html'; // Redireciona após o login
+      } catch (error) {
+        console.error('Erro ao fazer login: ', error);
+        document.getElementById('error-message').textContent = "Erro ao fazer login. Verifique suas credenciais.";
+      }
+    });
+
+    // Função para criação de conta
+    document.getElementById('registerButton').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Usuário registrado: ', userCredential.user);
+        window.location.href = 'index.html'; // Redireciona após criar a conta
+      } catch (error) {
+        console.error('Erro ao criar conta: ', error);
+        document.getElementById('error-message').textContent = "Erro ao criar conta. Tente novamente.";
+      }
+    });
+  </script>
+
+  <!-- Barra de navegação -->
+  <nav>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <div class="row">
+      <div class="logo-row">
+        <img class="logo" src="img/LOGO RODEIO AGRONEGOCIO BRANCA 2017.png" alt="logo-rodeio"> 
+      </div>
+    </div>
+  </header>
+
+  <!-- Formulário de login -->
+  <section class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label for="email">Email:</label>
+      <input type="email" id="email" required placeholder="Digite seu email">
+      
+      <label for="password">Senha:</label>
+      <input type="password" id="password" required placeholder="Digite sua senha">
+
+      <button type="submit">Entrar</button>
+      <button type="button" id="registerButton">Criar Conta</button>
+      <p id="error-message" style="color: red;"></p>
+    </form>
+  </section>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Referência ao arquivo de estilo -->
+  <link rel="stylesheet" href="styles.css">
+</body>
+</html>
