@@ -8,14 +8,6 @@ import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/fir
 const db = getFirestore();
 const auth = getAuth();
 
-// Arrays to hold clients and stock data
-let clients = [];
-let stock = [];
-
-
-// Initialize Firebase Authentication
-const auth = getAuth();
-
 // Function to save clients to Firestore
 async function addClientToFirestore(client) {
   try {
