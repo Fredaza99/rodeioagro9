@@ -7,17 +7,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Login</h1>
-    <div id="error-message" style="color: red;"></div>
-    <form id="loginForm" onsubmit="login(event)">
-        <label for="username">Usuário:</label>
-        <input type="text" id="username" required>
-        
-        <label for="password">Senha:</label>
-        <input type="password" id="password" required>
-        
-        <button type="submit">Entrar</button>
-    </form>
+    <div class="login-container">
+        <h1>Login</h1>
+        <div id="error-message" class="error-message"></div>
+        <form id="loginForm" onsubmit="login(event)">
+            <div class="input-group">
+                <label for="username">Usuário:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="login-button">Entrar</button>
+        </form>
+    </div>
 
     <script>
         function login(event) {
@@ -42,6 +46,7 @@
     </script>
 </body>
 </html>
+
 
 
 
