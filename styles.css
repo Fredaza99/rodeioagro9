@@ -230,5 +230,78 @@ body {
   box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
 }
 
+/* Estilos para a página de login */
+.login-container {
+    max-width: 400px; /* Largura máxima do container */
+    margin: 50px auto; /* Margem superior para espaço em relação ao topo */
+    background-color: #F3F8FF; /* Fundo leve para o container */
+    padding: 30px; /* Espaçamento interno */
+    border-radius: 10px; /* Bordas arredondadas */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra para dar profundidade */
+}
+
+/* Estilo para o título da página de login */
+.login-container h1 {
+    color: #333; /* Cor do texto */
+    margin-bottom: 20px; /* Espaço abaixo do título */
+}
+
+/* Estilos para o grupo de entrada */
+.input-group {
+    margin-bottom: 15px; /* Espaço abaixo de cada grupo */
+}
+
+/* Estilo para labels */
+.input-group label {
+    color: #333; /* Cor do texto */
+    margin-bottom: 5px; /* Espaço abaixo do label */
+    font-weight: bold; /* Negrito para os labels */
+}
+
+/* Estilos para os inputs */
+input[type="text"],
+input[type="password"] {
+    width: 100%; /* Largura total */
+    padding: 12px; /* Espaçamento interno */
+    border: 1px solid #ddd; /* Borda padrão */
+    border-radius: 5px; /* Bordas arredondadas */
+    font-size: 16px; /* Tamanho da fonte */
+    transition: border-color 0.3s; /* Transição suave para a borda */
+}
+
+/* Estilo de foco para os inputs */
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #00ADB5; /* Cor da borda ao focar */
+    outline: none; /* Remove o contorno padrão */
+}
+
+/* Estilos para o botão de login */
+.login-button {
+    width: 100%; /* Largura total */
+    padding: 12px; /* Espaçamento interno */
+    background-color: #00ADB5; /* Cor de fundo */
+    color: white; /* Cor do texto */
+    border: none; /* Remove a borda padrão */
+    border-radius: 5px; /* Bordas arredondadas */
+    font-size: 16px; /* Tamanho da fonte */
+    cursor: pointer; /* Cursor de mão ao passar sobre o botão */
+    transition: background-color 0.3s; /* Transição suave para a cor de fundo */
+}
+
+/* Estilo de hover para o botão */
+.login-button:hover {
+    background-color: #16a085; /* Cor ao passar o mouse */
+}
+
+/* Estilo para mensagens de erro */
+.error-message {
+    color: red; /* Cor vermelha */
+    text-align: center; /* Centraliza a mensagem */
+    margin-bottom: 10px; /* Espaço abaixo da mensagem */
+    font-size: 14px; /* Tamanho da fonte */
+}
+
+
 
   
