@@ -24,10 +24,6 @@ onAuthStateChanged(auth, (user) => {
     await signOut(auth);
     window.location.href = "login.html"; // Redireciona para a página de login após logout
   } catch (error) {
-    console.error('Erro ao fazer logout: ', error);
-  }
-});
-
 
 // Function to save clients to Firestore
 async function addClientToFirestore(client) {
