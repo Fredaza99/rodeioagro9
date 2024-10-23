@@ -45,21 +45,24 @@
   </div>
 
   <script>
-    function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+   function login() {
+  const username = document.getElementById('rodeioagronegocio@terra.com.br').value;
+  const password = document.getElementById('Zerodeio').value;
 
-      // Substitua esses valores pelos seus
-      const validUsername = 'rodeioagronegocio@terra.com.br';
-      const validPassword = 'Zerodeio';
+  // Substitua esses valores pelos seus
+  const validUsername = 'usuario';
+  const validPassword = 'senha123';
 
-      if (username === validUsername && password === validPassword) {
-        // Redireciona para a página principal ou qualquer outra página
-        window.location.href = 'index.html';
-      } else {
-        document.getElementById('error-message').textContent = 'Usuário ou senha incorretos!';
-      }
-    }
+  if (username === validUsername && password === validPassword) {
+    // Marca o usuário como autenticado
+    sessionStorage.setItem('loggedIn', 'true');
+    // Redireciona para a página principal ou qualquer outra página
+    window.location.href = 'index.html';
+  } else {
+    document.getElementById('error-message').textContent = 'Usuário ou senha incorretos!';
+  }
+}
+
   </script>
 </body>
 </html>
