@@ -7,23 +7,32 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js"></script> <!-- Firebase Authentication -->
-    <script>
-      // Configuração Firebase (substitua pelos dados do seu projeto Firebase)
-      const firebaseConfig = {
-        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-        authDomain: "rodeioagro-fee43.firebaseapp.com",
-        projectId: "rodeioagro-fee43",
-        storageBucket: "rodeioagro-fee43.appspot.com",
-        messagingSenderId: "981787707311",
-        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-        measurementId: "G-FM9TP3QF6N"
-      };
-
-      // Inicializar Firebase
-      firebase.initializeApp(firebaseConfig);
-    </script>
+ </script>
 </head>
 <body>
+     <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+     </script>
     <h1>Login</h1>
     <form id="loginForm">
         <label for="email">Email:</label>
