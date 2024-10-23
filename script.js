@@ -1,8 +1,12 @@
 // Import Firestore functions
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// Initialize Firestore
+// Import Firebase Auth functions
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+// Inicializa Firestore e Firebase Auth
 const db = getFirestore();
+const auth = getAuth();
 
 // Arrays to hold clients and stock data
 let clients = [];
