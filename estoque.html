@@ -32,6 +32,10 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app); // Initialize Firestore
+        // Redireciona para login.html se o usuário não estiver autenticado
+    if (!sessionStorage.getItem('loggedIn')) {
+        window.location.href = 'login.html';
+    }
 
     // Function to handle form submission
     document.getElementById('stockForm').addEventListener('submit', async (event) => {
