@@ -188,6 +188,25 @@ if (window.location.pathname.includes('estoque.html')) {
     }
   });
 
+  // Adicionar evento de input na barra de pesquisa
+document.getElementById('clientSearchInput').addEventListener('input', function () {
+    const searchQuery = this.value.toLowerCase(); // Obtém o valor digitado e converte para minúsculas
+
+    const tableRows = document.getElementById('stockTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of tableRows) {
+        const productNameCell = row.cells[0].textContent.toLowerCase(); // Nome do produto da linha
+
+        // Verifica se o nome do produto inclui o texto digitado na barra de pesquisa
+        if (productNameCell.includes(searchQuery)) {
+            row.style.display = ''; // Mostra a linha se corresponder
+        } else {
+            row.style.display = 'none'; // Oculta a linha se não corresponder
+        }
+    }
+});
+
+
   // Carrega os dados do estoque e preenche o dropdown ao carregar a página
   window.addEventListener('DOMContentLoaded', loadStockFromFirestore);
 }
