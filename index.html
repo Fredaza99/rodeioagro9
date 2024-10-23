@@ -29,6 +29,9 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app); // Initialize Firestore
+     if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'login.html';
+    }
 
     // Function to handle form submission
     document.getElementById('clientForm').addEventListener('submit', async (event) => {
