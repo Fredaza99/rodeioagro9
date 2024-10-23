@@ -20,8 +20,6 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Função para logout
-document.getElementById('logoutButton').addEventListener('click', async () => {
   try {
     await signOut(auth);
     window.location.href = "login.html"; // Redireciona para a página de login após logout
