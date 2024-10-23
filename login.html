@@ -3,63 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>Login - Rodeio</title>
+  <title>Login Simples</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    .login-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .login-container input {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .login-container button {
+      padding: 10px;
+      width: 100%;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <!-- Script do Firebase para Autenticação -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  <div class="login-container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Nome de Usuário">
+    <input type="password" id="password" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+    <p id="error-message" style="color: red;"></p>
+  </div>
 
-    // Configuração do Firebase
-    const firebaseConfig = {
-    apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
-    };
-
-    // Inicializar Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-
-    // Função de login
-    document.getElementById('loginForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const email = document.getElementById('email').value;
+  <script>
+    function login() {
+      const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('Usuário logado: ', userCredential.user);
-        window.location.href = 'index.html'; // Redireciona para a página principal
-      } catch (error) {
-        console.error('Erro ao fazer login: ', error);
-        document.getElementById('error-message').textContent = "Erro ao fazer login. Verifique suas credenciais.";
+      // Substitua esses valores pelos seus
+      const validUsername = 'usuario';
+      const validPassword = 'senha123';
+
+      if (username === validUsername && password === validPassword) {
+        // Redireciona para a página principal ou qualquer outra página
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('error-message').textContent = 'Usuário ou senha incorretos!';
       }
-    });
+    }
   </script>
-
-  <!-- Formulário de login -->
-  <section class="login-container">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <label for="email">Email:</label>
-      <input type="email" id="email" required placeholder="Digite seu email">
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required placeholder="Digite sua senha">
-
-      <button type="submit">Entrar</button>
-      <p id="error-message" style="color: red;"></p>
-    </form>
-  </section>
-
-<script type="module" src="script.js"></script>  
 </body>
 </html>
+
 
