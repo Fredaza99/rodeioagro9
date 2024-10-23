@@ -27,7 +27,6 @@ async function addStockToFirestore(product) {
     console.error('Erro ao salvar produto: ', error);
   }
 }
-
 // Função para lidar com o login
 document.getElementById('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();  // Evita o envio padrão do formulário
@@ -36,7 +35,7 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
     const password = document.getElementById('password').value;
 
     // Usar Firebase Authentication para fazer login com e-mail e senha
-    firebase.auth().signInWithEmailAndPassword(email, password)
+    auth.signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
         // Login bem-sucedido
         const user = userCredential.user;
@@ -52,21 +51,15 @@ document.getElementById('loginForm').addEventListener('submit', function (e) {
     });
 });
 
-// Verificar se o usuário já está logado
-firebase.auth().onAuthStateChanged((user) => {
+// Verificar se o usuário já está logado e redirecionar para o index
+auth.onAuthStateChanged((user) => {
     if (user) {
         // Se o usuário já está logado, redireciona para a página principal
         window.location.href = 'index.html';
     }
 });
 
-// Verificar se o usuário está autenticado
-firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
-        // Se o usuário não está logado, redireciona para a página de login
-        window.location.href = 'login.html';
-    }
-});
+
 
 
 
