@@ -1,6 +1,6 @@
 // Import Firestore functions
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
 // Initialize Firestore
 const db = getFirestore();
 
@@ -11,19 +11,6 @@ let stock = [];
 
 // Initialize Firebase Authentication
 const auth = getAuth();
-
-// Função para verificar se o usuário está autenticado
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    // Se o usuário não estiver autenticado, redirecionar para a página de login
-    window.location.href = "login.html";
-  }
-});
-
-  try {
-    await signOut(auth);
-    window.location.href = "login.html"; // Redireciona para a página de login após logout
-  } catch (error) {
 
 // Function to save clients to Firestore
 async function addClientToFirestore(client) {
