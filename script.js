@@ -110,7 +110,7 @@ if (window.location.pathname.includes('pedidos.html')) {
     }
   }
 
- function editClientRow(row, clientId) {
+function editClientRow(row, clientId) {
   const cells = row.querySelectorAll('td');
 
   const originalClientName = cells[0].textContent;
@@ -133,11 +133,11 @@ if (window.location.pathname.includes('pedidos.html')) {
   editButton.classList.remove('edit-client');
   editButton.classList.add('save-client');
 
-  // Remover qualquer event listener anterior para evitar múltiplos listeners
+  // Remove event listener anterior (evita duplicidade)
   const newButton = editButton.cloneNode(true);
   editButton.replaceWith(newButton);
 
-  // Ao clicar em "Salvar", atualiza o Firestore
+  // Lógica para atualizar os dados no Firestore
   newButton.addEventListener('click', async () => {
     const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
     const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
@@ -169,6 +169,7 @@ if (window.location.pathname.includes('pedidos.html')) {
     }
   });
 }
+
 
   // Load clients when the orders page is accessed
   loadClientsFromFirestore();
