@@ -302,6 +302,46 @@ input[type="password"]:focus {
     font-size: 14px; /* Tamanho da fonte */
 }
 
+/* Estilo para a seção de totais */
+.totals-cards {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0; /* Reduzir margem superior e inferior */
+  gap: 15px; /* Diminuir o espaço entre os cartões */
+}
+
+.card {
+  background-color: #d5d9e6;
+  padding: 15px; /* Reduzir o padding interno */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  flex: 1;
+  transition: transform 0.3s;
+  min-width: 150px; /* Definir largura mínima para garantir que não fiquem muito pequenos */
+}
+
+.card:hover {
+  transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
+}
+
+.card span {
+  font-size: 36px; /* Reduzir o tamanho do ícone */
+  color: #007bff;
+  margin-bottom: 5px; /* Ajustar espaço abaixo do ícone */
+}
+
+.card p {
+  font-size: 16px; /* Reduzir o tamanho da fonte */
+  margin: 5px 0 3px; /* Ajustar margens */
+  color: #333;
+}
+
+.card h2 {
+  font-size: 24px; /* Reduzir o tamanho do valor total */
+  margin: 0;
+  color: #00c42e;
+}
 
 
   
