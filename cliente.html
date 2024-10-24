@@ -6,16 +6,14 @@
     <title>Pesquisar Clientes - Agronegócio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-     <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
 </head>
 <body>
   <script type="module">
-    // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-    // Your web app's Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -26,109 +24,166 @@
       measurementId: "G-FM9TP3QF6N"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
-    const db = getFirestore(app); // Initialize Firestore
-        // Redireciona para login.html se o usuário não estiver autenticado
+    const db = getFirestore(app);
+
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
 
-    // Function to load clients from Firestore
-  async function loadClientsFromFirestore() {
-    const clientsCollection = collection(db, 'clients'); // Reference to the 'clients' collection
-    const querySnapshot = await getDocs(clientsCollection); // Fetch documents
+    async function loadClientsFromFirestore() {
+      const clientsCollection = collection(db, 'clients');
+      const querySnapshot = await getDocs(clientsCollection);
 
-    const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-    const productFilterDropdown = document.getElementById('productFilter');
-    clientHistoryTableBody.innerHTML = ''; // Clear the table before populating
+      const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+      const productFilterDropdown = document.getElementById('productFilter');
+      clientHistoryTableBody.innerHTML = '';
 
-    const productsSet = new Set(); // To store product names for the dropdown
+      const clients = [];
+      const productsSet = new Set();
 
-    querySnapshot.forEach((docSnapshot) => {
-      const client = docSnapshot.data();
-      const row = document.createElement('tr'); // Create a new row for each client
-      row.innerHTML = `
-        <td>${client.clientName}</td>
-        <td>${client.productName}</td>
-        <td>${client.entryDate}</td>
-        <td>${client.exitDate || 'N/A'}</td>
-        <td>${client.entryQuantity || 0}</td>
-        <td>${client.exitQuantity || 0}</td>
-        <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
-        <td><button class="delete-client" data-id="${docSnapshot.id}">Excluir</button></td>
-      `;
-      clientHistoryTableBody.appendChild(row); // Append the new row to the table body
-      productsSet.add(client.productName); // Add the product to the set
-    });
+      querySnapshot.forEach(docSnapshot => {
+        const client = docSnapshot.data();
+        clients.push({ id: docSnapshot.id, ...client });
+        productsSet.add(client.productName);
+      });
 
-    // Populate the dropdown with unique product names
-    productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-    productsSet.forEach(productName => {
-      const option = document.createElement('option');
-      option.value = productName;
-      option.textContent = productName;
-      productFilterDropdown.appendChild(option);
-    });
+      // Ordenar os clientes por nome
+      clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-    // Add delete functionality to the buttons
-    document.querySelectorAll('.delete-client').forEach(button => {
-      button.addEventListener('click', async () => {
-        const clientId = button.getAttribute('data-id');
+      clients.forEach(client => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${client.clientName}</td>
+          <td>${client.productName}</td>
+          <td>${client.entryDate}</td>
+          <td>${client.exitDate || 'N/A'}</td>
+          <td>${client.entryQuantity || 0}</td>
+          <td>${client.exitQuantity || 0}</td>
+          <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+          <td>
+            <button class="edit-client" data-id="${client.id}">Editar</button>
+            <button class="delete-client" data-id="${client.id}">Excluir</button>
+          </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+      });
+
+      // Popular o dropdown com nomes de produtos únicos
+      productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+      productsSet.forEach(productName => {
+        const option = document.createElement('option');
+        option.value = productName;
+        option.textContent = productName;
+        productFilterDropdown.appendChild(option);
+      });
+
+      // Adicionar funcionalidade de excluir e editar
+      document.querySelectorAll('.delete-client').forEach(button => {
+        button.addEventListener('click', async () => {
+          const clientId = button.getAttribute('data-id');
+          try {
+            await deleteDoc(doc(db, 'clients', clientId));
+            alert('Cliente excluído com sucesso!');
+            loadClientsFromFirestore();
+          } catch (error) {
+            console.error('Erro ao excluir cliente: ', error);
+            alert('Erro ao excluir cliente.');
+          }
+        });
+      });
+
+      document.querySelectorAll('.edit-client').forEach(button => {
+        button.addEventListener('click', () => {
+          const row = button.closest('tr');
+          editClientRow(row, button.getAttribute('data-id'));
+        });
+      });
+    }
+
+    function editClientRow(row, clientId) {
+      const cells = row.querySelectorAll('td');
+
+      const clientName = cells[0].textContent;
+      const productName = cells[1].textContent;
+      const entryDate = cells[2].textContent;
+      const exitDate = cells[3].textContent;
+      const entryQuantity = cells[4].textContent;
+      const exitQuantity = cells[5].textContent;
+
+      cells[0].innerHTML = `<input type="text" value="${clientName}" />`;
+      cells[1].innerHTML = `<input type="text" value="${productName}" />`;
+      cells[2].innerHTML = `<input type="date" value="${entryDate}" />`;
+      cells[3].innerHTML = `<input type="date" value="${exitDate}" />`;
+      cells[4].innerHTML = `<input type="number" value="${entryQuantity}" />`;
+      cells[5].innerHTML = `<input type="number" value="${exitQuantity}" />`;
+
+      const editButton = row.querySelector('.edit-client');
+      editButton.textContent = 'Salvar';
+      editButton.classList.remove('edit-client');
+      editButton.classList.add('save-client');
+
+      editButton.addEventListener('click', async () => {
+        const updatedClient = {
+          clientName: cells[0].querySelector('input').value,
+          productName: cells[1].querySelector('input').value,
+          entryDate: cells[2].querySelector('input').value,
+          exitDate: cells[3].querySelector('input').value || 'N/A',
+          entryQuantity: parseInt(cells[4].querySelector('input').value),
+          exitQuantity: parseInt(cells[5].querySelector('input').value)
+        };
+
         try {
-          await deleteDoc(doc(db, 'clients', clientId));
-          alert('Cliente excluído com sucesso!');
-          loadClientsFromFirestore(); // Reload the table after deletion
+          await updateDoc(doc(db, 'clients', clientId), updatedClient);
+          alert('Cliente atualizado com sucesso!');
+          loadClientsFromFirestore();
         } catch (error) {
-          console.error('Erro ao excluir cliente: ', error);
-          alert('Erro ao excluir cliente.');
+          console.error('Erro ao atualizar cliente: ', error);
         }
       });
-    });
-  }
+    }
 
-  // Filter function to search by client name and product, and calculate totals
-  function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-    
-    let totalEntradas = 0;
-    let totalSaldo = 0;
+    // Função de filtro da tabela
+    function filterTable() {
+      const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+      const productFilter = document.getElementById('productFilter').value.toLowerCase();
+      const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+      
+      let totalEntradas = 0;
+      let totalSaldo = 0;
 
-    tableRows.forEach(row => {
-      const clientName = row.cells[0].textContent.toLowerCase();
-      const productName = row.cells[1].textContent.toLowerCase();
-      const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-      const saldo = parseFloat(row.cells[6].textContent) || 0;
+      tableRows.forEach(row => {
+        const clientName = row.cells[0].textContent.toLowerCase();
+        const productName = row.cells[1].textContent.toLowerCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-      const matchesClient = clientName.includes(searchInput);
-      const matchesProduct = !productFilter || productName === productFilter;
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
 
-      if (matchesClient && matchesProduct) {
-        row.style.display = ''; // Show row
-        totalEntradas += entryQuantity; // Add to total entries
-        totalSaldo += saldo; // Add to total saldo
-      } else {
-        row.style.display = 'none'; // Hide row
-      }
-    });
+        if (matchesClient && matchesProduct) {
+          row.style.display = '';
+          totalEntradas += entryQuantity;
+          totalSaldo += saldo;
+        } else {
+          row.style.display = 'none';
+        }
+      });
 
-    // Update the totals in the UI
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
-  }
+      document.getElementById('totalEntradas').textContent = totalEntradas;
+      document.getElementById('totalSaldo').textContent = totalSaldo;
+    }
 
-  // Call the function to load clients when the page is loaded
-  loadClientsFromFirestore();
+    // Carregar os clientes quando a página for carregada
+    loadClientsFromFirestore();
 
-  // Add event listeners for filtering
-  document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-  document.getElementById('productFilter').addEventListener('change', filterTable);
-</script>
+    // Adicionar eventos para o filtro
+    document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+    document.getElementById('productFilter').addEventListener('change', filterTable);
+  </script>
 
-  <!-- Barra de Navegação com Logo -->
+  <!-- Barra de Navegação -->
   <nav>
     <div class="navbar-container">
       <ul class="navbar">
@@ -138,32 +193,32 @@
       </ul>
     </div>
   </nav>
-  <!-- Seção de Totais Destacada -->
-<div class="totals-cards">
-  <div class="card">
-    <span class="material-icons">add_circle</span>
-    <p>Total de Entradas</p>
-    <h2 id="totalEntradas">0</h2>
+
+  <!-- Seção de Totais -->
+  <div class="totals-cards">
+    <div class="card">
+      <span class="material-icons">add_circle</span>
+      <p>Total de Entradas</p>
+      <h2 id="totalEntradas">0</h2>
+    </div>
+    <div class="card">
+      <span class="material-icons">account_balance_wallet</span>
+      <p>Total de Saldo</p>
+      <h2 id="totalSaldo">0</h2>
+    </div>
   </div>
-  <div class="card">
-    <span class="material-icons">account_balance_wallet</span>
-    <p>Total de Saldo</p>
-    <h2 id="totalSaldo">0</h2>
-  </div>
-</div>
 
   <h1><span class="material-icons">person_search</span> Pesquisar Clientes</h1>
 
-  <!-- Campo de pesquisa por nome -->
+  <!-- Campo de pesquisa -->
   <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
   
-  <!-- Dropdown para filtrar por produto -->
+  <!-- Dropdown de filtro -->
   <select id="productFilter">
     <option value="">Todos os Produtos</option>
-    <!-- As opções de produtos serão adicionadas dinamicamente via JavaScript -->
   </select>
 
-  <!-- Tabela para exibir o histórico de pedidos do cliente -->
+  <!-- Tabela de clientes -->
   <table id="clientHistoryTable">
     <thead>
       <tr>
@@ -177,12 +232,9 @@
         <th>Ações</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Linhas da tabela serão preenchidas dinamicamente pelo JavaScript -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
-  <!-- Rodapé -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
   </footer>
@@ -191,6 +243,7 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
