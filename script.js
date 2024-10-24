@@ -110,51 +110,61 @@ if (window.location.pathname.includes('pedidos.html')) {
     }
   }
 
-  // Editar linha
-  function editClientRow(row, clientId) {
-    const cells = row.querySelectorAll('td');
+ function editClientRow(row, clientId) {
+  const cells = row.querySelectorAll('td');
 
-    const clientName = cells[0].textContent;
-    const productName = cells[1].textContent;
-    const entryDate = cells[2].textContent;
-    const exitDate = cells[3].textContent;
-    const entryQuantity = cells[4].textContent;
-    const exitQuantity = cells[5].textContent;
+  const originalClientName = cells[0].textContent;
+  const originalProductName = cells[1].textContent;
+  const originalEntryDate = cells[2].textContent;
+  const originalExitDate = cells[3].textContent;
+  const originalEntryQuantity = cells[4].textContent;
+  const originalExitQuantity = cells[5].textContent;
 
-    // Transformar as células em campos editáveis
-    cells[0].innerHTML = `<input type="text" value="${clientName}" />`;
-    cells[1].innerHTML = `<input type="text" value="${productName}" />`;
-    cells[2].innerHTML = `<input type="date" value="${entryDate}" />`;
-    cells[3].innerHTML = `<input type="date" value="${exitDate}" />`;
-    cells[4].innerHTML = `<input type="number" value="${entryQuantity}" />`;
-    cells[5].innerHTML = `<input type="number" value="${exitQuantity}" />`;
+  // Transformar as células em campos editáveis
+  cells[0].innerHTML = `<input type="text" value="${originalClientName}" />`;
+  cells[1].innerHTML = `<input type="text" value="${originalProductName}" />`;
+  cells[2].innerHTML = `<input type="date" value="${originalEntryDate}" />`;
+  cells[3].innerHTML = `<input type="date" value="${originalExitDate === 'N/A' ? '' : originalExitDate}" />`;
+  cells[4].innerHTML = `<input type="number" value="${originalEntryQuantity}" />`;
+  cells[5].innerHTML = `<input type="number" value="${originalExitQuantity}" />`;
 
-    // Mudar o botão "Editar" para "Salvar"
-    const editButton = row.querySelector('.edit-btn');
-    editButton.textContent = 'Salvar';
-    editButton.classList.remove('edit-btn');
-    editButton.classList.add('save-btn');
+  const editButton = row.querySelector('.edit-client');
+  editButton.textContent = 'Salvar';
+  editButton.classList.remove('edit-client');
+  editButton.classList.add('save-client');
 
-    // Ao clicar em "Salvar", atualizar o Firestore
-    editButton.addEventListener('click', async () => {
-      const updatedClient = {
-        clientName: cells[0].querySelector('input').value,
-        productName: cells[1].querySelector('input').value,
-        entryDate: cells[2].querySelector('input').value,
-        exitDate: cells[3].querySelector('input').value || 'N/A',
-        entryQuantity: parseInt(cells[4].querySelector('input').value),
-        exitQuantity: parseInt(cells[5].querySelector('input').value)
-      };
+  // Ao clicar em "Salvar", atualiza o Firestore
+  editButton.addEventListener('click', async () => {
+    const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
+    const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
+    const updatedEntryDate = cells[2].querySelector('input').value || originalEntryDate;
+    const updatedExitDate = cells[3].querySelector('input').value || originalExitDate;
+    const updatedEntryQuantity = parseInt(cells[4].querySelector('input').value) || parseInt(originalEntryQuantity);
+    const updatedExitQuantity = parseInt(cells[5].querySelector('input').value) || parseInt(originalExitQuantity);
 
-      try {
-        await updateDoc(doc(db, 'clients', clientId), updatedClient);
-        alert('Cliente atualizado com sucesso!');
-        window.location.reload(); // Recarrega a tabela após atualização
-      } catch (error) {
-        console.error('Erro ao atualizar cliente: ', error);
-      }
-    });
-  }
+    // Atualiza o saldo
+    const updatedSaldo = updatedEntryQuantity - updatedExitQuantity;
+
+    const updatedClient = {
+      clientName: updatedClientName,
+      productName: updatedProductName,
+      entryDate: updatedEntryDate,
+      exitDate: updatedExitDate || 'N/A',
+      entryQuantity: updatedEntryQuantity,
+      exitQuantity: updatedExitQuantity,
+      saldo: updatedSaldo
+    };
+
+    try {
+      await updateDoc(doc(db, 'clients', clientId), updatedClient);
+      alert('Cliente atualizado com sucesso!');
+      loadClientsFromFirestore(); // Recarregar a tabela após a atualização
+    } catch (error) {
+      console.error('Erro ao atualizar cliente: ', error);
+      alert('Erro ao atualizar cliente.');
+    }
+  });
+}
 
   // Load clients when the orders page is accessed
   loadClientsFromFirestore();
