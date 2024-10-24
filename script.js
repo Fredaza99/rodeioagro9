@@ -113,7 +113,7 @@ if (window.location.pathname.includes('pedidos.html')) {
 function editClientRow(row, clientId) {
   const cells = row.querySelectorAll('td');
 
-  // Guardar os valores originais
+  // Salvar os valores originais
   const originalClientName = cells[0].textContent;
   const originalProductName = cells[1].textContent;
   const originalEntryDate = cells[2].textContent;
@@ -130,17 +130,20 @@ function editClientRow(row, clientId) {
   cells[5].innerHTML = `<input type="number" value="${originalExitQuantity}" />`;
 
   // Alterar o botão de editar para salvar
-  const editButton = row.querySelector('button');
+  const editButton = row.querySelector('.edit-client');
   editButton.textContent = 'Salvar';
-  editButton.classList.remove('edit-btn');
-  editButton.classList.add('save-btn');
+  editButton.classList.remove('edit-client');
+  editButton.classList.add('save-client');
 
-  // Remover listeners antigos
-  const newButton = editButton.cloneNode(true);
-  editButton.replaceWith(newButton);
+  // Remover event listeners antigos (evitar múltiplos eventos)
+  editButton.replaceWith(editButton.cloneNode(true));
 
-  // Adicionar listener para salvar
-  newButton.addEventListener('click', async () => {
+  // Selecionar o botão de salvar recém-adicionado
+  const saveButton = row.querySelector('.save-client');
+
+  // Adicionar um único listener ao botão de salvar
+  saveButton.addEventListener('click', async () => {
+    // Coletar os valores atualizados dos inputs
     const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
     const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
     const updatedEntryDate = cells[2].querySelector('input').value || originalEntryDate;
@@ -148,9 +151,10 @@ function editClientRow(row, clientId) {
     const updatedEntryQuantity = parseInt(cells[4].querySelector('input').value) || parseInt(originalEntryQuantity);
     const updatedExitQuantity = parseInt(cells[5].querySelector('input').value) || parseInt(originalExitQuantity);
 
-    // Atualizar saldo
+    // Atualizar o saldo
     const updatedSaldo = updatedEntryQuantity - updatedExitQuantity;
 
+    // Novo objeto cliente com os valores atualizados
     const updatedClient = {
       clientName: updatedClientName,
       productName: updatedProductName,
@@ -158,20 +162,40 @@ function editClientRow(row, clientId) {
       exitDate: updatedExitDate || 'N/A',
       entryQuantity: updatedEntryQuantity,
       exitQuantity: updatedExitQuantity,
-      saldo: updatedSaldo,
+      saldo: updatedSaldo
     };
 
     try {
       // Atualizar o documento no Firestore
       await updateDoc(doc(db, 'clients', clientId), updatedClient);
+
+      // Exibir uma mensagem de sucesso
       alert('Cliente atualizado com sucesso!');
-      loadClientsFromFirestore(); // Recarregar a tabela
+
+      // Voltar ao modo de visualização (não editável)
+      cells[0].textContent = updatedClientName;
+      cells[1].textContent = updatedProductName;
+      cells[2].textContent = updatedEntryDate;
+      cells[3].textContent = updatedExitDate || 'N/A';
+      cells[4].textContent = updatedEntryQuantity;
+      cells[5].textContent = updatedExitQuantity;
+      cells[6].textContent = updatedSaldo;
+
+      // Voltar o botão para "Editar"
+      saveButton.textContent = 'Editar';
+      saveButton.classList.remove('save-client');
+      saveButton.classList.add('edit-client');
+
+      // Remover o listener "Salvar" e voltar para o comportamento de "Editar"
+      saveButton.removeEventListener('click', null);
+      saveButton.addEventListener('click', () => editClientRow(row, clientId));
     } catch (error) {
       console.error('Erro ao atualizar cliente: ', error);
       alert('Erro ao atualizar cliente.');
     }
   });
 }
+
 
 
 
