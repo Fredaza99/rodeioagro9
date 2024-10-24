@@ -113,31 +113,33 @@ if (window.location.pathname.includes('pedidos.html')) {
 function editClientRow(row, clientId) {
   const cells = row.querySelectorAll('td');
 
+  // Guardar os valores originais
   const originalClientName = cells[0].textContent;
   const originalProductName = cells[1].textContent;
   const originalEntryDate = cells[2].textContent;
-  const originalExitDate = cells[3].textContent;
+  const originalExitDate = cells[3].textContent === 'N/A' ? '' : cells[3].textContent;
   const originalEntryQuantity = cells[4].textContent;
   const originalExitQuantity = cells[5].textContent;
 
-  // Transformar as células em campos editáveis
+  // Tornar as células editáveis
   cells[0].innerHTML = `<input type="text" value="${originalClientName}" />`;
   cells[1].innerHTML = `<input type="text" value="${originalProductName}" />`;
   cells[2].innerHTML = `<input type="date" value="${originalEntryDate}" />`;
-  cells[3].innerHTML = `<input type="date" value="${originalExitDate === 'N/A' ? '' : originalExitDate}" />`;
+  cells[3].innerHTML = `<input type="date" value="${originalExitDate}" />`;
   cells[4].innerHTML = `<input type="number" value="${originalEntryQuantity}" />`;
   cells[5].innerHTML = `<input type="number" value="${originalExitQuantity}" />`;
 
-  const editButton = row.querySelector('.edit-client');
+  // Alterar o botão de editar para salvar
+  const editButton = row.querySelector('button');
   editButton.textContent = 'Salvar';
-  editButton.classList.remove('edit-client');
-  editButton.classList.add('save-client');
+  editButton.classList.remove('edit-btn');
+  editButton.classList.add('save-btn');
 
-  // Remove event listener anterior (evita duplicidade)
+  // Remover listeners antigos
   const newButton = editButton.cloneNode(true);
   editButton.replaceWith(newButton);
 
-  // Lógica para atualizar os dados no Firestore
+  // Adicionar listener para salvar
   newButton.addEventListener('click', async () => {
     const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
     const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
@@ -146,7 +148,7 @@ function editClientRow(row, clientId) {
     const updatedEntryQuantity = parseInt(cells[4].querySelector('input').value) || parseInt(originalEntryQuantity);
     const updatedExitQuantity = parseInt(cells[5].querySelector('input').value) || parseInt(originalExitQuantity);
 
-    // Atualiza o saldo
+    // Atualizar saldo
     const updatedSaldo = updatedEntryQuantity - updatedExitQuantity;
 
     const updatedClient = {
@@ -156,19 +158,21 @@ function editClientRow(row, clientId) {
       exitDate: updatedExitDate || 'N/A',
       entryQuantity: updatedEntryQuantity,
       exitQuantity: updatedExitQuantity,
-      saldo: updatedSaldo
+      saldo: updatedSaldo,
     };
 
     try {
+      // Atualizar o documento no Firestore
       await updateDoc(doc(db, 'clients', clientId), updatedClient);
       alert('Cliente atualizado com sucesso!');
-      loadClientsFromFirestore(); // Recarregar a tabela após a atualização
+      loadClientsFromFirestore(); // Recarregar a tabela
     } catch (error) {
       console.error('Erro ao atualizar cliente: ', error);
       alert('Erro ao atualizar cliente.');
     }
   });
 }
+
 
 
   // Load clients when the orders page is accessed
