@@ -35,85 +35,97 @@
     }
 
     // Function to load clients from Firestore
-    async function loadClientsFromFirestore() {
-      const clientsCollection = collection(db, 'clients'); // Reference to the 'clients' collection
-      const querySnapshot = await getDocs(clientsCollection); // Fetch documents
+  async function loadClientsFromFirestore() {
+    const clientsCollection = collection(db, 'clients'); // Reference to the 'clients' collection
+    const querySnapshot = await getDocs(clientsCollection); // Fetch documents
 
-      const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-      const productFilterDropdown = document.getElementById('productFilter');
-      clientHistoryTableBody.innerHTML = ''; // Clear the table before populating
+    const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+    const productFilterDropdown = document.getElementById('productFilter');
+    clientHistoryTableBody.innerHTML = ''; // Clear the table before populating
 
-      const productsSet = new Set(); // To store product names for the dropdown
+    const productsSet = new Set(); // To store product names for the dropdown
 
-      querySnapshot.forEach((docSnapshot) => {
-        const client = docSnapshot.data();
-        const row = document.createElement('tr'); // Create a new row for each client
-        row.innerHTML = `
-          <td>${client.clientName}</td>
-          <td>${client.productName}</td>
-          <td>${client.entryDate}</td>
-          <td>${client.exitDate || 'N/A'}</td>
-          <td>${client.entryQuantity || 0}</td>
-          <td>${client.exitQuantity || 0}</td>
-          <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
-          <td><button class="delete-client" data-id="${docSnapshot.id}">Excluir</button></td>
-        `;
-        clientHistoryTableBody.appendChild(row); // Append the new row to the table body
-        productsSet.add(client.productName); // Add the product to the set
-      });
+    querySnapshot.forEach((docSnapshot) => {
+      const client = docSnapshot.data();
+      const row = document.createElement('tr'); // Create a new row for each client
+      row.innerHTML = `
+        <td>${client.clientName}</td>
+        <td>${client.productName}</td>
+        <td>${client.entryDate}</td>
+        <td>${client.exitDate || 'N/A'}</td>
+        <td>${client.entryQuantity || 0}</td>
+        <td>${client.exitQuantity || 0}</td>
+        <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+        <td><button class="delete-client" data-id="${docSnapshot.id}">Excluir</button></td>
+      `;
+      clientHistoryTableBody.appendChild(row); // Append the new row to the table body
+      productsSet.add(client.productName); // Add the product to the set
+    });
 
-      // Populate the dropdown with unique product names
-      productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-      productsSet.forEach(productName => {
-        const option = document.createElement('option');
-        option.value = productName;
-        option.textContent = productName;
-        productFilterDropdown.appendChild(option);
-      });
+    // Populate the dropdown with unique product names
+    productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+    productsSet.forEach(productName => {
+      const option = document.createElement('option');
+      option.value = productName;
+      option.textContent = productName;
+      productFilterDropdown.appendChild(option);
+    });
 
-      // Add delete functionality to the buttons
-      document.querySelectorAll('.delete-client').forEach(button => {
-        button.addEventListener('click', async () => {
-          const clientId = button.getAttribute('data-id');
-          try {
-            await deleteDoc(doc(db, 'clients', clientId));
-            alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore(); // Reload the table after deletion
-          } catch (error) {
-            console.error('Erro ao excluir cliente: ', error);
-            alert('Erro ao excluir cliente.');
-          }
-        });
-      });
-    }
-
-    // Filter function to search by client name
-    function filterTable() {
-      const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
-      const productFilter = document.getElementById('productFilter').value.toLowerCase();
-      const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
-      tableRows.forEach(row => {
-        const clientName = row.cells[0].textContent.toLowerCase();
-        const productName = row.cells[1].textContent.toLowerCase();
-        const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = !productFilter || productName === productFilter;
-
-        if (matchesClient && matchesProduct) {
-          row.style.display = ''; // Show row
-        } else {
-          row.style.display = 'none'; // Hide row
+    // Add delete functionality to the buttons
+    document.querySelectorAll('.delete-client').forEach(button => {
+      button.addEventListener('click', async () => {
+        const clientId = button.getAttribute('data-id');
+        try {
+          await deleteDoc(doc(db, 'clients', clientId));
+          alert('Cliente excluído com sucesso!');
+          loadClientsFromFirestore(); // Reload the table after deletion
+        } catch (error) {
+          console.error('Erro ao excluir cliente: ', error);
+          alert('Erro ao excluir cliente.');
         }
       });
-    }
+    });
+  }
 
-    // Call the function to load clients when the page is loaded
-    loadClientsFromFirestore();
+  // Filter function to search by client name and product, and calculate totals
+  function filterTable() {
+    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
-    // Add event listeners for filtering
-    document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-    document.getElementById('productFilter').addEventListener('change', filterTable);
-  </script>
+    tableRows.forEach(row => {
+      const clientName = row.cells[0].textContent.toLowerCase();
+      const productName = row.cells[1].textContent.toLowerCase();
+      const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+      const saldo = parseFloat(row.cells[6].textContent) || 0;
+
+      const matchesClient = clientName.includes(searchInput);
+      const matchesProduct = !productFilter || productName === productFilter;
+
+      if (matchesClient && matchesProduct) {
+        row.style.display = ''; // Show row
+        totalEntradas += entryQuantity; // Add to total entries
+        totalSaldo += saldo; // Add to total saldo
+      } else {
+        row.style.display = 'none'; // Hide row
+      }
+    });
+
+    // Update the totals in the UI
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+  }
+
+  // Call the function to load clients when the page is loaded
+  loadClientsFromFirestore();
+
+  // Add event listeners for filtering
+  document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+  document.getElementById('productFilter').addEventListener('change', filterTable);
+</script>
 
   <!-- Barra de Navegação com Logo -->
   <nav>
@@ -125,6 +137,19 @@
       </ul>
     </div>
   </nav>
+  <!-- Seção de Totais Destacada -->
+<div class="totals-cards">
+  <div class="card">
+    <span class="material-icons">add_circle</span>
+    <p>Total de Entradas</p>
+    <h2 id="totalEntradas">0</h2>
+  </div>
+  <div class="card">
+    <span class="material-icons">account_balance_wallet</span>
+    <p>Total de Saldo</p>
+    <h2 id="totalSaldo">0</h2>
+  </div>
+</div>
 
   <h1><span class="material-icons">person_search</span> Pesquisar Clientes</h1>
 
@@ -165,6 +190,16 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 
