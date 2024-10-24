@@ -343,5 +343,54 @@ input[type="password"]:focus {
   color: #00c42e;
 }
 
+/* Estilização do botão de excluir */
+.delete-btn {
+    background-color: #e92c17;
+    color: white;
+    border: none;
+    padding: 8px 15px;  /* Aumentar um pouco o padding para maior cliqueabilidade */
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px; /* Ajustar o tamanho da fonte */
+    transition: background-color 0.3s ease; /* Transição suave ao passar o mouse */
+}
+
+.delete-btn:hover {
+    background-color: #c0392b; /* Um tom mais escuro de vermelho no hover */
+}
+
+/* Estilização do botão de editar */
+.edit-client {
+    background-color: #3498db; /* Um azul suave para diferenciar do vermelho */
+    color: white;
+    border: none;
+    padding: 8px 15px; /* Aumentar um pouco o padding para maior cliqueabilidade */
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px; /* Ajustar o tamanho da fonte */
+    transition: background-color 0.3s ease; /* Transição suave ao passar o mouse */
+}
+
+.edit-client:hover {
+    background-color: #2980b9; /* Um tom mais escuro de azul no hover */
+}
+
+/* Estilização do botão de salvar */
+.save-client {
+    background-color: #2ecc71; /* Verde para indicar que é uma ação de salvamento */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.save-client:hover {
+    background-color: #27ae60; /* Um verde mais escuro no hover */
+}
+
+
 
   
