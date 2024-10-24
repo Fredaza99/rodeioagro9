@@ -133,8 +133,12 @@ if (window.location.pathname.includes('pedidos.html')) {
   editButton.classList.remove('edit-client');
   editButton.classList.add('save-client');
 
+  // Remover qualquer event listener anterior para evitar múltiplos listeners
+  const newButton = editButton.cloneNode(true);
+  editButton.replaceWith(newButton);
+
   // Ao clicar em "Salvar", atualiza o Firestore
-  editButton.addEventListener('click', async () => {
+  newButton.addEventListener('click', async () => {
     const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
     const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
     const updatedEntryDate = cells[2].querySelector('input').value || originalEntryDate;
