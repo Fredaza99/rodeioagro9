@@ -1,7 +1,7 @@
 // Import Firestore functions
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// Inicializa Firestore e Firebase Auth
+// Inicializa Firestore
 const db = getFirestore();
 
 // Function to save clients to Firestore
@@ -51,42 +51,27 @@ if (window.location.pathname.includes('index.html')) {
 }
 
 // ------------------------------
-// Função para calcular os totais de entradas e saldos
-// ------------------------------
-function calculateTotals() {
-  const tableRows = document.querySelectorAll('#ordersTable tbody tr');
-  let totalEntradas = 0;
-  let totalSaldo = 0;
-
-  // Itera sobre as linhas da tabela e soma apenas as visíveis
-  tableRows.forEach(row => {
-    if (row.style.display !== 'none') { // Considera apenas as linhas visíveis
-      const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-      const saldo = parseFloat(row.cells[6].textContent) || 0;
-
-      totalEntradas += entryQuantity;
-      totalSaldo += saldo;
-    }
-  });
-
-  // Atualiza os valores de total no HTML
-  document.getElementById('totalEntradas').textContent = totalEntradas.toFixed(2);
-  document.getElementById('totalSaldo').textContent = totalSaldo.toFixed(2);
-}
-
-// ------------------------------
 // Lista de Pedidos (pedidos.html)
 // ------------------------------
 if (window.location.pathname.includes('pedidos.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
   table.innerHTML = ''; // Clear the table before filling it
 
-  // Function to load clients from Firestore
+  // Function to load clients from Firestore and sort them alphabetically
   async function loadClientsFromFirestore() {
     try {
       const querySnapshot = await getDocs(collection(db, 'clients'));
+      const clients = [];
+
       querySnapshot.forEach((docSnapshot) => {
         const client = docSnapshot.data();
+        clients.push({ id: docSnapshot.id, ...client });
+      });
+
+      // Ordena os clientes por nome
+      clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+      clients.forEach(client => {
         const newRow = table.insertRow();
         newRow.insertCell(0).textContent = client.clientName;
         newRow.insertCell(1).textContent = client.productName;
@@ -96,14 +81,22 @@ if (window.location.pathname.includes('pedidos.html')) {
         newRow.insertCell(5).textContent = client.exitQuantity;
         newRow.insertCell(6).textContent = client.saldo;
 
-        // Add delete button
-        const deleteCell = newRow.insertCell(7);
+        // Edit button
+        const editCell = newRow.insertCell(7);
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Editar';
+        editButton.classList.add('edit-btn');
+        editButton.addEventListener('click', () => editClientRow(newRow, client.id));
+        editCell.appendChild(editButton);
+
+        // Delete button
+        const deleteCell = newRow.insertCell(8);
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Excluir';
         deleteButton.classList.add('delete-btn');
         deleteButton.addEventListener('click', async () => {
           try {
-            await deleteDoc(doc(db, 'clients', docSnapshot.id));
+            await deleteDoc(doc(db, 'clients', client.id));
             console.log('Cliente removido com sucesso');
             window.location.reload(); // Reload the page to update the table
           } catch (error) {
@@ -112,59 +105,62 @@ if (window.location.pathname.includes('pedidos.html')) {
         });
         deleteCell.appendChild(deleteButton);
       });
-
-      // Recalcula os totais sempre que os clientes forem carregados
-      calculateTotals();
-
     } catch (error) {
       console.error('Erro ao carregar clientes: ', error);
     }
   }
 
+  // Editar linha
+  function editClientRow(row, clientId) {
+    const cells = row.querySelectorAll('td');
+
+    const clientName = cells[0].textContent;
+    const productName = cells[1].textContent;
+    const entryDate = cells[2].textContent;
+    const exitDate = cells[3].textContent;
+    const entryQuantity = cells[4].textContent;
+    const exitQuantity = cells[5].textContent;
+
+    // Transformar as células em campos editáveis
+    cells[0].innerHTML = `<input type="text" value="${clientName}" />`;
+    cells[1].innerHTML = `<input type="text" value="${productName}" />`;
+    cells[2].innerHTML = `<input type="date" value="${entryDate}" />`;
+    cells[3].innerHTML = `<input type="date" value="${exitDate}" />`;
+    cells[4].innerHTML = `<input type="number" value="${entryQuantity}" />`;
+    cells[5].innerHTML = `<input type="number" value="${exitQuantity}" />`;
+
+    // Mudar o botão "Editar" para "Salvar"
+    const editButton = row.querySelector('.edit-btn');
+    editButton.textContent = 'Salvar';
+    editButton.classList.remove('edit-btn');
+    editButton.classList.add('save-btn');
+
+    // Ao clicar em "Salvar", atualizar o Firestore
+    editButton.addEventListener('click', async () => {
+      const updatedClient = {
+        clientName: cells[0].querySelector('input').value,
+        productName: cells[1].querySelector('input').value,
+        entryDate: cells[2].querySelector('input').value,
+        exitDate: cells[3].querySelector('input').value || 'N/A',
+        entryQuantity: parseInt(cells[4].querySelector('input').value),
+        exitQuantity: parseInt(cells[5].querySelector('input').value)
+      };
+
+      try {
+        await updateDoc(doc(db, 'clients', clientId), updatedClient);
+        alert('Cliente atualizado com sucesso!');
+        window.location.reload(); // Recarrega a tabela após atualização
+      } catch (error) {
+        console.error('Erro ao atualizar cliente: ', error);
+      }
+    });
+  }
+
   // Load clients when the orders page is accessed
   loadClientsFromFirestore();
-
-  // Evento de mudança no dropdown para filtrar a tabela e recalcular os totais
-  document.getElementById('productFilter').addEventListener('change', function () {
-    const selectedProduct = this.value.toLowerCase();
-
-    const tableRows = document.getElementById('ordersTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    for (let row of tableRows) {
-      const productNameCell = row.cells[1].textContent.toLowerCase();
-
-      if (selectedProduct === '' || productNameCell === selectedProduct) {
-        row.style.display = ''; // Mostra a linha se corresponder
-      } else {
-        row.style.display = 'none'; // Oculta a linha se não corresponder
-      }
-    }
-
-    // Recalcula os totais após o filtro
-    calculateTotals();
-  });
-
-  // Adicionar evento de input na barra de pesquisa e recalcular totais após pesquisa
-  document.getElementById('clientSearchInput').addEventListener('input', function () {
-    const searchQuery = this.value.toLowerCase();
-
-    const tableRows = document.getElementById('ordersTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    for (let row of tableRows) {
-      const clientNameCell = row.cells[0].textContent.toLowerCase();
-
-      if (clientNameCell.includes(searchQuery)) {
-        row.style.display = ''; // Mostra a linha se corresponder
-      } else {
-        row.style.display = 'none'; // Oculta a linha se não corresponder
-      }
-    }
-
-    // Recalcula os totais após a pesquisa
-    calculateTotals();
-  });
 }
 
+// ------------------------------
 // Controle de Estoque (estoque.html)
 // ------------------------------
 if (window.location.pathname.includes('estoque.html')) {
@@ -234,9 +230,46 @@ if (window.location.pathname.includes('estoque.html')) {
     }
   }
 
+  // Evento de mudança no dropdown para filtrar a tabela
+  document.getElementById('productFilter').addEventListener('change', function () {
+    const selectedProduct = this.value.toLowerCase(); // Obtém o valor selecionado e converte para minúsculas
+
+    const tableRows = document.getElementById('stockTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of tableRows) {
+      const productNameCell = row.cells[0].textContent.toLowerCase(); // Nome do produto da linha
+
+      // Verifica se o produto da linha corresponde ao selecionado
+      if (selectedProduct === '' || productNameCell === selectedProduct) {
+        row.style.display = ''; // Mostra a linha se corresponder ou se a opção for "Todos os Produtos"
+      } else {
+        row.style.display = 'none'; // Oculta a linha se não corresponder
+      }
+    }
+  });
+
+  // Adicionar evento de input na barra de pesquisa
+  document.getElementById('clientSearchInput').addEventListener('input', function () {
+    const searchQuery = this.value.toLowerCase(); // Obtém o valor digitado e converte para minúsculas
+
+    const tableRows = document.getElementById('stockTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let row of tableRows) {
+        const productNameCell = row.cells[0].textContent.toLowerCase(); // Nome do produto da linha
+
+        // Verifica se o nome do produto inclui o texto digitado na barra de pesquisa
+        if (productNameCell.includes(searchQuery)) {
+            row.style.display = ''; // Mostra a linha se corresponder
+        } else {
+            row.style.display = 'none'; // Oculta a linha se não corresponder
+        }
+    }
+  });
+
   // Carrega os dados do estoque e preenche o dropdown ao carregar a página
   window.addEventListener('DOMContentLoaded', loadStockFromFirestore);
 }
+
 
 
 
