@@ -45,7 +45,7 @@ body {
   .navbar a {
     color: white;
     text-decoration: none;
-    font-size: 16px;
+    font-size: 22px;
   }
   
   .navbar a:hover {
@@ -53,8 +53,8 @@ body {
   }
   
   .material-icons {
-    vertical-align: middle;
-    margin-right: 8px;
+    vertical-align: sub;
+    margin-right: 1px;
   }
   
   /* Form Styles */
