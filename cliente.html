@@ -42,19 +42,93 @@
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
             const row = document.createElement('tr');
+
+            // Define a ação como 'Entrada' ou 'Saída'
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
             row.innerHTML = `
-                <td>
-                    <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
-                    <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
-                </td>
+                <td>${action}</td>
                 <td>${client.clientName || ''}</td>
                 <td>${client.productName || ''}</td>
                 <td>${client.date || ''}</td>
                 <td>${client.entryQuantity || 0}</td>
                 <td>${client.exitQuantity || 0}</td>
                 <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
+                    <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
+                </td>
             `;
             clientHistoryTableBody.appendChild(row); // Adiciona a linha à tabela
+        });
+
+        // Adicionar funcionalidade para os botões de editar e excluir
+        addEventListenersToButtons();
+    }
+
+    function addEventListenersToButtons() {
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const clientId = button.getAttribute('data-id');
+                try {
+                    await deleteDoc(doc(db, 'clients', clientId));
+                    alert('Cliente excluído com sucesso!');
+                    loadClientsFromFirestore(); // Atualiza a lista após a exclusão
+                } catch (error) {
+                    console.error('Erro ao excluir cliente: ', error);
+                    alert('Erro ao excluir cliente.');
+                }
+            });
+        });
+
+        document.querySelectorAll('.edit-client').forEach(button => {
+            button.addEventListener('click', () => {
+                const row = button.closest('tr');
+                const clientId = button.getAttribute('data-id');
+                editClientRow(row, clientId);
+            });
+        });
+    }
+
+    function editClientRow(row, clientId) {
+        const cells = row.querySelectorAll('td');
+
+        // Tornar as células editáveis
+        const originalValues = [...cells].map(cell => cell.textContent);
+        cells.forEach((cell, index) => {
+            if (index > 0) { // Ignorar a coluna de ação
+                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            }
+        });
+
+        // Alterar o botão de editar para salvar
+        const editButton = row.querySelector('.edit-client');
+        editButton.textContent = 'Salvar';
+        editButton.classList.remove('edit-client');
+        editButton.classList.add('save-client');
+
+        editButton.addEventListener('click', async () => {
+            const updatedValues = [...cells].map((cell, index) => {
+                return index > 0 ? cell.querySelector('input').value : originalValues[index];
+            });
+
+            const updatedClient = {
+                clientName: updatedValues[1],
+                productName: updatedValues[2],
+                date: updatedValues[3],
+                entryQuantity: parseInt(updatedValues[4]),
+                exitQuantity: parseInt(updatedValues[5]),
+                saldo: parseInt(updatedValues[6])
+            };
+
+            try {
+                await updateDoc(doc(db, 'clients', clientId), updatedClient);
+                alert('Cliente atualizado com sucesso!');
+                loadClientsFromFirestore(); // Atualiza a lista após a edição
+            } catch (error) {
+                console.error('Erro ao atualizar cliente: ', error);
+                alert('Erro ao atualizar cliente.');
+            }
         });
     }
 
@@ -142,6 +216,7 @@
         <th>Quantidade Entrada</th>
         <th>Quantidade Retirada</th>
         <th>Saldo</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody></tbody>
