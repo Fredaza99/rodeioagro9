@@ -32,29 +32,29 @@
         window.location.href = 'login.html';
     }
 
-// Função para carregar clientes do Firestore e preencher a tabela de clientes com filtro de produtos
+// Função para carregar clientes do Firestore e preencher a tabela em cliente.html
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
     const querySnapshot = await getDocs(clientsCollection);
 
     const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-    const productFilterDropdown = document.getElementById('productFilter'); // Referência ao dropdown
+    const productFilterDropdown = document.getElementById('productFilter'); // Referência ao dropdown de filtro
     clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar as linhas
 
-    const clients = [];
-    const productsSet = new Set(); // Conjunto para armazenar nomes únicos de produtos
+    const clients = []; // Lista para armazenar os dados de clientes
+    const productsSet = new Set(); // Coletor de produtos únicos para o filtro
 
-    // Adiciona cada cliente à lista e coleta nomes de produtos
+    // Adiciona cada cliente ao array 'clients' e popula 'productsSet'
     querySnapshot.forEach(docSnapshot => {
         const client = docSnapshot.data();
         clients.push({ id: docSnapshot.id, ...client });
-        productsSet.add(client.productName); // Armazena os produtos únicos
+        productsSet.add(client.productName); // Coleta nomes únicos de produtos
     });
 
     // Ordena os clientes por nome
     clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-    // Preenche o dropdown com produtos únicos
+    // Preenche o dropdown de produtos únicos
     productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>'; // Opção padrão
     productsSet.forEach(productName => {
         const option = document.createElement('option');
@@ -63,12 +63,12 @@ async function loadClientsFromFirestore() {
         productFilterDropdown.appendChild(option);
     });
 
-    // Função para filtrar a tabela com base no dropdown e pesquisa de cliente
+    // Função para filtrar a tabela
     function filterTable() {
         const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
         const productFilter = productFilterDropdown.value.toLowerCase();
 
-        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar linhas filtradas
+        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar as linhas filtradas
 
         clients.forEach(client => {
             const matchesClient = client.clientName.toLowerCase().includes(searchInput);
@@ -93,16 +93,17 @@ async function loadClientsFromFirestore() {
         });
     }
 
-    // Eventos de filtro para o campo de pesquisa e o dropdown
+    // Adiciona eventos para o filtro de tabela
     document.getElementById('clientSearchInput').addEventListener('input', filterTable);
     productFilterDropdown.addEventListener('change', filterTable);
 
-    // Chama a função de filtro para exibir todos os clientes no início
+    // Exibe todos os clientes inicialmente
     filterTable();
 }
 
 // Chama a função para carregar os clientes ao carregar a página
 window.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
