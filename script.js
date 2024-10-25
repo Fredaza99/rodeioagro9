@@ -107,45 +107,29 @@ async function loadClientsFromFirestore() {
         });
 
         // Ordena os clientes alfabeticamente pelo campo 'clientName'
-        clients = clients.sort((a, b) => {
+        clients.sort((a, b) => {
             if (a.clientName && b.clientName) {
                 return a.clientName.localeCompare(b.clientName);
             }
-            return 0; // Caso não haja clientName, evita erros
+            return 0;
         });
 
-        // Seleciona o corpo da tabela e o limpa
+        // Limpa a tabela antes de preenchê-la
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela para evitar duplicação
+        clientHistoryTableBody.innerHTML = '';
 
-        // Preenche a tabela com os dados dos clientes ordenados
+        // Preenche a tabela com os dados ordenados
         clients.forEach(client => {
             const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
             row.innerHTML = `
-                <td>${action}</td>
                 <td>${client.clientName || ''}</td>
                 <td>${client.productName || ''}</td>
                 <td>${client.date || ''}</td>
                 <td>${client.entryQuantity || 0}</td>
                 <td>${client.exitQuantity || 0}</td>
                 <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
             `;
             clientHistoryTableBody.appendChild(row);
-        });
-
-        // Adiciona evento de confirmação para exclusão aos botões de exclusão
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const clientId = event.target.getAttribute('data-id');
-                if (confirm("Você tem certeza que deseja excluir este cliente?")) {
-                    deleteClient(clientId);
-                }
-            });
         });
     } catch (error) {
         console.error('Erro ao carregar clientes: ', error);
