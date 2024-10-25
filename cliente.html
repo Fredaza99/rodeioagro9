@@ -32,45 +32,36 @@
         window.location.href = 'login.html';
     }
 
-    async function loadClientsFromFirestore() {
-      const clientsCollection = collection(db, 'clients');
-      const querySnapshot = await getDocs(clientsCollection);
+ // Função para carregar clientes do Firestore e preencher a tabela de clientes
+async function loadClientsFromFirestore() {
+    const clientsCollection = collection(db, 'clients');
+    const querySnapshot = await getDocs(clientsCollection);
 
-      const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-      const productFilterDropdown = document.getElementById('productFilter');
-      clientHistoryTableBody.innerHTML = '';
+    const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+    clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de preencher
 
-      const clients = [];
-      const productsSet = new Set();
-
-      querySnapshot.forEach(docSnapshot => {
+    querySnapshot.forEach(docSnapshot => {
         const client = docSnapshot.data();
-        clients.push({ id: docSnapshot.id, ...client });
-        productsSet.add(client.productName);
-      });
 
-      // Ordenar os clientes por nome
-      clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+        // Cria a linha da tabela com as informações do cliente
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
+                <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
+            </td>
+            <td>${client.clientName || ''}</td>  <!-- Nome do Cliente -->
+            <td>${client.productName || ''}</td>  <!-- Nome do Produto -->
+            <td>${client.date || ''}</td>         <!-- Data -->
+            <td>${client.entryQuantity || 0}</td> <!-- Quantidade Entrada -->
+            <td>${client.exitQuantity || 0}</td>  <!-- Quantidade Retirada -->
+            <td>${client.saldo || 0}</td>         <!-- Saldo -->
+        `;
 
- // Dentro de loadClientsFromFirestore em cliente.html
-clients.forEach(client => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${client.clientName}</td>
-        <td>${client.productName}</td>
-        <td>${client.entryDate}</td>
-        <td>${client.exitDate || 'N/A'}</td>
-        <td>${client.entryQuantity || 0}</td>
-        <td>${client.exitQuantity || 0}</td>
-        <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
-        <td>${client.transactionType}</td> <!-- Exibe o tipo de transação -->
-        <td>
-            <button class="edit-client" data-id="${client.id}">Editar</button>
-            <button class="delete-btn" data-id="${client.id}">Excluir</button>
-        </td>
-    `;
-    clientHistoryTableBody.appendChild(row);
-});
+        clientHistoryTableBody.appendChild(row); // Adiciona a linha à tabela
+    });
+}
+
 
 
       // Popular o dropdown com nomes de produtos únicos
