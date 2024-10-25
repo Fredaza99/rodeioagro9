@@ -2,395 +2,250 @@
 body {
     font-family: Arial, sans-serif;
     background: #3D3B40;
-
-     margin: 0;
+    margin: 0;
     padding: 0;
-  }
-  
-  h1, h2 {
+}
+
+h1, h2 {
     color: whitesmoke;
     text-align: center;
     margin-top: 20px;
-  }
-  
-  nav {
+}
+
+nav {
     background-color: #202122;
-    padding: 5px 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-    
-  .logo-row{
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.logo-row {
     text-align: center;
-  }
-  .logo {
+}
+
+.logo {
     width: 175px;
     height: 175px;
-    text-align: center;
-  }
-  
-  .navbar {
+}
+
+.navbar {
     list-style: none;
     padding: 0;
     display: flex;
     gap: 5px;
-  }
-  
-  .navbar li {
-    display: inline;
-  }
-  
-  .navbar a {
+    justify-content: center;
+}
+
+.navbar a {
+    padding: 10px 15px;
     color: white;
-    text-decoration: none;
     font-size: 22px;
-  }
-  
-  .navbar a:hover {
-    color: #18bc9c;
-  }
-  
-  .material-icons {
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.navbar a:hover {
+    color: #00ADB5;
+    text-decoration: underline;
+}
+
+.material-icons {
     vertical-align: sub;
     margin-right: 1px;
-  }
-  
-  /* Form Styles */
-  form {
+}
+
+/* Form Styles */
+form {
     max-width: 600px;
     margin: 20px auto;
     background-color: #F3F8FF;
     padding: 37px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  
-  form label {
-    display:grid;
+}
+
+form label {
+    display: grid;
     margin-bottom: 5px;
     color: #333;
-  }
-  
-  form input[type="text"], form input[type="date"], form input[type="number"] {
+}
+
+form input[type="text"], form input[type="date"], form input[type="number"] {
     width: 100%;
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
-  }
-  
-  form button {
+    transition: all 0.2s ease-in-out;
+}
+
+form input[type="text"]:focus, form input[type="date"]:focus, form input[type="number"]:focus {
+    border-color: #18bc9c;
+    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+form button {
     padding: 10px 20px;
     background-color: #00ADB5;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
-  form button:hover {
+    transition: background-color 0.3s;
+}
+
+form button:hover {
     background-color: #16a085;
-  }
-  
-  /* Table Styles */
-  table {
+}
+
+form button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Table Styles */
+table {
     width: 90%;
     margin: 20px auto;
     border-collapse: collapse;
     background-color: #F3F8FF;
-  }
-  
-  table th, table td {
+}
+
+table th, table td {
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-  }
-  
-  table th {
+}
+
+table th {
     background-color: #527853;
     color: white;
-  }
-  
-  .delete-btn {
-    background-color: #e92c17;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .delete-btn:hover {
-    background-color: #c0392b;
-  }
-  
-  /* Barra de Pesquisa */
-  #orderSearchInput {
-    width: 40%;
-    padding: 10px;
-    margin: 20px auto;
-    display: block;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  #orderSearchInput:focus {
-    border-color: #18bc9c;
-    outline: none;
-    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-  }
-  
-  /* Footer */
-  footer {
     text-align: center;
-    padding: 0px;
-    background-color: transparent;
-    color: white;
-    position:static;
-    width: 100%;
-    bottom: 0;
-    font-size: 13px;
-  }
-
-  /* Estilo para a barra de pesquisa de clientes */
-#clientSearchInput {
-  width: 50%; /* Aumentar o tamanho para ser mais visível */
-  padding: 10px;
-  margin: 20px auto; /* Centralizar o campo */
-  display: block; /* Definir como block para aplicar margens corretamente */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#clientSearchInput:focus {
-  border-color: #18bc9c;
-  outline: none;
-  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+table tbody tr:hover {
+    background-color: rgba(82, 120, 83, 0.1);
+    transition: background-color 0.3s;
 }
 
-/* Estilo para o dropdown de produtos */
-#productFilter {
-  width: 50%; /* Mesma largura da barra de pesquisa */
-  padding: 10px;
-  margin: 20px auto; /* Centralizar o dropdown */
-  display: block; /* Para que o dropdown fique na mesma linha que a barra */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  background-color: #F3F8FF; /* Fundo branco para destacar o dropdown */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#productFilter:focus {
-  border-color: #18bc9c;
-  outline: none;
-  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-}
-
-/* Estilo para a barra de pesquisa de produtos no estoque */
-#stockSearchInput {
-  width: 50%; /* Largura aumentada para destacar */
-  padding: 10px;
-  margin: 20px auto; /* Centralizado com margem superior e inferior */
-  display: block; /* Para centralizar o campo */
-  border: 1px solid #F3F8FF;
-  border-radius: 5px;
-  font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#stockSearchInput:focus {
-  border-color: #18bc9c;
-  outline: none;
-  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-}
-
-/* Estilo para o dropdown de produtos no estoque */
-#stockFilter {
-  width: 50%; /* Mesma largura da barra de pesquisa */
-  padding: 10px;
-  margin: 20px auto; /* Centralizado */
-  display: block; /* Para que o dropdown também fique centralizado */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
-  background-color: white; /* Fundo branco para destacar o dropdown */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#stockFilter:focus {
-  border-color: #18bc9c;
-  outline: none;
-  box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-}
-
-/* Estilos para a página de login */
-.login-container {
-    max-width: 400px; /* Largura máxima do container */
-    margin: 50px auto; /* Margem superior para espaço em relação ao topo */
-    background-color: #F3F8FF; /* Fundo leve para o container */
-    padding: 30px; /* Espaçamento interno */
-    border-radius: 10px; /* Bordas arredondadas */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra para dar profundidade */
-}
-
-/* Estilo para o título da página de login */
-.login-container h1 {
-    color: #333; /* Cor do texto */
-    margin-bottom: 20px; /* Espaço abaixo do título */
-}
-
-/* Estilos para o grupo de entrada */
-.input-group {
-    margin-bottom: 15px; /* Espaço abaixo de cada grupo */
-}
-
-/* Estilo para labels */
-.input-group label {
-    color: #333; /* Cor do texto */
-    margin-bottom: 5px; /* Espaço abaixo do label */
-    font-weight: bold; /* Negrito para os labels */
-}
-
-/* Estilos para os inputs */
-input[type="text"],
-input[type="password"] {
-    width: 100%; /* Largura total */
-    padding: 12px; /* Espaçamento interno */
-    border: 1px solid #ddd; /* Borda padrão */
-    border-radius: 5px; /* Bordas arredondadas */
-    font-size: 16px; /* Tamanho da fonte */
-    transition: border-color 0.3s; /* Transição suave para a borda */
-}
-
-/* Estilo de foco para os inputs */
-input[type="text"]:focus,
-input[type="password"]:focus {
-    border-color: #00ADB5; /* Cor da borda ao focar */
-    outline: none; /* Remove o contorno padrão */
-}
-
-/* Estilos para o botão de login */
-.login-button {
-    width: 100%; /* Largura total */
-    padding: 12px; /* Espaçamento interno */
-    background-color: #00ADB5; /* Cor de fundo */
-    color: white; /* Cor do texto */
-    border: none; /* Remove a borda padrão */
-    border-radius: 5px; /* Bordas arredondadas */
-    font-size: 16px; /* Tamanho da fonte */
-    cursor: pointer; /* Cursor de mão ao passar sobre o botão */
-    transition: background-color 0.3s; /* Transição suave para a cor de fundo */
-}
-
-/* Estilo de hover para o botão */
-.login-button:hover {
-    background-color: #16a085; /* Cor ao passar o mouse */
-}
-
-/* Estilo para mensagens de erro */
-.error-message {
-    color: red; /* Cor vermelha */
-    text-align: center; /* Centraliza a mensagem */
-    margin-bottom: 10px; /* Espaço abaixo da mensagem */
-    font-size: 14px; /* Tamanho da fonte */
-}
-
-/* Estilo para a seção de totais */
-.totals-cards {
-  display: flex;
-  justify-content: space-around;
-  margin: 10px 0; /* Reduzir margem superior e inferior */
-  gap: 15px; /* Diminuir o espaço entre os cartões */
-}
-
-.card {
-  background-color: #d5d9e6;
-  padding: 15px; /* Reduzir o padding interno */
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  flex: 1;
-  transition: transform 0.3s;
-  min-width: 150px; /* Definir largura mínima para garantir que não fiquem muito pequenos */
-}
-
-.card:hover {
-  transform: scale(1.05); /* Efeito de zoom ao passar o mouse */
-}
-
-.card span {
-  font-size: 36px; /* Reduzir o tamanho do ícone */
-  color: #007bff;
-  margin-bottom: 5px; /* Ajustar espaço abaixo do ícone */
-}
-
-.card p {
-  font-size: 16px; /* Reduzir o tamanho da fonte */
-  margin: 5px 0 3px; /* Ajustar margens */
-  color: #333;
-}
-
-.card h2 {
-  font-size: 24px; /* Reduzir o tamanho do valor total */
-  margin: 0;
-  color: #00c42e;
-}
-
-/* Estilização do botão de excluir */
-.delete-btn {
-    background-color: #e92c17;
-    color: white;
-    border: none;
-    padding: 6px 13px;  /* Aumentar um pouco o padding para maior cliqueabilidade */
-    cursor: pointer;
-    border-radius: 3px;
-    font-size: 14px; /* Ajustar o tamanho da fonte */
-    transition: background-color 0.3s ease; /* Transição suave ao passar o mouse */
-}
-
-.delete-btn:hover {
-    background-color: #c0392b; /* Um tom mais escuro de vermelho no hover */
-}
-
-/* Estilização do botão de editar */
-.edit-client {
-    background-color: #3498db; /* Um azul suave para diferenciar do vermelho */
-    color: white;
-    border: none;
-    padding: 9px 16px; /* Aumentar um pouco o padding para maior cliqueabilidade */
-    cursor: pointer;
-    border-radius: 6px;
-    font-size: 14px; /* Ajustar o tamanho da fonte */
-    transition: background-color 0.3s ease; /* Transição suave ao passar o mouse */
-}
-
-.edit-client:hover {
-    background-color: #2980b9; /* Um tom mais escuro de azul no hover */
-}
-
-/* Estilização do botão de salvar */
-.save-client {
-    background-color: #2ecc71; /* Verde para indicar que é uma ação de salvamento */
+/* Button Styles */
+.delete-btn, .edit-client, .save-client {
     color: white;
     border: none;
     padding: 8px 15px;
     cursor: pointer;
     border-radius: 5px;
     font-size: 14px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.delete-btn {
+    background-color: #e92c17;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.edit-client {
+    background-color: #3498db;
+    margin-right: 5px;
+}
+
+.edit-client:hover {
+    background-color: #2980b9;
+}
+
+.save-client {
+    background-color: #2ecc71;
 }
 
 .save-client:hover {
-    background-color: #27ae60; /* Um verde mais escuro no hover */
+    background-color: #27ae60;
 }
-/* Botões de Transação */
+
+/* Barra de Pesquisa */
+#clientSearchInput, #orderSearchInput, #stockSearchInput {
+    width: 50%;
+    padding: 10px;
+    margin: 20px auto;
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#clientSearchInput:focus, #orderSearchInput:focus, #stockSearchInput:focus {
+    border-color: #18bc9c;
+    outline: none;
+    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Dropdown Filter Styles */
+#productFilter, #stockFilter {
+    width: 50%;
+    padding: 10px;
+    margin: 20px auto;
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #F3F8FF;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#productFilter:focus, #stockFilter:focus {
+    border-color: #18bc9c;
+    outline: none;
+    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Totals Cards */
+.totals-cards {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+    gap: 15px;
+    padding: 10px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #d5d9e6;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    flex: 1;
+    min-width: 150px;
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card span {
+    font-size: 36px;
+    color: #007bff;
+    margin-bottom: 5px;
+}
+
+.card p {
+    font-size: 16px;
+    margin: 5px 0 3px;
+    color: #333;
+}
+
+.card h2 {
+    font-size: 24px;
+    margin: 0;
+    color: #00c42e;
+}
+
+/* Transaction Buttons */
 #transactionButtons {
     display: flex;
     gap: 10px;
@@ -404,7 +259,7 @@ input[type="password"]:focus {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    background-color: #ccc; /* Cor padrão */
+    background-color: #ccc;
     color: white;
     transition: background-color 0.3s ease;
 }
@@ -414,7 +269,104 @@ input[type="password"]:focus {
 }
 
 .transaction-btn.active {
-    background-color: #00ADB5; /* Cor para o botão ativo */
+    background-color: #00ADB5;
+    box-shadow: 0 0 10px rgba(0, 173, 181, 0.5);
+    border: 1px solid #18bc9c;
+}
+
+/* Login Page Styles */
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    background-color: #F3F8FF;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.login-container h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    color: #333;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #00ADB5;
+    outline: none;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #00ADB5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #16a085;
+}
+
+.error-message {
+    color: red;
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 0;
+    background-color: transparent;
+    color: white;
+    position: static;
+    width: 100%;
+    bottom: 0;
+    font-size: 13px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    nav .navbar {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .totals-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    form {
+        padding: 20px;
+    }
+
+    table {
+        width: 100%;
+    }
 }
 
 
