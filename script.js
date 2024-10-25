@@ -266,58 +266,73 @@ if (window.location.pathname.includes('estoque.html')) {
     window.location.reload(); // Recarrega a página para atualizar a tabela
   });
 
-  // Função para carregar o estoque do Firestore e preencher o dropdown
-  async function loadStockFromFirestore() {
-    const stockTable = document.getElementById('stockTable').getElementsByTagName('tbody')[0];
-    const productFilter = document.getElementById('productFilter'); // Dropdown para o filtro de produtos
-    stockTable.innerHTML = ''; // Limpa a tabela
-    productFilter.innerHTML = '<option value="">Todos os Produtos</option>'; // Adiciona a opção padrão "Todos os Produtos"
-
+async function loadClientsFromFirestore() {
     try {
-      const querySnapshot = await getDocs(collection(db, 'stock'));
-      const products = [];
+        // Captura os dados da coleção 'clients' do Firestore
+        const querySnapshot = await getDocs(collection(db, 'clients'));
+        const clients = [];
 
-      querySnapshot.forEach((docSnapshot) => {
-        const product = docSnapshot.data();
-        products.push(product); // Armazena os produtos em um array
-
-        // Preenche a tabela com os dados do estoque
-        const newRow = stockTable.insertRow();
-        newRow.insertCell(0).textContent = product.productName;
-        newRow.insertCell(1).textContent = product.entryDate;
-        newRow.insertCell(2).textContent = product.productQuantity;
-        newRow.insertCell(3).textContent = product.productQuantity;
-
-        // Botão de exclusão
-        const deleteCell = newRow.insertCell(4);
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', async () => {
-          try {
-            await deleteDoc(doc(db, 'stock', docSnapshot.id));
-            console.log('Produto removido com sucesso');
-            window.location.reload(); // Recarrega a página
-          } catch (error) {
-            console.error('Erro ao remover produto: ', error);
-          }
+        // Extrai os dados e adiciona ao array de clientes
+        querySnapshot.forEach((docSnapshot) => {
+            const client = docSnapshot.data();
+            clients.push({ id: docSnapshot.id, ...client });
         });
-        deleteCell.appendChild(deleteButton);
-      });
 
-      // Preencher o dropdown de filtro com os nomes dos produtos
-      const uniqueProducts = [...new Set(products.map(product => product.productName))]; // Garante que não haja produtos duplicados
-      uniqueProducts.forEach(productName => {
-        const option = document.createElement('option');
-        option.value = productName;
-        option.textContent = productName;
-        productFilter.appendChild(option); // Adiciona as opções ao dropdown
-      });
+        // Ordena os clientes pelo nome (alfabeticamente)
+        clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
+        // Seleciona o corpo da tabela e limpa para evitar duplicação
+        const tableBody = document.querySelector('#clientHistoryTable tbody');
+        if (!tableBody) {
+            console.error("Tabela ou tbody não encontrada");
+            return; // Encerra a função se o tbody não for encontrado
+        }
+        tableBody.innerHTML = ''; // Limpa o tbody antes de inserir novas linhas
+
+        // Insere os clientes ordenados na tabela
+        clients.forEach(client => {
+            const newRow = tableBody.insertRow();
+
+            newRow.insertCell(0).textContent = client.clientName || 'N/A';
+            newRow.insertCell(1).textContent = client.productName || 'N/A';
+            newRow.insertCell(2).textContent = client.entryDate || 'N/A';
+            newRow.insertCell(3).textContent = client.exitDate || 'N/A';
+            newRow.insertCell(4).textContent = client.entryQuantity || 0;
+            newRow.insertCell(5).textContent = client.exitQuantity || 0;
+            newRow.insertCell(6).textContent = client.saldo || 0;
+
+            // Botão de edição
+            const editCell = newRow.insertCell(7);
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Editar';
+            editButton.classList.add('edit-btn');
+            editButton.addEventListener('click', () => editClientRow(newRow, client.id));
+            editCell.appendChild(editButton);
+
+            // Botão de exclusão
+            const deleteCell = newRow.insertCell(8);
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Excluir';
+            deleteButton.classList.add('delete-btn');
+            deleteButton.addEventListener('click', async () => {
+                try {
+                    await deleteDoc(doc(db, 'clients', client.id));
+                    console.log('Cliente removido com sucesso');
+                    loadClientsFromFirestore(); // Atualiza a tabela após exclusão
+                } catch (error) {
+                    console.error('Erro ao remover cliente:', error);
+                }
+            });
+            deleteCell.appendChild(deleteButton);
+        });
     } catch (error) {
-      console.error('Erro ao carregar estoque: ', error);
+        console.error('Erro ao carregar clientes:', error);
     }
-  }
+}
+
+// Chama a função para carregar os clientes assim que a página estiver pronta
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
   // Evento de mudança no dropdown para filtrar a tabela
   document.getElementById('productFilter').addEventListener('change', function () {
