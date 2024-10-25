@@ -15,13 +15,13 @@
     import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -35,6 +35,9 @@
     document.addEventListener('DOMContentLoaded', async () => {
         console.log("DOM fully loaded");
 
+        // Set up event listeners for filters and load initial data
+        document.getElementById('productFilter').addEventListener('change', filterTable);
+        document.getElementById('clientSearchInput').addEventListener('input', filterTable);
         await loadClientsFromFirestore();
 
         // Add click event listener to table for edit and delete actions
@@ -49,6 +52,9 @@
 
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; // Clear table
+
+        const productFilterDropdown = document.getElementById('productFilter');
+        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>'; // Clear and reset product filter
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
@@ -69,6 +75,14 @@
                 </td>
             `;
             clientHistoryTableBody.appendChild(row);
+
+            // Add unique product names to the product filter dropdown
+            if (![...productFilterDropdown.options].some(option => option.value === client.productName)) {
+                const option = document.createElement('option');
+                option.value = client.productName;
+                option.textContent = client.productName;
+                productFilterDropdown.appendChild(option);
+            }
         });
     }
 
@@ -139,9 +153,41 @@
             alert('Erro ao atualizar cliente.');
         }
     }
+
+    function filterTable() {
+        const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+        const productFilter = document.getElementById('productFilter').value.toLowerCase();
+        const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+        tableRows.forEach(row => {
+            const clientName = row.cells[1].textContent.toLowerCase();
+            const productName = row.cells[2].textContent.toLowerCase();
+
+            const matchesClient = clientName.includes(searchInput);
+            const matchesProduct = !productFilter || productName === productFilter;
+
+            row.style.display = matchesClient && matchesProduct ? '' : 'none';
+        });
+    }
   </script>
 
+  <!-- Navigation Bar -->
+  <nav>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
+  </nav>
+
   <h1>Pesquisar Clientes</h1>
+
+  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+  
+  <select id="productFilter">
+    <option value="">Todos os Produtos</option>
+  </select>
+
   <table id="clientHistoryTable">
     <thead>
       <tr>
@@ -157,8 +203,7 @@
     </thead>
     <tbody></tbody>
   </table>
-</body>
-</html>
+
 
 
   <footer>
