@@ -33,8 +33,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        console.log("DOM fully loaded");
-
         document.getElementById('productFilter').addEventListener('change', filterTable);
         document.getElementById('clientSearchInput').addEventListener('input', filterTable);
         
@@ -44,8 +42,6 @@
     });
 
     async function loadClientsFromFirestore() {
-        console.log("Loading clients from Firestore...");
-
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
@@ -135,6 +131,17 @@
         editButton.textContent = 'Salvar';
         editButton.classList.remove('edit-client');
         editButton.classList.add('save-client');
+
+        // Atualizar o saldo automaticamente ao alterar entrada/saída
+        cells[4].querySelector('input').addEventListener('input', updateSaldo);
+        cells[5].querySelector('input').addEventListener('input', updateSaldo);
+
+        function updateSaldo() {
+            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
+            const saida = parseInt(cells[5].querySelector('input').value) || 0;
+            const saldo = entrada - saida;
+            cells[6].textContent = saldo; // Atualiza a célula de saldo com o novo valor
+        }
     }
 
     async function saveEditedRow(row, clientId) {
@@ -145,7 +152,7 @@
             date: cells[3].querySelector('input').value,
             entryQuantity: parseInt(cells[4].querySelector('input').value),
             exitQuantity: parseInt(cells[5].querySelector('input').value),
-            saldo: parseInt(cells[6].querySelector('input').value)
+            saldo: parseInt(cells[6].textContent) // Pega o saldo atualizado
         };
 
         try {
