@@ -67,6 +67,7 @@ document.getElementById('clientForm').addEventListener('submit', async function 
 
 
 
+
 // Atualização para exibir a tabela em cliente.html
 clients.forEach(client => {
     const row = document.createElement('tr');
