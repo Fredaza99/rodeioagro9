@@ -24,24 +24,41 @@ async function addStockToFirestore(product) {
   }
 }
 
-// Evento de envio no formulário (index.html)
+// Inicializa o tipo de transação como "Entrada" por padrão
+let transactionType = "Entrada";
+
+// Função para definir o tipo de transação com base no botão clicado
+function setTransactionType(type) {
+    transactionType = type;
+    document.getElementById("entryButton").style.backgroundColor = type === 'Entrada' ? '#00ADB5' : '#ccc';
+    document.getElementById("exitButton").style.backgroundColor = type === 'Saída' ? '#00ADB5' : '#ccc';
+}
+
+// Evento de envio de formulário para salvar cliente no Firestore
 document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const transactionType = document.getElementById('transactionType').value;
     const clientName = document.getElementById('clientName').value;
     const productName = document.getElementById('productName').value;
-    const date = document.getElementById('entryDate').value;  // Usando apenas um campo de data
-    const entryQuantity = parseInt(document.getElementById('entryQuantity').value);
-    const exitQuantity = parseInt(document.getElementById('exitQuantity').value || 0);
-    const saldo = entryQuantity - exitQuantity;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
 
-    const client = { transactionType, clientName, productName, date, entryQuantity, exitQuantity, saldo };
-    
+    // Define os dados com base no tipo de transação
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === 'Entrada' ? quantity : 0,
+        exitQuantity: transactionType === 'Saída' ? quantity : 0,
+        saldo: transactionType === 'Entrada' ? quantity : -quantity
+    };
+
+    // Salva o cliente no Firestore
     await addClientToFirestore(client);
 
     window.location.href = 'cliente.html';
 });
+
 
 // Atualização para exibir a tabela em cliente.html
 clients.forEach(client => {
