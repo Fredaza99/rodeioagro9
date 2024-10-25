@@ -37,13 +37,13 @@
         const querySnapshot = await getDocs(clientsCollection);
 
         const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de preencher
+        clientHistoryTableBody.innerHTML = ''; // Clear the table before filling it
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
             const row = document.createElement('tr');
 
-            // Define a ação como 'Entrada' ou 'Saída'
+            // Define action as 'Entrada' or 'Saída'
             const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
             row.innerHTML = `
@@ -59,10 +59,10 @@
                     <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
                 </td>
             `;
-            clientHistoryTableBody.appendChild(row); // Adiciona a linha à tabela
+            clientHistoryTableBody.appendChild(row);
         });
 
-        // Adicionar funcionalidade para os botões de editar e excluir
+        // Add event listeners to buttons after rows are created
         addEventListenersToButtons();
     }
 
@@ -73,7 +73,7 @@
                 try {
                     await deleteDoc(doc(db, 'clients', clientId));
                     alert('Cliente excluído com sucesso!');
-                    loadClientsFromFirestore(); // Atualiza a lista após a exclusão
+                    loadClientsFromFirestore(); // Refresh list after deletion
                 } catch (error) {
                     console.error('Erro ao excluir cliente: ', error);
                     alert('Erro ao excluir cliente.');
@@ -93,15 +93,15 @@
     function editClientRow(row, clientId) {
         const cells = row.querySelectorAll('td');
 
-        // Tornar as células editáveis
+        // Make cells editable
         const originalValues = [...cells].map(cell => cell.textContent);
         cells.forEach((cell, index) => {
-            if (index > 0) { // Ignorar a coluna de ação
+            if (index > 0) {
                 cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
             }
         });
 
-        // Alterar o botão de editar para salvar
+        // Change the edit button to a save button
         const editButton = row.querySelector('.edit-client');
         editButton.textContent = 'Salvar';
         editButton.classList.remove('edit-client');
@@ -124,25 +124,13 @@
             try {
                 await updateDoc(doc(db, 'clients', clientId), updatedClient);
                 alert('Cliente atualizado com sucesso!');
-                loadClientsFromFirestore(); // Atualiza a lista após a edição
+                loadClientsFromFirestore();
             } catch (error) {
                 console.error('Erro ao atualizar cliente: ', error);
                 alert('Erro ao atualizar cliente.');
             }
-        });
+        }, { once: true });
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        const productFilterDropdown = document.getElementById('productFilter');
-        const clientSearchInput = document.getElementById('clientSearchInput');
-
-        // Adiciona eventos
-        productFilterDropdown.addEventListener('change', filterTable);
-        clientSearchInput.addEventListener('input', filterTable);
-
-        // Carrega os dados ao iniciar
-        loadClientsFromFirestore();
-    });
 
     function filterTable() {
         const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
@@ -173,6 +161,18 @@
         document.getElementById('totalEntradas').textContent = totalEntradas;
         document.getElementById('totalSaldo').textContent = totalSaldo;
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const productFilterDropdown = document.getElementById('productFilter');
+        const clientSearchInput = document.getElementById('clientSearchInput');
+
+        // Add event listeners
+        productFilterDropdown.addEventListener('change', filterTable);
+        clientSearchInput.addEventListener('input', filterTable);
+
+        // Load data on page load
+        loadClientsFromFirestore();
+    });
   </script>
 
   <nav>
@@ -224,12 +224,11 @@
 
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
-  </footer>
-
-  <!-- Referência ao JavaScript -->
-  <script type="module" src="script.js"></script>
+  
+ <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
