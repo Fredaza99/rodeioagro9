@@ -18,15 +18,6 @@ nav {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.logo-row {
-    text-align: center;
-}
-
-.logo {
-    width: 175px;
-    height: 175px;
-}
-
 .navbar {
     list-style: none;
     padding: 0;
@@ -38,7 +29,7 @@ nav {
 .navbar a {
     padding: 10px 15px;
     color: white;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: bold;
     text-decoration: none;
     transition: color 0.3s;
@@ -49,18 +40,13 @@ nav {
     text-decoration: underline;
 }
 
-.material-icons {
-    vertical-align: sub;
-    margin-right: 1px;
-}
-
 /* Form Styles */
 form {
-    max-width: 600px;
+    max-width: 500px;
     margin: 20px auto;
     background-color: #F3F8FF;
-    padding: 37px;
-    border-radius: 10px;
+    padding: 30px;
+    border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
@@ -72,11 +58,12 @@ form label {
 
 form input[type="text"], form input[type="date"], form input[type="number"] {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
+    padding: 8px;
+    margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
     transition: all 0.2s ease-in-out;
+    font-size: 14px;
 }
 
 form input[type="text"]:focus, form input[type="date"]:focus, form input[type="number"]:focus {
@@ -85,7 +72,7 @@ form input[type="text"]:focus, form input[type="date"]:focus, form input[type="n
 }
 
 form button {
-    padding: 10px 20px;
+    padding: 8px 16px;
     background-color: #00ADB5;
     color: white;
     border: none;
@@ -98,29 +85,31 @@ form button:hover {
     background-color: #16a085;
 }
 
-form button:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
 /* Table Styles */
 table {
-    width: 90%;
+    width: 85%;
     margin: 20px auto;
     border-collapse: collapse;
     background-color: #F3F8FF;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 table th, table td {
-    padding: 15px;
-    text-align: left;
+    padding: 10px;
+    text-align: center;
     border-bottom: 1px solid #ddd;
 }
 
 table th {
     background-color: #527853;
     color: white;
-    text-align: center;
+    font-weight: bold;
+    min-width: 100px; /* Largura mínima para evitar células muito largas */
+}
+
+table td {
+    min-width: 80px;
 }
 
 table tbody tr:hover {
@@ -132,12 +121,13 @@ table tbody tr:hover {
 .delete-btn, .edit-client, .save-client {
     color: white;
     border: none;
-    padding: 8px 15px;
+    padding: 6px 12px;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin: 2px;
 }
 
 .delete-btn {
@@ -150,7 +140,6 @@ table tbody tr:hover {
 
 .edit-client {
     background-color: #3498db;
-    margin-right: 5px;
 }
 
 .edit-client:hover {
@@ -166,37 +155,37 @@ table tbody tr:hover {
 }
 
 /* Barra de Pesquisa */
-#clientSearchInput, #orderSearchInput, #stockSearchInput {
+#clientSearchInput {
     width: 50%;
-    padding: 10px;
+    padding: 8px;
     margin: 20px auto;
     display: block;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 14px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#clientSearchInput:focus, #orderSearchInput:focus, #stockSearchInput:focus {
+#clientSearchInput:focus {
     border-color: #18bc9c;
     outline: none;
     box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
 }
 
 /* Dropdown Filter Styles */
-#productFilter, #stockFilter {
+#productFilter {
     width: 50%;
-    padding: 10px;
-    margin: 20px auto;
+    padding: 8px;
+    margin: 10px auto;
     display: block;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 14px;
     background-color: #F3F8FF;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#productFilter:focus, #stockFilter:focus {
+#productFilter:focus {
     border-color: #18bc9c;
     outline: none;
     box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
@@ -207,19 +196,19 @@ table tbody tr:hover {
     display: flex;
     justify-content: space-around;
     margin: 10px 0;
-    gap: 15px;
+    gap: 10px;
     padding: 10px;
     flex-wrap: wrap;
 }
 
 .card {
     background-color: #d5d9e6;
-    padding: 15px;
+    padding: 12px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     flex: 1;
-    min-width: 150px;
+    min-width: 120px;
     transition: transform 0.3s;
 }
 
@@ -228,19 +217,19 @@ table tbody tr:hover {
 }
 
 .card span {
-    font-size: 36px;
+    font-size: 28px;
     color: #007bff;
     margin-bottom: 5px;
 }
 
 .card p {
-    font-size: 16px;
-    margin: 5px 0 3px;
+    font-size: 14px;
+    margin: 5px 0;
     color: #333;
 }
 
 .card h2 {
-    font-size: 24px;
+    font-size: 20px;
     margin: 0;
     color: #00c42e;
 }
@@ -249,16 +238,16 @@ table tbody tr:hover {
 #transactionButtons {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     justify-content: center;
 }
 
 .transaction-btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     background-color: #ccc;
     color: white;
     transition: background-color 0.3s ease;
@@ -272,68 +261,6 @@ table tbody tr:hover {
     background-color: #00ADB5;
     box-shadow: 0 0 10px rgba(0, 173, 181, 0.5);
     border: 1px solid #18bc9c;
-}
-
-/* Login Page Styles */
-.login-container {
-    max-width: 400px;
-    margin: 50px auto;
-    background-color: #F3F8FF;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.login-container h1 {
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    margin-bottom: 15px;
-}
-
-.input-group label {
-    color: #333;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-input[type="text"], input[type="password"] {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    transition: border-color 0.3s;
-}
-
-input[type="text"]:focus, input[type="password"]:focus {
-    border-color: #00ADB5;
-    outline: none;
-}
-
-.login-button {
-    width: 100%;
-    padding: 12px;
-    background-color: #00ADB5;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.login-button:hover {
-    background-color: #16a085;
-}
-
-.error-message {
-    color: red;
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 14px;
 }
 
 /* Footer */
@@ -350,7 +277,7 @@ footer {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    nav .navbar {
+    .navbar {
         flex-direction: column;
         align-items: center;
     }
