@@ -95,10 +95,10 @@ if (window.location.pathname.includes('pedidos.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
   table.innerHTML = ''; // Clear the table before filling it
 
- async function loadClientsFromFirestore() {
+async function loadClientsFromFirestore() {
     try {
         const querySnapshot = await getDocs(collection(db, 'clients'));
-        const clients = [];
+        let clients = [];
 
         // Extrai dados dos clientes
         querySnapshot.forEach((docSnapshot) => {
@@ -106,18 +106,24 @@ if (window.location.pathname.includes('pedidos.html')) {
             clients.push({ id: docSnapshot.id, ...client });
         });
 
-        // Ordena os clientes alfabeticamente pelo nome
-        clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+        // Ordena os clientes alfabeticamente pelo campo 'clientName'
+        clients = clients.sort((a, b) => {
+            if (a.clientName && b.clientName) {
+                return a.clientName.localeCompare(b.clientName);
+            }
+            return 0; // Caso não haja clientName, evita erros
+        });
 
-        // Limpa a tabela antes de preencher com dados ordenados
+        // Seleciona o corpo da tabela e o limpa
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = '';
+        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela para evitar duplicação
 
-        // Adiciona os clientes ordenados à tabela
+        // Preenche a tabela com os dados dos clientes ordenados
         clients.forEach(client => {
             const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
             row.innerHTML = `
-                <td>${client.entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+                <td>${action}</td>
                 <td>${client.clientName || ''}</td>
                 <td>${client.productName || ''}</td>
                 <td>${client.date || ''}</td>
@@ -132,7 +138,7 @@ if (window.location.pathname.includes('pedidos.html')) {
             clientHistoryTableBody.appendChild(row);
         });
 
-        // Adiciona a confirmação de exclusão aos botões de exclusão
+        // Adiciona evento de confirmação para exclusão aos botões de exclusão
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', (event) => {
                 const clientId = event.target.getAttribute('data-id');
