@@ -84,7 +84,7 @@
     <option value="Saída">Saída</option>
 </select>
 
-    <!-- Formulário de cadastro em index.html -->
+ <!-- Formulário de cadastro em index.html -->
 <form id="clientForm">
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
@@ -98,13 +98,15 @@
     <label for="quantity">Quantidade:</label>
     <input type="number" id="quantity" required>
 
+    <!-- Botões para selecionar Entrada ou Saída -->
     <div id="transactionButtons">
-        <button type="button" id="entryButton" onclick="setTransactionType('Entrada')">Entrada</button>
-        <button type="button" id="exitButton" onclick="setTransactionType('Saída')">Saída</button>
+        <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
+        <button type="button" id="exitButton" class="transaction-btn">Saída</button>
     </div>
 
     <button type="submit">Adicionar Cliente</button>
 </form>
+
 
 
   <!-- Footer -->
