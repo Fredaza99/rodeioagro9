@@ -12,6 +12,15 @@ h1, h2 {
     margin-top: 20px;
 }
 
+ .logo-row{
+    text-align: center;
+  }
+  .logo {
+    width: 175px;
+    height: 175px;
+    text-align: center;
+  }
+
 nav {
     background-color: #202122;
     padding: 10px;
