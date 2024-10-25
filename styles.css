@@ -391,23 +391,32 @@ input[type="password"]:focus {
     background-color: #27ae60; /* Um verde mais escuro no hover */
 }
 
-#transactionType {
-    width: 50%; /* Mesma largura dos outros inputs */
-    padding: 10px;
-    margin: 20px auto; /* Centralizar o dropdown */
-    display: block; /* Exibir como block para centralização */
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: #F3F8FF;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+#transactionButtons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
 }
 
-#transactionType:focus {
-    border-color: #18bc9c;
-    outline: none;
-    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+#entryButton, #exitButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    background-color: #ccc; /* Cor padrão */
+    color: white;
+    transition: background-color 0.3s ease;
 }
+
+#entryButton:hover, #exitButton:hover {
+    background-color: #18bc9c;
+}
+
+#entryButton.active, #exitButton.active {
+    background-color: #00ADB5; /* Cor ativa */
+}
+
 
 
 
