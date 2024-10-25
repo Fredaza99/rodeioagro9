@@ -25,12 +25,11 @@ async function addStockToFirestore(product) {
 }
 
 // ------------------------------
-// Cadastro de Clientes e Redirecionamento para a Lista de Pedidos (index.html)
-// ------------------------------
-if (window.location.pathname.includes('index.html')) {
-  document.getElementById('clientForm').addEventListener('submit', async function (e) {
+// Dentro do evento de envio de formulário em index.html
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    const transactionType = document.getElementById('transactionType').value;
     const clientName = document.getElementById('clientName').value;
     const productName = document.getElementById('productName').value;
     const entryDate = document.getElementById('entryDate').value;
@@ -39,16 +38,16 @@ if (window.location.pathname.includes('index.html')) {
     const exitDate = document.getElementById('exitDate').value || 'Não definido';
     const saldo = entryQuantity - exitQuantity;
 
-    // Create a client object with all information
-    const client = { clientName, productName, entryDate, entryQuantity, exitQuantity, saldo, exitDate };
+    // Inclui transactionType no objeto client
+    const client = { transactionType, clientName, productName, entryDate, entryQuantity, exitQuantity, saldo, exitDate };
     
-    // Save the client in Firestore
+    // Salva no Firestore
     await addClientToFirestore(client);
 
-    // Redirect to the orders page after registration
+    // Redireciona para a página de clientes
     window.location.href = 'cliente.html';
-  });
-}
+});
+
 
 // ------------------------------
 // Lista de Pedidos (pedidos.html)
