@@ -15,13 +15,13 @@
     import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -35,18 +35,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
         console.log("DOM fully loaded");
 
-        const productFilterDropdown = document.getElementById('productFilter');
-        const clientSearchInput = document.getElementById('clientSearchInput');
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        console.log("Checking elements:", productFilterDropdown, clientSearchInput, clientHistoryTableBody);
+        await loadClientsFromFirestore();
 
-        if (productFilterDropdown && clientSearchInput && clientHistoryTableBody) {
-            productFilterDropdown.addEventListener('change', filterTable);
-            clientSearchInput.addEventListener('input', filterTable);
-            await loadClientsFromFirestore();
-        } else {
-            console.error("Essential elements not found in the DOM!");
-        }
+        // Add click event listener to table for edit and delete actions
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
     });
 
     async function loadClientsFromFirestore() {
@@ -56,12 +48,11 @@
         const querySnapshot = await getDocs(clientsCollection);
 
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = '';
+        clientHistoryTableBody.innerHTML = ''; // Clear table
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
             const row = document.createElement('tr');
-
             const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
             row.innerHTML = `
@@ -79,8 +70,6 @@
             `;
             clientHistoryTableBody.appendChild(row);
         });
-
-        clientHistoryTableBody.addEventListener('click', handleTableClick);
     }
 
     async function handleTableClick(event) {
@@ -88,15 +77,15 @@
 
         if (button.classList.contains('delete-btn')) {
             const clientId = button.getAttribute('data-id');
-            console.log("Delete button clicked for ID:", clientId);
             await deleteClient(clientId);
-        }
-
-        if (button.classList.contains('edit-client')) {
+        } else if (button.classList.contains('edit-client')) {
             const row = button.closest('tr');
             const clientId = button.getAttribute('data-id');
-            console.log("Edit button clicked for ID:", clientId);
-            editClientRow(row, clientId);
+            startEditingRow(row, clientId);
+        } else if (button.classList.contains('save-client')) {
+            const row = button.closest('tr');
+            const clientId = button.getAttribute('data-id');
+            await saveEditedRow(row, clientId);
         }
     }
 
@@ -111,94 +100,48 @@
         }
     }
 
-    function editClientRow(row, clientId) {
+    function startEditingRow(row, clientId) {
+        // Turn cells into input fields for editing
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
 
         cells.forEach((cell, index) => {
-            if (index > 0) {
+            if (index > 0 && index < cells.length - 1) { // Skip action and buttons columns
                 cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
             }
         });
 
+        // Change edit button to save button
         const editButton = row.querySelector('.edit-client');
         editButton.textContent = 'Salvar';
         editButton.classList.remove('edit-client');
         editButton.classList.add('save-client');
-
-        editButton.addEventListener('click', async () => {
-            const updatedValues = [...cells].map((cell, index) => {
-                return index > 0 ? cell.querySelector('input').value : originalValues[index];
-            });
-
-            const updatedClient = {
-                clientName: updatedValues[1],
-                productName: updatedValues[2],
-                date: updatedValues[3],
-                entryQuantity: parseInt(updatedValues[4]),
-                exitQuantity: parseInt(updatedValues[5]),
-                saldo: parseInt(updatedValues[6])
-            };
-
-            try {
-                await updateDoc(doc(db, 'clients', clientId), updatedClient);
-                alert('Cliente atualizado com sucesso!');
-                loadClientsFromFirestore();
-            } catch (error) {
-                console.error('Erro ao atualizar cliente:', error);
-                alert('Erro ao atualizar cliente.');
-            }
-        }, { once: true });
     }
 
-    function filterTable() {
-        const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
-        const productFilter = document.getElementById('productFilter').value.toLowerCase();
-        const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    async function saveEditedRow(row, clientId) {
+        // Extract values from input fields
+        const cells = row.querySelectorAll('td');
+        const updatedClient = {
+            clientName: cells[1].querySelector('input').value,
+            productName: cells[2].querySelector('input').value,
+            date: cells[3].querySelector('input').value,
+            entryQuantity: parseInt(cells[4].querySelector('input').value),
+            exitQuantity: parseInt(cells[5].querySelector('input').value),
+            saldo: parseInt(cells[6].querySelector('input').value)
+        };
 
-        tableRows.forEach(row => {
-            const clientName = row.cells[1].textContent.toLowerCase();
-            const productName = row.cells[2].textContent.toLowerCase();
-
-            const matchesClient = clientName.includes(searchInput);
-            const matchesProduct = !productFilter || productName === productFilter;
-
-            row.style.display = matchesClient && matchesProduct ? '' : 'none';
-        });
+        try {
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
+            alert('Cliente atualizado com sucesso!');
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao atualizar cliente:', error);
+            alert('Erro ao atualizar cliente.');
+        }
     }
   </script>
 
-  <nav>
-    <div class="navbar-container">
-      <ul class="navbar">
-        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-        <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <div class="totals-cards">
-    <div class="card">
-      <span class="material-icons">add_circle</span>
-      <p>Total de Entradas</p>
-      <h2 id="totalEntradas">0</h2>
-    </div>
-    <div class="card">
-      <span class="material-icons">account_balance_wallet</span>
-      <p>Total de Saldo</p>
-      <h2 id="totalSaldo">0</h2>
-    </div>
-  </div>
-
-  <h1><span class="material-icons">person_search</span> Pesquisar Clientes</h1>
-
-  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
-  
-  <select id="productFilter">
-    <option value="">Todos os Produtos</option>
-  </select>
-
+  <h1>Pesquisar Clientes</h1>
   <table id="clientHistoryTable">
     <thead>
       <tr>
@@ -214,6 +157,9 @@
     </thead>
     <tbody></tbody>
   </table>
+</body>
+</html>
+
 
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
