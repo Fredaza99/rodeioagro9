@@ -84,26 +84,28 @@
     <option value="Saída">Saída</option>
 </select>
 
+    <!-- Formulário de cadastro em index.html -->
+<form id="clientForm">
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
 
     <label for="productName">Nome do Produto:</label>
     <input type="text" id="productName" required>
 
-    <label for="entryDate">Data de Entrada:</label>
-    <input type="date" id="entryDate" required>
+    <label for="date">Data:</label>
+    <input type="date" id="date" required>
 
-    <label for="entryQuantity">Quantidade Entrada:</label>
-    <input type="number" id="entryQuantity" required>
+    <label for="quantity">Quantidade:</label>
+    <input type="number" id="quantity" required>
 
-    <label for="exitQuantity">Quantidade Retirada:</label>
-    <input type="number" id="exitQuantity">
-
-    <label for="exitDate">Data de Saída:</label>
-    <input type="date" id="exitDate">
+    <div id="transactionButtons">
+        <button type="button" id="entryButton" onclick="setTransactionType('Entrada')">Entrada</button>
+        <button type="button" id="exitButton" onclick="setTransactionType('Saída')">Saída</button>
+    </div>
 
     <button type="submit">Adicionar Cliente</button>
-  </form>
+</form>
+
 
   <!-- Footer -->
   <footer>
