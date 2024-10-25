@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -33,11 +32,14 @@
     }
 
     async function loadClientsFromFirestore() {
+        console.log("Loading clients from Firestore...");
+        
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
         const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
         clientHistoryTableBody.innerHTML = ''; // Clear the table before filling it
+        console.log("clientHistoryTableBody found:", clientHistoryTableBody);
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
@@ -62,14 +64,17 @@
             clientHistoryTableBody.appendChild(row);
         });
 
-        // Add event listeners to buttons after rows are created
         addEventListenersToButtons();
     }
 
     function addEventListenersToButtons() {
+        console.log("Adding event listeners to buttons...");
+
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', async () => {
                 const clientId = button.getAttribute('data-id');
+                console.log("Delete button clicked for ID:", clientId);
+
                 try {
                     await deleteDoc(doc(db, 'clients', clientId));
                     alert('Cliente excluído com sucesso!');
@@ -85,23 +90,25 @@
             button.addEventListener('click', () => {
                 const row = button.closest('tr');
                 const clientId = button.getAttribute('data-id');
+                console.log("Edit button clicked for ID:", clientId);
+
                 editClientRow(row, clientId);
             });
         });
     }
 
     function editClientRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
+        console.log("Entering edit mode for client ID:", clientId);
 
-        // Make cells editable
+        const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
+
         cells.forEach((cell, index) => {
             if (index > 0) {
                 cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
             }
         });
 
-        // Change the edit button to a save button
         const editButton = row.querySelector('.edit-client');
         editButton.textContent = 'Salvar';
         editButton.classList.remove('edit-client');
@@ -123,6 +130,7 @@
 
             try {
                 await updateDoc(doc(db, 'clients', clientId), updatedClient);
+                console.log("Client updated successfully");
                 alert('Cliente atualizado com sucesso!');
                 loadClientsFromFirestore();
             } catch (error) {
@@ -163,14 +171,23 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM fully loaded");
+        
         const productFilterDropdown = document.getElementById('productFilter');
         const clientSearchInput = document.getElementById('clientSearchInput');
 
-        // Add event listeners
-        productFilterDropdown.addEventListener('change', filterTable);
-        clientSearchInput.addEventListener('input', filterTable);
+        if (productFilterDropdown) {
+            productFilterDropdown.addEventListener('change', filterTable);
+        } else {
+            console.error("Product filter dropdown not found!");
+        }
 
-        // Load data on page load
+        if (clientSearchInput) {
+            clientSearchInput.addEventListener('input', filterTable);
+        } else {
+            console.error("Client search input not found!");
+        }
+
         loadClientsFromFirestore();
     });
   </script>
