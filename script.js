@@ -149,90 +149,91 @@ if (window.location.pathname.includes('pedidos.html')) {
   }
 
 function editClientRow(row, clientId) {
-  const cells = row.querySelectorAll('td');
+    const cells = row.querySelectorAll('td');
 
-  // Salvar os valores originais
-  const originalClientName = cells[0].textContent;
-  const originalProductName = cells[1].textContent;
-  const originalEntryDate = cells[2].textContent;
-  const originalExitDate = cells[3].textContent === 'N/A' ? '' : cells[3].textContent;
-  const originalEntryQuantity = cells[4].textContent;
-  const originalExitQuantity = cells[5].textContent;
+    // Salvar os valores originais
+    const originalClientName = cells[1].textContent; // Corrigido o índice para 1
+    const originalProductName = cells[2].textContent; // Corrigido o índice para 2
+    const originalEntryDate = cells[3].textContent; // Corrigido o índice para 3
+    const originalExitDate = cells[4].textContent === 'N/A' ? '' : cells[4].textContent; // Corrigido o índice para 4
+    const originalEntryQuantity = cells[5].textContent; // Corrigido o índice para 5
+    const originalExitQuantity = cells[6].textContent; // Corrigido o índice para 6
 
-  // Tornar as células editáveis
-  cells[0].innerHTML = `<input type="text" value="${originalClientName}" />`;
-  cells[1].innerHTML = `<input type="text" value="${originalProductName}" />`;
-  cells[2].innerHTML = `<input type="date" value="${originalEntryDate}" />`;
-  cells[3].innerHTML = `<input type="date" value="${originalExitDate}" />`;
-  cells[4].innerHTML = `<input type="number" value="${originalEntryQuantity}" />`;
-  cells[5].innerHTML = `<input type="number" value="${originalExitQuantity}" />`;
+    // Tornar as células editáveis
+    cells[1].innerHTML = `<input type="text" value="${originalClientName}" />`;
+    cells[2].innerHTML = `<input type="text" value="${originalProductName}" />`;
+    cells[3].innerHTML = `<input type="date" value="${originalEntryDate}" />`;
+    cells[4].innerHTML = `<input type="date" value="${originalExitDate}" />`;
+    cells[5].innerHTML = `<input type="number" value="${originalEntryQuantity}" />`;
+    cells[6].innerHTML = `<input type="number" value="${originalExitQuantity}" />`;
 
-  // Alterar o botão de editar para salvar
-  const editButton = row.querySelector('.edit-client');
-  editButton.textContent = 'Salvar';
-  editButton.classList.remove('edit-client');
-  editButton.classList.add('save-client');
+    // Alterar o botão de editar para salvar
+    const editButton = row.querySelector('.edit-client');
+    editButton.textContent = 'Salvar';
+    editButton.classList.remove('edit-client');
+    editButton.classList.add('save-client');
 
-  // Remover event listeners antigos (evitar múltiplos eventos)
-  editButton.replaceWith(editButton.cloneNode(true));
+    // Remover event listeners antigos (evitar múltiplos eventos)
+    editButton.replaceWith(editButton.cloneNode(true)); // Clona o botão para remover eventos antigos
 
-  // Selecionar o botão de salvar recém-adicionado
-  const saveButton = row.querySelector('.save-client');
+    // Selecionar o botão de salvar recém-adicionado
+    const saveButton = row.querySelector('.save-client');
 
-  // Adicionar um único listener ao botão de salvar
-  saveButton.addEventListener('click', async () => {
-    // Coletar os valores atualizados dos inputs
-    const updatedClientName = cells[0].querySelector('input').value.trim() || originalClientName;
-    const updatedProductName = cells[1].querySelector('input').value.trim() || originalProductName;
-    const updatedEntryDate = cells[2].querySelector('input').value || originalEntryDate;
-    const updatedExitDate = cells[3].querySelector('input').value || originalExitDate;
-    const updatedEntryQuantity = parseInt(cells[4].querySelector('input').value) || parseInt(originalEntryQuantity);
-    const updatedExitQuantity = parseInt(cells[5].querySelector('input').value) || parseInt(originalExitQuantity);
+    // Adicionar um único listener ao botão de salvar
+    saveButton.addEventListener('click', async () => {
+        // Coletar os valores atualizados dos inputs
+        const updatedClientName = cells[1].querySelector('input').value.trim() || originalClientName;
+        const updatedProductName = cells[2].querySelector('input').value.trim() || originalProductName;
+        const updatedEntryDate = cells[3].querySelector('input').value || originalEntryDate;
+        const updatedExitDate = cells[4].querySelector('input').value || originalExitDate;
+        const updatedEntryQuantity = parseInt(cells[5].querySelector('input').value) || parseInt(originalEntryQuantity);
+        const updatedExitQuantity = parseInt(cells[6].querySelector('input').value) || parseInt(originalExitQuantity);
 
-    // Atualizar o saldo
-    const updatedSaldo = updatedEntryQuantity - updatedExitQuantity;
+        // Atualizar o saldo
+        const updatedSaldo = updatedEntryQuantity - updatedExitQuantity;
 
-    // Novo objeto cliente com os valores atualizados
-    const updatedClient = {
-      clientName: updatedClientName,
-      productName: updatedProductName,
-      entryDate: updatedEntryDate,
-      exitDate: updatedExitDate || 'N/A',
-      entryQuantity: updatedEntryQuantity,
-      exitQuantity: updatedExitQuantity,
-      saldo: updatedSaldo
-    };
+        // Novo objeto cliente com os valores atualizados
+        const updatedClient = {
+            clientName: updatedClientName,
+            productName: updatedProductName,
+            entryDate: updatedEntryDate,
+            exitDate: updatedExitDate || 'N/A',
+            entryQuantity: updatedEntryQuantity,
+            exitQuantity: updatedExitQuantity,
+            saldo: updatedSaldo
+        };
 
-    try {
-      // Atualizar o documento no Firestore
-      await updateDoc(doc(db, 'clients', clientId), updatedClient);
+        try {
+            // Atualizar o documento no Firestore
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
 
-      // Exibir uma mensagem de sucesso
-      alert('Cliente atualizado com sucesso!');
+            // Exibir uma mensagem de sucesso
+            alert('Cliente atualizado com sucesso!');
 
-      // Voltar ao modo de visualização (não editável)
-      cells[0].textContent = updatedClientName;
-      cells[1].textContent = updatedProductName;
-      cells[2].textContent = updatedEntryDate;
-      cells[3].textContent = updatedExitDate || 'N/A';
-      cells[4].textContent = updatedEntryQuantity;
-      cells[5].textContent = updatedExitQuantity;
-      cells[6].textContent = updatedSaldo;
+            // Voltar ao modo de visualização (não editável)
+            cells[1].textContent = updatedClientName;
+            cells[2].textContent = updatedProductName;
+            cells[3].textContent = updatedEntryDate;
+            cells[4].textContent = updatedExitDate || 'N/A';
+            cells[5].textContent = updatedEntryQuantity;
+            cells[6].textContent = updatedExitQuantity;
+            cells[7].textContent = updatedSaldo; // Corrigido o índice para 7
 
-      // Voltar o botão para "Editar"
-      saveButton.textContent = 'Editar';
-      saveButton.classList.remove('save-client');
-      saveButton.classList.add('edit-client');
+            // Voltar o botão para "Editar"
+            saveButton.textContent = 'Editar';
+            saveButton.classList.remove('save-client');
+            saveButton.classList.add('edit-client');
 
-      // Remover o listener "Salvar" e voltar para o comportamento de "Editar"
-      saveButton.removeEventListener('click', null);
-      saveButton.addEventListener('click', () => editClientRow(row, clientId));
-    } catch (error) {
-      console.error('Erro ao atualizar cliente: ', error);
-      alert('Erro ao atualizar cliente.');
-    }
-  });
+            // Remover o listener "Salvar" e voltar para o comportamento de "Editar"
+            saveButton.removeEventListener('click', null); // Remove todos os listeners
+            saveButton.addEventListener('click', () => editClientRow(row, clientId)); // Re-add listener
+        } catch (error) {
+            console.error('Erro ao atualizar cliente: ', error);
+            alert('Erro ao atualizar cliente.');
+        }
+    });
 }
+
 
 
 
