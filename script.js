@@ -24,29 +24,43 @@ async function addStockToFirestore(product) {
   }
 }
 
-// ------------------------------
-// Dentro do evento de envio de formulário em index.html
+// Evento de envio no formulário (index.html)
 document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const transactionType = document.getElementById('transactionType').value;
     const clientName = document.getElementById('clientName').value;
     const productName = document.getElementById('productName').value;
-    const entryDate = document.getElementById('entryDate').value;
+    const date = document.getElementById('entryDate').value;  // Usando apenas um campo de data
     const entryQuantity = parseInt(document.getElementById('entryQuantity').value);
     const exitQuantity = parseInt(document.getElementById('exitQuantity').value || 0);
-    const exitDate = document.getElementById('exitDate').value || 'Não definido';
     const saldo = entryQuantity - exitQuantity;
 
-    // Inclui transactionType no objeto client
-    const client = { transactionType, clientName, productName, entryDate, entryQuantity, exitQuantity, saldo, exitDate };
+    const client = { transactionType, clientName, productName, date, entryQuantity, exitQuantity, saldo };
     
-    // Salva no Firestore
     await addClientToFirestore(client);
 
-    // Redireciona para a página de clientes
     window.location.href = 'cliente.html';
 });
+
+// Atualização para exibir a tabela em cliente.html
+clients.forEach(client => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+          <button class="edit-client" data-id="${client.id}">Editar</button>
+          <button class="delete-btn" data-id="${client.id}">Excluir</button>
+        </td>
+        <td>${client.clientName}</td>
+        <td>${client.productName}</td>
+        <td>${client.date}</td>  <!-- Data única -->
+        <td>${client.entryQuantity || 0}</td>
+        <td>${client.exitQuantity || 0}</td>
+        <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+    `;
+    clientHistoryTableBody.appendChild(row);
+});
+
 
 
 // ------------------------------
