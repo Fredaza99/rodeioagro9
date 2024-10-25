@@ -348,9 +348,9 @@ input[type="password"]:focus {
     background-color: #e92c17;
     color: white;
     border: none;
-    padding: 8px 15px;  /* Aumentar um pouco o padding para maior cliqueabilidade */
+    padding: 7px 14px;  /* Aumentar um pouco o padding para maior cliqueabilidade */
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 4px;
     font-size: 14px; /* Ajustar o tamanho da fonte */
     transition: background-color 0.3s ease; /* Transição suave ao passar o mouse */
 }
