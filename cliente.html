@@ -32,35 +32,51 @@
         window.location.href = 'login.html';
     }
 
- // Função para carregar clientes do Firestore e preencher a tabela de clientes
+ // Função para carregar clientes do Firestore e preencher a tabela em cliente.html
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
     const querySnapshot = await getDocs(clientsCollection);
 
+    // Obtém o corpo da tabela onde os clientes serão inseridos
     const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-    clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de preencher
+    clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar as linhas
 
+    const clients = []; // Lista para armazenar clientes temporariamente
+
+    // Adiciona cada cliente ao array 'clients'
     querySnapshot.forEach(docSnapshot => {
         const client = docSnapshot.data();
+        clients.push({ id: docSnapshot.id, ...client });
+    });
 
-        // Cria a linha da tabela com as informações do cliente
+    // Ordena os clientes por nome
+    clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+    // Preenche a tabela com os dados do cliente
+    clients.forEach(client => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
-                <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
-                <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
+                <button class="edit-client" data-id="${client.id}">Editar</button>
+                <button class="delete-btn" data-id="${client.id}">Excluir</button>
             </td>
-            <td>${client.clientName || ''}</td>  <!-- Nome do Cliente -->
-            <td>${client.productName || ''}</td>  <!-- Nome do Produto -->
-            <td>${client.date || ''}</td>         <!-- Data -->
-            <td>${client.entryQuantity || 0}</td> <!-- Quantidade Entrada -->
-            <td>${client.exitQuantity || 0}</td>  <!-- Quantidade Retirada -->
-            <td>${client.saldo || 0}</td>         <!-- Saldo -->
+            <td>${client.clientName || ''}</td>
+            <td>${client.productName || ''}</td>
+            <td>${client.date || ''}</td>
+            <td>${client.entryQuantity || 0}</td>
+            <td>${client.exitQuantity || 0}</td>
+            <td>${client.saldo || 0}</td>
         `;
-
         clientHistoryTableBody.appendChild(row); // Adiciona a linha à tabela
     });
+
+    // (Opcional) Lógica para o filtro, se necessário
+    // Se desejar restaurar um dropdown para filtro, é possível adicionar a lógica aqui.
 }
+
+// Chama a função para carregar os clientes ao carregar a página
+window.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
