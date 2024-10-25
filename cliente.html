@@ -11,10 +11,10 @@
 <body>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      apiKey: "API_KEY_AQUI",
       authDomain: "rodeioagro-fee43.firebaseapp.com",
       projectId: "rodeioagro-fee43",
       storageBucket: "rodeioagro-fee43.appspot.com",
@@ -26,41 +26,41 @@
     const db = getFirestore(app);
 
     async function loadTransactionsFromFirestore() {
-      console.log("Iniciando a coleta de dados...");
       try {
         const transactionsCollection = collection(db, 'transactions');
         const querySnapshot = await getDocs(transactionsCollection);
 
-        if (querySnapshot.empty) {
-          console.log("Nenhum dado encontrado.");
-          return;
-        }
-
-        console.log("Dados encontrados:", querySnapshot.size);
         const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
         clientHistoryTableBody.innerHTML = '';
 
         querySnapshot.forEach(docSnapshot => {
           const transaction = docSnapshot.data();
-          console.log("Transação carregada:", transaction);
+
+          // Configura valores padrão para registros legados
+          const clientName = transaction.clientName || "N/A";
+          const productName = transaction.productName || "N/A";
+          const transactionDate = transaction.transactionDate || "N/A";
+          const transactionType = transaction.transactionType || "entrada";
+          const transactionQuantity = transaction.transactionQuantity || 0;
 
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${transaction.clientName}</td>
-            <td>${transaction.productName}</td>
-            <td>${transaction.transactionDate}</td>
-            <td>${transaction.transactionType}</td>
-            <td>${transaction.transactionType === 'entrada' ? transaction.transactionQuantity : 'N/A'}</td>
-            <td>${transaction.transactionType === 'saida' ? -transaction.transactionQuantity : 'N/A'}</td>
-            <td>${transaction.transactionQuantity}</td>
+            <td>${clientName}</td>
+            <td>${productName}</td>
+            <td>${transactionDate}</td>
+            <td>${transactionType}</td>
+            <td>${transactionType === 'entrada' ? transactionQuantity : 'N/A'}</td>
+            <td>${transactionType === 'saida' ? -transactionQuantity : 'N/A'}</td>
+            <td>${transactionQuantity}</td>
             <td>
+              <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
               <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
             </td>
           `;
-
           clientHistoryTableBody.appendChild(row);
         });
 
+        // Configurar os botões de excluir e editar
         document.querySelectorAll('.delete-btn').forEach(button => {
           button.addEventListener('click', async () => {
             const transactionId = button.getAttribute('data-id');
@@ -74,15 +74,75 @@
           });
         });
 
+        document.querySelectorAll('.edit-client').forEach(button => {
+          button.addEventListener('click', () => {
+            const row = button.closest('tr');
+            editTransactionRow(row, button.getAttribute('data-id'));
+          });
+        });
+
       } catch (error) {
         console.error("Erro ao carregar dados do Firestore:", error);
       }
     }
 
+    function editTransactionRow(row, transactionId) {
+      const cells = row.querySelectorAll('td');
+
+      const originalClientName = cells[0].textContent;
+      const originalProductName = cells[1].textContent;
+      const originalTransactionDate = cells[2].textContent;
+      const originalTransactionType = cells[3].textContent;
+      const originalTransactionQuantity = parseInt(cells[6].textContent);
+
+      cells[0].innerHTML = `<input type="text" value="${originalClientName}" />`;
+      cells[1].innerHTML = `<input type="text" value="${originalProductName}" />`;
+      cells[2].innerHTML = `<input type="date" value="${originalTransactionDate}" />`;
+      cells[3].innerHTML = `
+        <select>
+          <option value="entrada" ${originalTransactionType === 'entrada' ? 'selected' : ''}>Entrada</option>
+          <option value="saida" ${originalTransactionType === 'saida' ? 'selected' : ''}>Saída</option>
+        </select>
+      `;
+      cells[6].innerHTML = `<input type="number" value="${originalTransactionQuantity}" />`;
+
+      const editButton = row.querySelector('.edit-client');
+      editButton.textContent = 'Salvar';
+      editButton.classList.remove('edit-client');
+      editButton.classList.add('save-client');
+
+      editButton.addEventListener('click', async () => {
+        const updatedClientName = cells[0].querySelector('input').value.trim();
+        const updatedProductName = cells[1].querySelector('input').value.trim();
+        const updatedTransactionDate = cells[2].querySelector('input').value;
+        const updatedTransactionType = cells[3].querySelector('select').value;
+        const updatedTransactionQuantity = parseInt(cells[6].querySelector('input').value);
+
+        const finalTransactionQuantity = updatedTransactionType === 'entrada' ? updatedTransactionQuantity : -updatedTransactionQuantity;
+
+        const updatedTransaction = {
+          clientName: updatedClientName,
+          productName: updatedProductName,
+          transactionDate: updatedTransactionDate,
+          transactionType: updatedTransactionType,
+          transactionQuantity: finalTransactionQuantity
+        };
+
+        try {
+          await updateDoc(doc(db, 'transactions', transactionId), updatedTransaction);
+
+          alert('Transação atualizada com sucesso!');
+          loadTransactionsFromFirestore();
+        } catch (error) {
+          console.error('Erro ao atualizar transação:', error);
+          alert('Erro ao atualizar transação.');
+        }
+      });
+    }
+
     loadTransactionsFromFirestore();
   </script>
 
-  <!-- Barra de Navegação -->
   <nav>
     <ul class="navbar">
       <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
@@ -91,10 +151,8 @@
     </ul>
   </nav>
 
-  <!-- Seção de Totais -->
   <h1><span class="material-icons">person_search</span> Pesquisar Clientes</h1>
 
-  <!-- Tabela de transações -->
   <table id="clientHistoryTable">
     <thead>
       <tr>
@@ -116,6 +174,7 @@
   </footer>
 </body>
 </html>
+
 
 
 
