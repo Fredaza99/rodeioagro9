@@ -32,50 +32,78 @@
         window.location.href = 'login.html';
     }
 
- // Função para carregar clientes do Firestore e preencher a tabela em cliente.html
+// Função para carregar clientes do Firestore e preencher a tabela de clientes com filtro de produtos
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
     const querySnapshot = await getDocs(clientsCollection);
 
-    // Obtém o corpo da tabela onde os clientes serão inseridos
     const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+    const productFilterDropdown = document.getElementById('productFilter'); // Referência ao dropdown
     clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar as linhas
 
-    const clients = []; // Lista para armazenar clientes temporariamente
+    const clients = [];
+    const productsSet = new Set(); // Conjunto para armazenar nomes únicos de produtos
 
-    // Adiciona cada cliente ao array 'clients'
+    // Adiciona cada cliente à lista e coleta nomes de produtos
     querySnapshot.forEach(docSnapshot => {
         const client = docSnapshot.data();
         clients.push({ id: docSnapshot.id, ...client });
+        productsSet.add(client.productName); // Armazena os produtos únicos
     });
 
     // Ordena os clientes por nome
     clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-    // Preenche a tabela com os dados do cliente
-    clients.forEach(client => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>
-                <button class="edit-client" data-id="${client.id}">Editar</button>
-                <button class="delete-btn" data-id="${client.id}">Excluir</button>
-            </td>
-            <td>${client.clientName || ''}</td>
-            <td>${client.productName || ''}</td>
-            <td>${client.date || ''}</td>
-            <td>${client.entryQuantity || 0}</td>
-            <td>${client.exitQuantity || 0}</td>
-            <td>${client.saldo || 0}</td>
-        `;
-        clientHistoryTableBody.appendChild(row); // Adiciona a linha à tabela
+    // Preenche o dropdown com produtos únicos
+    productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>'; // Opção padrão
+    productsSet.forEach(productName => {
+        const option = document.createElement('option');
+        option.value = productName;
+        option.textContent = productName;
+        productFilterDropdown.appendChild(option);
     });
 
-    // (Opcional) Lógica para o filtro, se necessário
-    // Se desejar restaurar um dropdown para filtro, é possível adicionar a lógica aqui.
+    // Função para filtrar a tabela com base no dropdown e pesquisa de cliente
+    function filterTable() {
+        const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+        const productFilter = productFilterDropdown.value.toLowerCase();
+
+        clientHistoryTableBody.innerHTML = ''; // Limpa a tabela antes de adicionar linhas filtradas
+
+        clients.forEach(client => {
+            const matchesClient = client.clientName.toLowerCase().includes(searchInput);
+            const matchesProduct = !productFilter || client.productName.toLowerCase() === productFilter;
+
+            if (matchesClient && matchesProduct) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <button class="edit-client" data-id="${client.id}">Editar</button>
+                        <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                    </td>
+                    <td>${client.clientName || ''}</td>
+                    <td>${client.productName || ''}</td>
+                    <td>${client.date || ''}</td>
+                    <td>${client.entryQuantity || 0}</td>
+                    <td>${client.exitQuantity || 0}</td>
+                    <td>${client.saldo || 0}</td>
+                `;
+                clientHistoryTableBody.appendChild(row);
+            }
+        });
+    }
+
+    // Eventos de filtro para o campo de pesquisa e o dropdown
+    document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+    productFilterDropdown.addEventListener('change', filterTable);
+
+    // Chama a função de filtro para exibir todos os clientes no início
+    filterTable();
 }
 
 // Chama a função para carregar os clientes ao carregar a página
 window.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
