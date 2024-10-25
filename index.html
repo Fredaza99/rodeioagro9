@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+   <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+  <title>Rodeio Agronegócio</title>
+</head>
+<body>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+     if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'login.html';
+    }
+
+    // Function to handle form submission
+    document.getElementById('clientForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      const clientData = {
+        name: document.getElementById('clientName').value,
+        productName: document.getElementById('productName').value,
+        entryDate: document.getElementById('entryDate').value,
+        entryQuantity: document.getElementById('entryQuantity').value,
+        exitQuantity: document.getElementById('exitQuantity').value,
+        exitDate: document.getElementById('exitDate').value,
+      };
+      
+      // Add the client data to Firestore
+      try {
+        const docRef = await db.collection('clients').add(clientData);
+        console.log("Document written with ID: ", docRef.id);
+      } catch (error) {
+        console.error("Error adding document: ", error);
+      }
+    });
+  </script>
+  
+  <!-- Navigation Bar -->
+  <nav>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <div class="row">
+      <div class="logo-row">
+        <img class="logo" src="img/Sem título(1).png" alt="logo-rodeio"> 
+      </div>
+    </div>
+  </header>
+
+  <!-- Form to add clients -->
+  <form id="clientForm">
+    <label for="clientName">Nome do Cliente:</label>
+    <input type="text" id="clientName" required>
+
+    <label for="productName">Nome do Produto:</label>
+    <input type="text" id="productName" required>
+
+    <label for="entryDate">Data de Entrada:</label>
+    <input type="date" id="entryDate" required>
+
+    <label for="entryQuantity">Quantidade Entrada:</label>
+    <input type="number" id="entryQuantity" required>
+
+    <label for="exitQuantity">Quantidade Retirada:</label>
+    <input type="number" id="exitQuantity">
+
+    <label for="exitDate">Data de Saída:</label>
+    <input type="date" id="exitDate">
+
+    <button type="submit">Adicionar Cliente</button>
+  </form>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Reference to the main JavaScript file -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
