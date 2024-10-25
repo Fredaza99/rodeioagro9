@@ -11,8 +11,7 @@
 <body>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
@@ -20,84 +19,64 @@
       projectId: "rodeioagro-fee43",
       storageBucket: "rodeioagro-fee43.appspot.com",
       messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    if (!sessionStorage.getItem('loggedIn')) {
-        window.location.href = 'login.html';
-    }
-
     async function loadTransactionsFromFirestore() {
-      const transactionsCollection = collection(db, 'transactions');
-      const querySnapshot = await getDocs(transactionsCollection);
+      console.log("Iniciando a coleta de dados...");
+      try {
+        const transactionsCollection = collection(db, 'transactions');
+        const querySnapshot = await getDocs(transactionsCollection);
 
-      const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
-      clientHistoryTableBody.innerHTML = '';
-
-      const transactions = [];
-      let totalEntradas = 0;
-      let totalSaidas = 0;
-
-      querySnapshot.forEach(docSnapshot => {
-        const transaction = docSnapshot.data();
-        transactions.push({ id: docSnapshot.id, ...transaction });
-      });
-
-      transactions.sort((a, b) => a.clientName.localeCompare(b.clientName));
-
-      transactions.forEach(transaction => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${transaction.clientName}</td>
-          <td>${transaction.productName}</td>
-          <td>${transaction.transactionDate}</td>
-          <td>${transaction.transactionType}</td>
-          <td>${transaction.transactionType === 'entrada' ? transaction.transactionQuantity : 'N/A'}</td>
-          <td>${transaction.transactionType === 'saida' ? -transaction.transactionQuantity : 'N/A'}</td>
-          <td>${transaction.transactionQuantity}</td>
-          <td>
-            <button class="edit-client" data-id="${transaction.id}">Editar</button>
-            <button class="delete-btn" data-id="${transaction.id}">Excluir</button>
-          </td>
-        `;
-
-        if (transaction.transactionType === 'entrada') {
-          totalEntradas += transaction.transactionQuantity;
-        } else {
-          totalSaidas += Math.abs(transaction.transactionQuantity);
+        if (querySnapshot.empty) {
+          console.log("Nenhum dado encontrado.");
+          return;
         }
 
-        clientHistoryTableBody.appendChild(row);
-      });
+        console.log("Dados encontrados:", querySnapshot.size);
+        const clientHistoryTableBody = document.getElementById('clientHistoryTable').querySelector('tbody');
+        clientHistoryTableBody.innerHTML = '';
 
-      document.getElementById('totalEntradas').textContent = totalEntradas;
-      document.getElementById('totalSaldo').textContent = totalEntradas - totalSaidas;
+        querySnapshot.forEach(docSnapshot => {
+          const transaction = docSnapshot.data();
+          console.log("Transação carregada:", transaction);
 
-      // Event listeners para editar e excluir
-      document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-          const transactionId = button.getAttribute('data-id');
-          try {
-            await deleteDoc(doc(db, 'transactions', transactionId));
-            alert('Transação excluída com sucesso!');
-            loadTransactionsFromFirestore();
-          } catch (error) {
-            console.error('Erro ao excluir transação: ', error);
-          }
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${transaction.clientName}</td>
+            <td>${transaction.productName}</td>
+            <td>${transaction.transactionDate}</td>
+            <td>${transaction.transactionType}</td>
+            <td>${transaction.transactionType === 'entrada' ? transaction.transactionQuantity : 'N/A'}</td>
+            <td>${transaction.transactionType === 'saida' ? -transaction.transactionQuantity : 'N/A'}</td>
+            <td>${transaction.transactionQuantity}</td>
+            <td>
+              <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
+            </td>
+          `;
+
+          clientHistoryTableBody.appendChild(row);
         });
-      });
 
-      document.querySelectorAll('.edit-client').forEach(button => {
-        button.addEventListener('click', () => {
-          const row = button.closest('tr');
-          editTransactionRow(row, button.getAttribute('data-id'));
+        document.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', async () => {
+            const transactionId = button.getAttribute('data-id');
+            try {
+              await deleteDoc(doc(db, 'transactions', transactionId));
+              alert('Transação excluída com sucesso!');
+              loadTransactionsFromFirestore();
+            } catch (error) {
+              console.error('Erro ao excluir transação: ', error);
+            }
+          });
         });
-      });
+
+      } catch (error) {
+        console.error("Erro ao carregar dados do Firestore:", error);
+      }
     }
 
     loadTransactionsFromFirestore();
@@ -105,38 +84,15 @@
 
   <!-- Barra de Navegação -->
   <nav>
-    <div class="navbar-container">
-      <ul class="navbar">
-        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-        <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
-      </ul>
-    </div>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
   </nav>
 
   <!-- Seção de Totais -->
-  <div class="totals-cards">
-    <div class="card">
-      <span class="material-icons">add_circle</span>
-      <p>Total de Entradas</p>
-      <h2 id="totalEntradas">0</h2>
-    </div>
-    <div class="card">
-      <span class="material-icons">account_balance_wallet</span>
-      <p>Total de Saldo</p>
-      <h2 id="totalSaldo">0</h2>
-    </div>
-  </div>
-
   <h1><span class="material-icons">person_search</span> Pesquisar Clientes</h1>
-
-  <!-- Campo de pesquisa -->
-  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
-  
-  <!-- Dropdown de filtro -->
-  <select id="productFilter">
-    <option value="">Todos os Produtos</option>
-  </select>
 
   <!-- Tabela de transações -->
   <table id="clientHistoryTable">
@@ -158,11 +114,9 @@
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
   </footer>
-
-  <!-- Referência ao JavaScript -->
-  <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
