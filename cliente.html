@@ -52,23 +52,26 @@
       // Ordenar os clientes por nome
       clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-      clients.forEach(client => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${client.clientName}</td>
-          <td>${client.productName}</td>
-          <td>${client.entryDate}</td>
-          <td>${client.exitDate || 'N/A'}</td>
-          <td>${client.entryQuantity || 0}</td>
-          <td>${client.exitQuantity || 0}</td>
-          <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
-          <td>
+ // Dentro de loadClientsFromFirestore em cliente.html
+clients.forEach(client => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${client.clientName}</td>
+        <td>${client.productName}</td>
+        <td>${client.entryDate}</td>
+        <td>${client.exitDate || 'N/A'}</td>
+        <td>${client.entryQuantity || 0}</td>
+        <td>${client.exitQuantity || 0}</td>
+        <td>${(client.entryQuantity || 0) - (client.exitQuantity || 0)}</td>
+        <td>${client.transactionType}</td> <!-- Exibe o tipo de transação -->
+        <td>
             <button class="edit-client" data-id="${client.id}">Editar</button>
             <button class="delete-btn" data-id="${client.id}">Excluir</button>
-          </td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-      });
+        </td>
+    `;
+    clientHistoryTableBody.appendChild(row);
+});
+
 
       // Popular o dropdown com nomes de produtos únicos
       productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
