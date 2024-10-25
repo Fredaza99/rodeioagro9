@@ -24,17 +24,23 @@ async function addStockToFirestore(product) {
   }
 }
 
-// Inicializa o tipo de transação como "Entrada" por padrão
+// Inicializa o tipo de transação com "Entrada" como padrão
 let transactionType = "Entrada";
 
-// Função para definir o tipo de transação com base no botão clicado
+// Função para configurar o tipo de transação e destacar o botão ativo
 function setTransactionType(type) {
     transactionType = type;
-    document.getElementById("entryButton").style.backgroundColor = type === 'Entrada' ? '#00ADB5' : '#ccc';
-    document.getElementById("exitButton").style.backgroundColor = type === 'Saída' ? '#00ADB5' : '#ccc';
+
+    // Ajusta o estilo dos botões para refletir o tipo selecionado
+    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
 }
 
-// Evento de envio de formulário para salvar cliente no Firestore
+// Configura eventos de clique para os botões de transação
+document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+// Evento de envio de formulário
 document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -43,14 +49,14 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     const date = document.getElementById('date').value;
     const quantity = parseInt(document.getElementById('quantity').value);
 
-    // Define os dados com base no tipo de transação
+    // Define os dados do cliente com base no tipo de transação
     const client = {
         clientName,
         productName,
         date,
-        entryQuantity: transactionType === 'Entrada' ? quantity : 0,
-        exitQuantity: transactionType === 'Saída' ? quantity : 0,
-        saldo: transactionType === 'Entrada' ? quantity : -quantity
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
     };
 
     // Salva o cliente no Firestore
@@ -58,6 +64,7 @@ document.getElementById('clientForm').addEventListener('submit', async function 
 
     window.location.href = 'cliente.html';
 });
+
 
 
 // Atualização para exibir a tabela em cliente.html
