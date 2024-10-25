@@ -265,34 +265,28 @@ if (window.location.pathname.includes('estoque.html')) {
     await addStockToFirestore(product); // Salva no Firestore
     window.location.reload(); // Recarrega a página para atualizar a tabela
   });
-
 async function loadClientsFromFirestore() {
     try {
-        // Captura os dados da coleção 'clients' do Firestore
         const querySnapshot = await getDocs(collection(db, 'clients'));
         const clients = [];
 
-        // Extrai os dados e adiciona ao array de clientes
+        // Extrai os dados dos documentos Firestore
         querySnapshot.forEach((docSnapshot) => {
             const client = docSnapshot.data();
             clients.push({ id: docSnapshot.id, ...client });
         });
 
-        // Ordena os clientes pelo nome (alfabeticamente)
+        // Ordena os clientes por nome (ordem alfabética)
         clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-        // Seleciona o corpo da tabela e limpa para evitar duplicação
+        // Limpa e popula a tabela com clientes ordenados
         const tableBody = document.querySelector('#clientHistoryTable tbody');
-        if (!tableBody) {
-            console.error("Tabela ou tbody não encontrada");
-            return; // Encerra a função se o tbody não for encontrado
-        }
-        tableBody.innerHTML = ''; // Limpa o tbody antes de inserir novas linhas
+        tableBody.innerHTML = ''; // Limpa a tabela
 
-        // Insere os clientes ordenados na tabela
         clients.forEach(client => {
             const newRow = tableBody.insertRow();
 
+            // Insere os dados de cada cliente nas células da nova linha
             newRow.insertCell(0).textContent = client.clientName || 'N/A';
             newRow.insertCell(1).textContent = client.productName || 'N/A';
             newRow.insertCell(2).textContent = client.entryDate || 'N/A';
@@ -300,33 +294,9 @@ async function loadClientsFromFirestore() {
             newRow.insertCell(4).textContent = client.entryQuantity || 0;
             newRow.insertCell(5).textContent = client.exitQuantity || 0;
             newRow.insertCell(6).textContent = client.saldo || 0;
-
-            // Botão de edição
-            const editCell = newRow.insertCell(7);
-            const editButton = document.createElement('button');
-            editButton.textContent = 'Editar';
-            editButton.classList.add('edit-btn');
-            editButton.addEventListener('click', () => editClientRow(newRow, client.id));
-            editCell.appendChild(editButton);
-
-            // Botão de exclusão
-            const deleteCell = newRow.insertCell(8);
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Excluir';
-            deleteButton.classList.add('delete-btn');
-            deleteButton.addEventListener('click', async () => {
-                try {
-                    await deleteDoc(doc(db, 'clients', client.id));
-                    console.log('Cliente removido com sucesso');
-                    loadClientsFromFirestore(); // Atualiza a tabela após exclusão
-                } catch (error) {
-                    console.error('Erro ao remover cliente:', error);
-                }
-            });
-            deleteCell.appendChild(deleteButton);
         });
     } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
+        console.error('Erro ao carregar clientes: ', error);
     }
 }
 
