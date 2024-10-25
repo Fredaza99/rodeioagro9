@@ -77,6 +77,13 @@
 
   <!-- Form to add clients -->
   <form id="clientForm">
+    <!-- Adicione este código dentro do formulário em index.html -->
+<label for="transactionType">Tipo de Transação:</label>
+<select id="transactionType" required>
+    <option value="Entrada">Entrada</option>
+    <option value="Saída">Saída</option>
+</select>
+
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
 
