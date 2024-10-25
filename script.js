@@ -95,58 +95,57 @@ if (window.location.pathname.includes('pedidos.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
   table.innerHTML = ''; // Clear the table before filling it
 
-  // Function to load clients from Firestore and sort them alphabetically
-  async function loadClientsFromFirestore() {
+ async function loadClientsFromFirestore() {
     try {
-      const querySnapshot = await getDocs(collection(db, 'clients'));
-      const clients = [];
+        const querySnapshot = await getDocs(collection(db, 'clients'));
+        const clients = [];
 
-      querySnapshot.forEach((docSnapshot) => {
-        const client = docSnapshot.data();
-        clients.push({ id: docSnapshot.id, ...client });
-      });
-
-      // Ordena os clientes por nome
-      clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
-
-      clients.forEach(client => {
-        const newRow = table.insertRow();
-        newRow.insertCell(0).textContent = client.clientName;
-        newRow.insertCell(1).textContent = client.productName;
-        newRow.insertCell(2).textContent = client.entryDate;
-        newRow.insertCell(3).textContent = client.exitDate;
-        newRow.insertCell(4).textContent = client.entryQuantity;
-        newRow.insertCell(5).textContent = client.exitQuantity;
-        newRow.insertCell(6).textContent = client.saldo;
-
-        // Edit button
-        const editCell = newRow.insertCell(7);
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Editar';
-        editButton.classList.add('edit-btn');
-        editButton.addEventListener('click', () => editClientRow(newRow, client.id));
-        editCell.appendChild(editButton);
-
-        // Delete button
-        const deleteCell = newRow.insertCell(8);
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Excluir';
-        deleteButton.classList.add('delete-btn');
-        deleteButton.addEventListener('click', async () => {
-          try {
-            await deleteDoc(doc(db, 'clients', client.id));
-            console.log('Cliente removido com sucesso');
-            window.location.reload(); // Reload the page to update the table
-          } catch (error) {
-            console.error('Erro ao remover cliente: ', error);
-          }
+        // Extrai dados dos clientes
+        querySnapshot.forEach((docSnapshot) => {
+            const client = docSnapshot.data();
+            clients.push({ id: docSnapshot.id, ...client });
         });
-        deleteCell.appendChild(deleteButton);
-      });
+
+        // Ordena os clientes alfabeticamente pelo nome
+        clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+        // Limpa a tabela antes de preencher com dados ordenados
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = '';
+
+        // Adiciona os clientes ordenados à tabela
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${client.entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
+
+        // Adiciona a confirmação de exclusão aos botões de exclusão
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const clientId = event.target.getAttribute('data-id');
+                if (confirm("Você tem certeza que deseja excluir este cliente?")) {
+                    deleteClient(clientId);
+                }
+            });
+        });
     } catch (error) {
-      console.error('Erro ao carregar clientes: ', error);
+        console.error('Erro ao carregar clientes: ', error);
     }
-  }
+}
+
 
 function editClientRow(row, clientId) {
     const cells = row.querySelectorAll('td');
