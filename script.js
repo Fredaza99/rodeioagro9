@@ -95,46 +95,58 @@ if (window.location.pathname.includes('pedidos.html')) {
   const table = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
   table.innerHTML = ''; // Clear the table before filling it
 
-async function loadClientsFromFirestore() {
+// Function to load clients from Firestore and sort them alphabetically
+  async function loadClientsFromFirestore() {
     try {
-        const querySnapshot = await getDocs(collection(db, 'clients'));
-        let clients = [];
+      const querySnapshot = await getDocs(collection(db, 'clients'));
+      const clients = [];
 
-        // Extrai dados dos clientes
-        querySnapshot.forEach((docSnapshot) => {
-            const client = docSnapshot.data();
-            clients.push({ id: docSnapshot.id, ...client });
+      querySnapshot.forEach((docSnapshot) => {
+        const client = docSnapshot.data();
+        clients.push({ id: docSnapshot.id, ...client });
+      });
+
+      // Ordena os clientes por nome
+      clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+      clients.forEach(client => {
+        const newRow = table.insertRow();
+        newRow.insertCell(0).textContent = client.clientName;
+        newRow.insertCell(1).textContent = client.productName;
+        newRow.insertCell(2).textContent = client.entryDate;
+        newRow.insertCell(3).textContent = client.exitDate;
+        newRow.insertCell(4).textContent = client.entryQuantity;
+        newRow.insertCell(5).textContent = client.exitQuantity;
+        newRow.insertCell(6).textContent = client.saldo;
+
+        // Edit button
+        const editCell = newRow.insertCell(7);
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Editar';
+        editButton.classList.add('edit-btn');
+        editButton.addEventListener('click', () => editClientRow(newRow, client.id));
+        editCell.appendChild(editButton);
+
+        // Delete button
+        const deleteCell = newRow.insertCell(8);
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Excluir';
+        deleteButton.classList.add('delete-btn');
+        deleteButton.addEventListener('click', async () => {
+          try {
+            await deleteDoc(doc(db, 'clients', client.id));
+            console.log('Cliente removido com sucesso');
+            window.location.reload(); // Reload the page to update the table
+          } catch (error) {
+            console.error('Erro ao remover cliente: ', error);
+          }
         });
-
-        // Ordena os clientes alfabeticamente pelo campo 'clientName'
-        clients.sort((a, b) => {
-            if (a.clientName && b.clientName) {
-                return a.clientName.localeCompare(b.clientName);
-            }
-            return 0;
-        });
-
-        // Limpa a tabela antes de preenchê-la
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = '';
-
-        // Preenche a tabela com os dados ordenados
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+        deleteCell.appendChild(deleteButton);
+      });
     } catch (error) {
-        console.error('Erro ao carregar clientes: ', error);
+      console.error('Erro ao carregar clientes: ', error);
     }
-}
+  }
 
 
 function editClientRow(row, clientId) {
