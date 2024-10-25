@@ -390,7 +390,7 @@ input[type="password"]:focus {
 .save-client:hover {
     background-color: #27ae60; /* Um verde mais escuro no hover */
 }
-
+/* Botões de Transação */
 #transactionButtons {
     display: flex;
     gap: 10px;
@@ -398,7 +398,7 @@ input[type="password"]:focus {
     justify-content: center;
 }
 
-#entryButton, #exitButton {
+.transaction-btn {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
@@ -409,13 +409,14 @@ input[type="password"]:focus {
     transition: background-color 0.3s ease;
 }
 
-#entryButton:hover, #exitButton:hover {
+.transaction-btn:hover {
     background-color: #18bc9c;
 }
 
-#entryButton.active, #exitButton.active {
-    background-color: #00ADB5; /* Cor ativa */
+.transaction-btn.active {
+    background-color: #00ADB5; /* Cor para o botão ativo */
 }
+
 
 
 
