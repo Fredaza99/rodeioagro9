@@ -14,7 +14,7 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes, ordenados alfabeticamente e cronologicamente
+// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
@@ -26,17 +26,14 @@ async function loadClientsFromFirestore() {
             ...doc.data()
         }));
         
-        // Ordena por nome (alfabético) e por data (decrescente) se o nome for igual
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                // Parsing para garantir que estamos comparando datas reais
-                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data descrescente
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
             }
             return nameComparison;
         });
 
-        // Limpa e exibe clientes ordenados na tabela
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
@@ -63,8 +60,6 @@ async function loadClientsFromFirestore() {
         console.error('Erro ao carregar clientes:', error);
     }
 }
-
-
 
 // Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
@@ -140,8 +135,87 @@ function editClientRow(row, clientId) {
     });
 }
 
+function filterTable() {
+    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+    const aggregatedData = {}; // Armazena as somas por cliente/produto
+
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    // Primeiro, agrupamos as quantidades de entrada e saída para cada cliente e produto
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.toLowerCase();
+        const productName = row.cells[2].textContent.toLowerCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
+
+        if (matchesClient && matchesProduct) {
+            // Agrupamento por cliente e produto
+            const key = `${clientName}-${productName}`;
+            if (!aggregatedData[key]) {
+                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0 };
+            }
+            aggregatedData[key].entryQuantity += entryQuantity;
+            aggregatedData[key].exitQuantity += exitQuantity;
+
+            row.style.display = 'none'; // Esconde a linha original temporariamente
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Limpa o corpo da tabela para exibir as linhas agrupadas
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
+    // Exibir linhas agrupadas e calcular saldo
+    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity }) => {
+        const saldo = entryQuantity - exitQuantity;
+        
+        // Cria uma nova linha na tabela para exibir os dados agrupados
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${saldo >= 0 ? 'Entrada' : 'Saída'}</td>
+            <td>${clientName}</td>
+            <td>${productName}</td>
+            <td>-</td>
+            <td>${entryQuantity}</td>
+            <td>${exitQuantity}</td>
+            <td>${saldo}</td>
+            <td></td>
+        `;
+
+        // Adiciona uma classe à linha para aplicar cor com base no saldo
+        if (saldo < 0) {
+            row.classList.add('negative-saldo'); // Classe para saldo negativo
+        } else if (saldo > 0) {
+            row.classList.add('positive-saldo'); // Classe para saldo positivo
+        } else {
+            row.classList.add('neutral-saldo'); // Classe para saldo zero
+        }
+
+        clientHistoryTableBody.appendChild(row);
+
+        totalEntradas += entryQuantity;
+        totalSaldo += saldo;
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+}
+
+
+
+
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
