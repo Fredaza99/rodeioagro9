@@ -81,11 +81,13 @@ form input[type="text"]:focus, form input[type="date"]:focus, form input[type="n
 }
 
 form button {
-    padding: 8px 16px;
+    padding: 10px 16px;
     background-color: #00ADB5;
+    display: flex;
+    justify-content: right;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 7px;
     cursor: pointer;
     transition: background-color 0.3s;
 }
@@ -246,17 +248,17 @@ table tbody tr:hover {
 /* Transaction Buttons */
 #transactionButtons {
     display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    justify-content: center;
+    gap: 12px;
+    margin-bottom: 17px;
+    justify-content:left;
 }
 
 .transaction-btn {
-    padding: 8px 16px;
+    padding: 10px 16px;
     border: none;
-    border-radius: 5px;
+    border-radius: 7px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
     background-color: #ccc;
     color: white;
     transition: background-color 0.3s ease;
@@ -304,6 +306,12 @@ footer {
         width: 100%;
     }
 }
+
+
+
+
+  
+
 
 
 
