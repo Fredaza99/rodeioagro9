@@ -64,8 +64,9 @@ async function loadClientsFromFirestore() {
 
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
     clientHistoryTableBody.innerHTML = ''; 
+    
     const productFilterDropdown = document.getElementById('productFilter');
-        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+    productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
 
     let totalEntradas = 0;
     let totalSaldo = 0;
