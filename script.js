@@ -30,7 +30,8 @@ async function loadClientsFromFirestore() {
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                return new Date(b.date) - new Date(a.date);  // Ordena por data descrescente
+                // Parsing para garantir que estamos comparando datas reais
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data descrescente
             }
             return nameComparison;
         });
@@ -62,6 +63,7 @@ async function loadClientsFromFirestore() {
         console.error('Erro ao carregar clientes:', error);
     }
 }
+
 
 
 // Função para definir o tipo de transação e destacar o botão ativo
