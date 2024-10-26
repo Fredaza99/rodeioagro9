@@ -140,14 +140,12 @@ function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    // Objeto para armazenar dados agrupados de entrada, saída e saldo
+    // Objeto para armazenar dados agregados por cliente e produto
     const aggregatedData = {};
-
-    // Limpa as variáveis de totais
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    // Agrupa as entradas e saídas por cliente e produto
+    // Agrupamento das entradas e saídas
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.toLowerCase();
         const productName = row.cells[2].textContent.toLowerCase();
@@ -158,30 +156,30 @@ function filterTable() {
         const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
-            // Agrupa por cliente e produto
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
                 aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
             aggregatedData[key].entryQuantity += entryQuantity;
             aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo = aggregatedData[key].entryQuantity - aggregatedData[key].exitQuantity;
 
-            row.style.display = 'none'; // Oculta as linhas originais
+            row.style.display = 'none'; // Esconde linhas originais
         } else {
             row.style.display = 'none';
         }
     });
 
-    // Limpa o corpo da tabela para exibir as linhas agrupadas
+    // Limpa a tabela para exibir dados agregados
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
     clientHistoryTableBody.innerHTML = '';
 
-    // Cria uma linha para cada cliente-produto agrupado e calcula o saldo
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
+    // Geração de linhas agregadas com saldo e coloração de acordo com o saldo
+    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity }) => {
+        const saldo = entryQuantity - exitQuantity;
+
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${saldo >= 0 ? 'Entrada' : 'Saída'}</td>
+            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
             <td>${clientName}</td>
             <td>${productName}</td>
             <td>-</td>
@@ -191,13 +189,13 @@ function filterTable() {
             <td></td>
         `;
 
-        // Aplica a cor da linha com base no saldo
+        // Define a cor da linha com base no saldo
         if (saldo < 0) {
-            row.style.backgroundColor = 'lightcoral'; // Saldo negativo
+            row.style.backgroundColor = 'lightcoral';
         } else if (saldo > 0) {
-            row.style.backgroundColor = 'lightgreen'; // Saldo positivo
+            row.style.backgroundColor = 'lightgreen';
         } else {
-            row.style.backgroundColor = 'white'; // Saldo neutro
+            row.style.backgroundColor = 'white';
         }
 
         clientHistoryTableBody.appendChild(row);
@@ -206,10 +204,11 @@ function filterTable() {
         totalSaldo += saldo;
     });
 
-    // Atualiza os totais na interface
+    // Atualiza os totais
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
 
 
 
