@@ -14,7 +14,7 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes, ordenados alfabeticamente
+// Função para carregar e exibir clientes, ordenados alfabeticamente e cronologicamente
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
@@ -25,7 +25,15 @@ async function loadClientsFromFirestore() {
             id: doc.id,
             ...doc.data()
         }));
-        clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
+        
+        // Ordena por nome (alfabético) e por data (decrescente) se o nome for igual
+        clients.sort((a, b) => {
+            const nameComparison = a.clientName.localeCompare(b.clientName);
+            if (nameComparison === 0) {
+                return new Date(b.date) - new Date(a.date);  // Ordena por data descrescente
+            }
+            return nameComparison;
+        });
 
         // Limpa e exibe clientes ordenados na tabela
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
@@ -54,6 +62,7 @@ async function loadClientsFromFirestore() {
         console.error('Erro ao carregar clientes:', error);
     }
 }
+
 
 // Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
