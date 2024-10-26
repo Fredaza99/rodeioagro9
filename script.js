@@ -19,14 +19,11 @@ async function loadClientsFromFirestore() {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes por data decrescente
+        // Ordena os clientes por data (mais recente primeiro)
         const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-        }));
-
-        // Ordenação por data (mais recente primeiro)
-        clients.sort((a, b) => new Date(b.date) - new Date(a.date));
+        })).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = '';
@@ -52,8 +49,10 @@ async function loadClientsFromFirestore() {
         });
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
+        alert('Erro ao carregar clientes do Firestore.');
     }
 }
+
 
 
 // Função para definir o tipo de transação e destacar o botão ativo
