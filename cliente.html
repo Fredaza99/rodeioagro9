@@ -41,53 +41,60 @@
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
     });
 
-    async function loadClientsFromFirestore() {
-        const clientsCollection = collection(db, 'clients');
-        const querySnapshot = await getDocs(clientsCollection);
+async function loadClientsFromFirestore() {
+    const clientsCollection = collection(db, 'clients');
+    const querySnapshot = await getDocs(clientsCollection);
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; 
+    const clients = [];
 
-        const productFilterDropdown = document.getElementById('productFilter');
-        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+    querySnapshot.forEach(docSnapshot => {
+        const client = docSnapshot.data();
+        client.id = docSnapshot.id;  // Preserva o ID para ações de edição/exclusão
+        clients.push(client);
+    });
 
-        let totalEntradas = 0;
-        let totalSaldo = 0;
+    // Ordena por nome alfabético e por data (cronológica decrescente)
+    clients.sort((a, b) => {
+        const nameComparison = a.clientName.localeCompare(b.clientName);
+        if (nameComparison === 0) {
+            return new Date(b.date) - new Date(a.date);  // Ordena por data descrescente se o nome for igual
+        }
+        return nameComparison;
+    });
 
-        querySnapshot.forEach(docSnapshot => {
-            const client = docSnapshot.data();
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = ''; 
 
-            totalEntradas += client.entryQuantity || 0;
-            totalSaldo += client.saldo || 0;
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
-                    <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
+    clients.forEach(client => {
+        const row = document.createElement('tr');
+        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-            if (![...productFilterDropdown.options].some(option => option.value === client.productName)) {
-                const option = document.createElement('option');
-                option.value = client.productName;
-                option.textContent = client.productName;
-                productFilterDropdown.appendChild(option);
-            }
-        });
+        totalEntradas += client.entryQuantity || 0;
+        totalSaldo += client.saldo || 0;
 
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
-    }
+        row.innerHTML = `
+            <td>${action}</td>
+            <td>${client.clientName || ''}</td>
+            <td>${client.productName || ''}</td>
+            <td>${client.date || ''}</td>
+            <td>${client.entryQuantity || 0}</td>
+            <td>${client.exitQuantity || 0}</td>
+            <td>${client.saldo || 0}</td>
+            <td>
+                <button class="edit-client" data-id="${client.id}">Editar</button>
+                <button class="delete-btn" data-id="${client.id}">Excluir</button>
+            </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+}
+
 
     async function handleTableClick(event) {
         const button = event.target;
