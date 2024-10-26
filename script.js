@@ -14,22 +14,22 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes, ordenados alfabeticamente
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes
+        // Extrair e ordenar dados dos clientes por data decrescente
         const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-        clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
 
-        // Limpa e exibe clientes ordenados na tabela
+        // Ordenação por data (mais recente primeiro)
+        clients.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+        clientHistoryTableBody.innerHTML = '';
 
         clients.forEach(client => {
             const row = document.createElement('tr');
@@ -54,6 +54,7 @@ async function loadClientsFromFirestore() {
         console.error('Erro ao carregar clientes:', error);
     }
 }
+
 
 // Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
@@ -131,6 +132,29 @@ function editClientRow(row, clientId) {
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
