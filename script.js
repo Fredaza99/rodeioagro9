@@ -14,18 +14,17 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
+// Função para carregar e exibir clientes (transações individuais)
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes
         const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-
+        
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
@@ -104,7 +103,7 @@ function editClientRow(row, clientId) {
     // Torna as células editáveis
     cells.forEach((cell, index) => {
         if (index > 0 && index < cells.length - 1) {
-            cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            cell.innerHTML = <input type="text" value="${originalValues[index]}" />;
         }
     });
 
@@ -135,70 +134,78 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para filtrar e agrupar a tabela
+// Função de filtro para exibir dados consolidados por produto ou detalhados por cliente
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
-    const aggregatedData = {}; // Armazenará as somas por cliente/produto
-
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    
     let totalEntradas = 0;
     let totalSaldo = 0;
+    
+    // Obter todas as linhas carregadas
+    const rows = Array.from(clientHistoryTableBody.querySelectorAll('tr'));
 
-    tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.toLowerCase();
-        const productName = row.cells[2].textContent.toLowerCase();
-        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
-        const saldo = parseFloat(row.cells[6].textContent) || 0;
+    if (productFilter) {
+        // Agrupar por cliente para o filtro de produto específico
+        const groupedClients = {};
 
-        const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = !productFilter || productName === productFilter;
+        rows.forEach(row => {
+            const clientName = row.cells[1].textContent.toLowerCase();
+            const productName = row.cells[2].textContent.toLowerCase();
+            const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+            const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+            const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-        if (matchesClient && matchesProduct) {
-            // Agrupamento por cliente e produto
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            if (productName === productFilter && clientName.includes(searchInput)) {
+                if (!groupedClients[clientName]) {
+                    groupedClients[clientName] = { clientName, totalEntry: 0, totalExit: 0, totalSaldo: 0 };
+                }
+
+                groupedClients[clientName].totalEntry += entryQuantity;
+                groupedClients[clientName].totalExit += exitQuantity;
+                groupedClients[clientName].totalSaldo += saldo;
             }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo += saldo;
+        });
 
-            row.style.display = 'none'; // Esconde a linha original temporariamente
-        } else {
-            row.style.display = 'none';
-        }
-    });
+        // Limpar a tabela e exibir as linhas consolidadas
+        clientHistoryTableBody.innerHTML = '';
 
-    // Exibir linhas agrupadas
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
+        Object.values(groupedClients).forEach(client => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${client.clientName}</td>
+                <td>${productFilter}</td>
+                <td>${client.totalEntry}</td>
+                <td>${client.totalExit}</td>
+                <td class="${client.totalSaldo >= 0 ? 'positive' : 'negative'}">${client.totalSaldo}</td>
+                <td></td>
+            `;
+            clientHistoryTableBody.appendChild(row);
 
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-            <td>${clientName}</td>
-            <td>${productName}</td>
-            <td>-</td>
-            <td>${entryQuantity}</td>
-            <td>${exitQuantity}</td>
-            <td>${saldo}</td>
-            <td></td>
-        `;
-        clientHistoryTableBody.appendChild(row);
+            totalEntradas += client.totalEntry;
+            totalSaldo += client.totalSaldo;
+        });
 
-        totalEntradas += entryQuantity;
-        totalSaldo += saldo;
-    });
+    } else {
+        // Exibir todas as linhas detalhadas se apenas o cliente for filtrado
+        rows.forEach(row => {
+            const clientName = row.cells[1].textContent.toLowerCase();
+            if (clientName.includes(searchInput)) {
+                row.style.display = '';
+                totalEntradas += parseFloat(row.cells[4].textContent) || 0;
+                totalSaldo += parseFloat(row.cells[6].textContent) || 0;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
-// Carrega os clientes ao carregar o DOM
+// Carrega os clientes ao carregar o DOM e configura os filtros
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 document.getElementById('productFilter').addEventListener('change', filterTable);
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
