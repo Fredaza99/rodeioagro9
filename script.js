@@ -198,6 +198,68 @@ function filterTable() {
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
+async function showAggregatedView() {
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    const modal = document.getElementById('aggregatedModal');
+    const closeModal = document.getElementsByClassName('close')[0];
+
+    // Clear previous results
+    aggregatedTableBody.innerHTML = '';
+
+    const aggregatedData = {}; // To store totals by client and product
+
+    // Fetch clients from Firestore
+    const querySnapshot = await getDocs(collection(db, 'clients'));
+    querySnapshot.forEach(doc => {
+        const client = doc.data();
+        const clientName = client.clientName.toLowerCase();
+        const productName = client.productName.toLowerCase();
+
+        // Aggregate only if product filter is applied
+        if (productFilter && productName === productFilter) {
+            const key = `${clientName}-${productName}`;
+            if (!aggregatedData[key]) {
+                aggregatedData[key] = { clientName: client.clientName, productName: client.productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            }
+            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
+            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
+            aggregatedData[key].saldo += client.saldo || 0;
+        }
+    });
+
+    // Display aggregated data in modal
+    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+            <td>${clientName}</td>
+            <td>${productName}</td>
+            <td>${entryQuantity}</td>
+            <td>${exitQuantity}</td>
+            <td>${saldo}</td>
+        `;
+        aggregatedTableBody.appendChild(row);
+    });
+
+    // Open modal
+    modal.style.display = 'block';
+
+    // Close modal functionality
+    closeModal.onclick = function() {
+        modal.style.display = 'none';
+    };
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+// Attach showAggregatedView to button click
+document.getElementById('showAggregatedButton').addEventListener('click', showAggregatedView);
+
+
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
