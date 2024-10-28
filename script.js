@@ -135,16 +135,12 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para filtrar e agrupar a tabela
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    const aggregatedData = {}; // Armazenará as somas por cliente/produto
-
-    let totalEntradas = 0;
-    let totalSaldo = 0;
+    let aggregatedData = {};
 
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.toLowerCase();
@@ -153,46 +149,30 @@ function filterTable() {
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-        const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = !productFilter || productName === productFilter;
-
-        if (matchesClient && matchesProduct) {
-            // Agrupamento por cliente e produto
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+        if (productName === productFilter) {
+            if (!aggregatedData[clientName]) {
+                aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo += saldo;
-
-            row.style.display = 'none'; // Esconde a linha original temporariamente
-        } else {
-            row.style.display = 'none';
+            aggregatedData[clientName].entryQuantity += entryQuantity;
+            aggregatedData[clientName].exitQuantity += exitQuantity;
+            aggregatedData[clientName].saldo += saldo;
         }
     });
 
-    // Exibir linhas agrupadas
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
+    // Limpa a tabela antes de reescrever os dados
+    const tbody = document.querySelector('#clientHistoryTable tbody');
+    tbody.innerHTML = '';
 
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-            <td>${clientName}</td>
-            <td>${productName}</td>
-            <td>-</td>
-            <td>${entryQuantity}</td>
-            <td>${exitQuantity}</td>
-            <td>${saldo}</td>
-            <td></td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-
-        totalEntradas += entryQuantity;
-        totalSaldo += saldo;
+    Object.entries(aggregatedData).forEach(([client, data]) => {
+        const newRow = tbody.insertRow();
+        newRow.innerHTML = `<td>${productFilter}</td>
+                            <td>${client}</td>
+                            <td>${data.entryQuantity}</td>
+                            <td>${data.exitQuantity}</td>
+                            <td>${data.saldo}</td>`;
     });
+}
+
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
