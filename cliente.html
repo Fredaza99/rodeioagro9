@@ -235,6 +235,17 @@ async function loadClientsFromFirestore() {
       <h2 id="totalSaldo">0</h2>
     </div>
   </div>
+    <!-- Modal para detalhes do cliente -->
+<div id="clientDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('clientDetailsModal')">&times;</span>
+        <h3>Detalhes do Cliente</h3>
+        <div id="clientTransactions">
+            <!-- Detalhes das transações do cliente serão carregados aqui -->
+        </div>
+    </div>
+</div>
+
 
   <!-- Campo de pesquisa e filtro -->
   <h1>Pesquisar Clientes</h1>
@@ -260,16 +271,8 @@ async function loadClientsFromFirestore() {
     </thead>
     <tbody></tbody>
   </table>
-    <!-- Modal para detalhes do cliente -->
-<div id="clientDetailsModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('clientDetailsModal')">&times;</span>
-        <h3>Detalhes do Cliente</h3>
-        <div id="clientTransactions">
-            <!-- Detalhes das transações do cliente serão carregados aqui -->
-        </div>
-    </div>
-</div>
+
+
 
 
   <footer>
