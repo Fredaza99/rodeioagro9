@@ -14,12 +14,13 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes (transações individuais)
+// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
+        // Extrair e ordenar dados dos clientes
         const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -103,7 +104,7 @@ function editClientRow(row, clientId) {
     // Torna as células editáveis
     cells.forEach((cell, index) => {
         if (index > 0 && index < cells.length - 1) {
-            cell.innerHTML = <input type="text" value="${originalValues[index]}" />;
+            cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
         }
     });
 
@@ -134,78 +135,96 @@ function editClientRow(row, clientId) {
     });
 }
 
-async function filterTable() {
+// Função para filtrar e agrupar a tabela
+function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    
-    clientHistoryTableBody.innerHTML = ''; // Limpa a tabela
-    
-    // Coleta todos os documentos da coleção 'clients'
-    const clientsCollection = collection(db, 'clients');
-    const querySnapshot = await getDocs(clientsCollection);
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    const groupedClients = {}; // Objeto para armazenar clientes agrupados
-
-    querySnapshot.forEach(docSnapshot => {
-        const client = docSnapshot.data();
-        const clientName = client.clientName.toLowerCase();
-        const productName = client.productName.toLowerCase();
-
-        // Verifica se o cliente e o produto correspondem ao filtro
-        if (clientName.includes(searchInput) && (!productFilter || productName === productFilter)) {
-            if (!groupedClients[clientName]) {
-                // Inicializa o objeto do cliente com valores somados
-                groupedClients[clientName] = { 
-                    clientName: client.clientName, 
-                    productName: client.productName,
-                    totalEntry: 0, 
-                    totalExit: 0, 
-                    totalSaldo: 0 
-                };
-            }
-
-            // Soma as entradas, saídas e saldo para o cliente
-            groupedClients[clientName].totalEntry += client.entryQuantity || 0;
-            groupedClients[clientName].totalExit += client.exitQuantity || 0;
-            groupedClients[clientName].totalSaldo += client.saldo || 0;
-        }
-    });
+    const aggregatedData = {}; // Armazenará as somas por cliente/produto
 
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    // Adiciona uma linha consolidada para cada cliente
-    Object.values(groupedClients).forEach(client => {
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.toLowerCase();
+        const productName = row.cells[2].textContent.toLowerCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
+
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
+
+        if (matchesClient && matchesProduct) {
+            // Agrupamento por cliente e produto
+            const key = `${clientName}-${productName}`;
+            if (!aggregatedData[key]) {
+                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            }
+            aggregatedData[key].entryQuantity += entryQuantity;
+            aggregatedData[key].exitQuantity += exitQuantity;
+            aggregatedData[key].saldo += saldo;
+
+            row.style.display = 'none'; // Esconde a linha original temporariamente
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Exibir linhas agrupadas
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
+    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>Consolidado</td>
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
+            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+            <td>${clientName}</td>
+            <td>${productName}</td>
             <td>-</td>
-            <td>${client.totalEntry}</td>
-            <td>${client.totalExit}</td>
-            <td class="${client.totalSaldo >= 0 ? 'positive' : 'negative'}">${client.totalSaldo}</td>
+            <td>${entryQuantity}</td>
+            <td>${exitQuantity}</td>
+            <td>${saldo}</td>
             <td></td>
         `;
         clientHistoryTableBody.appendChild(row);
 
-        // Soma os totais para exibição final
-        totalEntradas += client.totalEntry;
-        totalSaldo += client.totalSaldo;
+        totalEntradas += entryQuantity;
+        totalSaldo += saldo;
     });
 
-    // Atualiza os totais exibidos
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
-
-
-// Carrega os clientes ao carregar o DOM e configura os filtros
+// Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
-document.getElementById('productFilter').addEventListener('change', filterTable);
-document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
