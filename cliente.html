@@ -248,7 +248,23 @@ async function loadClientsFromFirestore() {
 
 <button id="showAggregatedButton">Show Aggregated View</button>
 
-<div id="aggregatedModal" class="modal">
+<table id="clientHistoryTable">
+    <thead>
+        <tr>
+            <th>Ação</th>
+            <th>Nome do Cliente</th>
+            <th>Produto</th>
+            <th>Data</th>
+            <th>Quantidade Entrada</th>
+            <th>Quantidade Retirada</th>
+            <th>Saldo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<div id="aggregatedModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close">&times;</span>
         <table id="aggregatedTable">
@@ -266,6 +282,7 @@ async function loadClientsFromFirestore() {
         </table>
     </div>
 </div>
+
 
 
   <footer>
