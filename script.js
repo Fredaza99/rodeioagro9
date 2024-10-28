@@ -4,60 +4,59 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-async function addClientToFirestore(clientData) {
+// Função para adicionar um cliente ao Firestore
+async function addClientToFirestore(client) {
     try {
-        const docRef = await addDoc(collection(db, 'clients'), clientData);
-        console.log("Documento escrito com ID: ", docRef.id);
+        await addDoc(collection(db, 'clients'), client);
+        console.log('Cliente salvo no Firestore');
     } catch (error) {
-        console.error("Erro ao adicionar documento: ", error);
+        console.error('Erro ao salvar cliente:', error);
     }
 }
 
-
+// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
-    const clientsCollection = collection(db, 'clients');
-    const querySnapshot = await getDocs(clientsCollection);
-    const aggregatedData = {};
+    try {
+        const clientsCollection = collection(db, 'clients');
+        const querySnapshot = await getDocs(clientsCollection);
 
-    querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const key = `${data.clientName}-${data.productName}`;
+        // Extrair e ordenar dados dos clientes
+        const clients = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        clients.sort((a, b) => {
+            const nameComparison = a.clientName.localeCompare(b.clientName);
+            if (nameComparison === 0) {
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
+            }
+            return nameComparison;
+        });
 
-        if (!aggregatedData[key]) {
-            aggregatedData[key] = {...data, totalEntries: 0, totalExits: 0, saldo: 0};
-        }
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
-        aggregatedData[key].totalEntries += data.entryQuantity;
-        aggregatedData[key].totalExits += data.exitQuantity;
-        aggregatedData[key].saldo += data.entryQuantity - data.exitQuantity;
-    });
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-    console.log(aggregatedData);
-    // Aqui, você chamaria a função para exibir os dados ou manipular mais, conforme necessário
-}
-
-
-function displayAggregatedData(aggregatedData) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
-
-    Object.values(aggregatedData).forEach(client => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
-            <td>${client.totalEntries}</td>
-            <td>${client.totalExits}</td>
-            <td>${client.saldo}</td>
-            <td>
-                <button onclick="viewClientDetails('${client.clientName}', '${client.productName}')">Detalhes</button>
-            </td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-    });
-}
-
- catch (error) {
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
+    } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
 }
