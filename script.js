@@ -21,21 +21,22 @@ async function loadClientsFromFirestore() {
 
     querySnapshot.forEach(docSnapshot => {
         const data = docSnapshot.data();
-        const clientKey = `${data.clientName}-${data.productName}`; // Chave única para cada cliente e produto
+        const clientProductKey = `${data.clientName}-${data.productName}`; // Chave única para cada combinação cliente-produto
 
-        if (!aggregatedData[clientKey]) {
-            aggregatedData[clientKey] = {
+        if (!aggregatedData[clientProductKey]) {
+            aggregatedData[clientProductKey] = {
                 clientName: data.clientName,
                 productName: data.productName,
-                entryQuantity: 0,
-                exitQuantity: 0,
+                totalEntries: 0,
+                totalExits: 0,
                 saldo: 0
             };
         }
 
-        aggregatedData[clientKey].entryQuantity += data.entryQuantity;
-        aggregatedData[clientKey].exitQuantity += data.exitQuantity;
-        aggregatedData[clientKey].saldo += data.entryQuantity - data.exitQuantity; // Atualiza o saldo
+        // Agregar os dados de entrada e saída
+        aggregatedData[clientProductKey].totalEntries += (data.entryQuantity || 0);
+        aggregatedData[clientProductKey].totalExits += (data.exitQuantity || 0);
+        aggregatedData[clientProductKey].saldo += (data.entryQuantity || 0) - (data.exitQuantity || 0);
     });
 
     displayAggregatedData(aggregatedData);
@@ -50,8 +51,8 @@ function displayAggregatedData(aggregatedData) {
         row.innerHTML = `
             <td>${client.clientName}</td>
             <td>${client.productName}</td>
-            <td>${client.entryQuantity}</td>
-            <td>${client.exitQuantity}</td>
+            <td>${client.totalEntries}</td>
+            <td>${client.totalExits}</td>
             <td>${client.saldo}</td>
             <td>
                 <button onclick="viewClientDetails('${client.clientName}', '${client.productName}')">Detalhes</button>
