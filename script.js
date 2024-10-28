@@ -176,7 +176,7 @@ function filterTable() {
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
-}
+
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
