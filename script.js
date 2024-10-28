@@ -135,10 +135,10 @@ function editClientRow(row, clientId) {
     });
 }
 
+// Função para consolidar dados no filtro de produto
 function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
     let aggregatedData = {};
 
     tableRows.forEach(row => {
@@ -148,7 +148,7 @@ function filterTable() {
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = entryQuantity - exitQuantity;
 
-        if (productName === productFilter) {
+        if (productName === productFilter || productFilter === "") {
             if (!aggregatedData[clientName]) {
                 aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
@@ -158,20 +158,42 @@ function filterTable() {
         }
     });
 
+    displayAggregatedData(aggregatedData, productFilter);
+}
+
+// Exibir dados agregados na tabela
+function displayAggregatedData(aggregatedData, productFilter) {
     const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = ''; // Clear table body
+    tbody.innerHTML = ''; // Limpa a tabela antes de reescrever os dados
 
     for (const [client, data] of Object.entries(aggregatedData)) {
-        const newRow = tbody.insertRow();
-        newRow.innerHTML = `<td>-</td>
-                            <td>${client}</td>
-                            <td>${productFilter}</td>
-                            <td>-</td> <!-- No specific date for aggregated data -->
-                            <td>${data.entryQuantity}</td>
-                            <td>${data.exitQuantity}</td>
-                            <td>${data.saldo}</td>
-                            <td>-</td>`;
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>Agregado</td>
+                         <td>${client}</td>
+                         <td>${productFilter}</td>
+                         <td>-</td>
+                         <td>${data.entryQuantity}</td>
+                         <td>${data.exitQuantity}</td>
+                         <td>${data.saldo}</td>
+                         <td></td>`;
+        tbody.appendChild(row);
     }
+}
+
+// Função para exibir detalhes do cliente no modal
+async function viewClientDetails(clientId) {
+    const docRef = doc(db, "clients", clientId);
+    const clientData = await getDoc(docRef);
+    const transactionsDiv = document.getElementById('clientTransactions');
+    
+    transactionsDiv.innerHTML = `
+        <p><strong>Nome:</strong> ${clientData.data().clientName}</p>
+        <p><strong>Produto:</strong> ${clientData.data().productName}</p>
+        <p><strong>Entradas:</strong> ${clientData.data().entryQuantity}</p>
+        <p><strong>Saídas:</strong> ${clientData.data().exitQuantity}</p>
+        <p><strong>Saldo:</strong> ${clientData.data().saldo}</p>
+    `;
+    document.getElementById('clientDetailsModal').style.display = 'block';
 }
 
 // Carrega os clientes ao carregar o DOM
