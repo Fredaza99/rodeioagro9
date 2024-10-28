@@ -207,6 +207,8 @@ async function loadClientsFromFirestore() {
                 row.style.display = 'none';
             }
         });
+        document.getElementById('showAggregatedButton').addEventListener('click', showAggregatedView);
+
 
         document.getElementById('totalEntradas').textContent = totalEntradas;
         document.getElementById('totalSaldo').textContent = totalSaldo;
