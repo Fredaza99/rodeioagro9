@@ -135,106 +135,68 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para agrupar dados por cliente e produto
-function groupDataByClientAndProduct(data) {
-    const groupedData = {};
-
-    data.forEach(client => {
-        const { clientName, productName, entryQuantity, exitQuantity, saldo } = client;
-        const key = `${clientName}-${productName}`;
-
-        if (!groupedData[key]) {
-            groupedData[key] = { clientName, productName, totalEntry: 0, totalExit: 0, totalSaldo: 0 };
-        }
-
-        groupedData[key].totalEntry += entryQuantity;
-        groupedData[key].totalExit += exitQuantity;
-        groupedData[key].totalSaldo += saldo;
-    });
-
-    return Object.values(groupedData);
-}
-
-// Função para exibir dados na tabela
-function displayTableData(data, isGrouped) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
-
-    data.forEach(item => {
-        const row = document.createElement('tr');
-        if (isGrouped) {
-            // Exibe uma linha consolidada por cliente/produto
-            row.innerHTML = `
-                <td>${item.totalEntry > 0 ? 'Entrada' : 'Saída'}</td>
-                <td>${item.clientName}</td>
-                <td>${item.productName}</td>
-                <td>-</td>
-                <td>${item.totalEntry}</td>
-                <td>${item.totalExit}</td>
-                <td>${item.totalSaldo}</td>
-                <td></td>
-            `;
-        } else {
-            // Exibe cada transação individual
-            row.innerHTML = `
-                <td>${item.entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-                <td>${item.clientName}</td>
-                <td>${item.productName}</td>
-                <td>${item.date}</td>
-                <td>${item.entryQuantity}</td>
-                <td>${item.exitQuantity}</td>
-                <td>${item.saldo}</td>
-                <td>
-                    <button class="edit-client" data-id="${item.id}">Editar</button>
-                    <button class="delete-btn" data-id="${item.id}">Excluir</button>
-                </td>
-            `;
-        }
-        clientHistoryTableBody.appendChild(row);
-    });
-}
-
-// Função principal de filtragem
+// Função para filtrar e agrupar a tabela
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    loadClientsFromFirestore().then(clients => {
-        // Filtragem inicial
-        let filteredData = clients.filter(client => {
-            const matchesClient = client.clientName.toLowerCase().includes(searchInput);
-            const matchesProduct = !productFilter || client.productName.toLowerCase() === productFilter;
-            return matchesClient && matchesProduct;
-        });
+    const aggregatedData = {}; // Armazenará as somas por cliente/produto
 
-        // Define se devemos agrupar os dados ou exibi-los detalhadamente
-        const isGrouped = !!productFilter && !searchInput;
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
-        if (isGrouped) {
-            // Agrupar dados por cliente/produto
-            filteredData = groupDataByClientAndProduct(filteredData);
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.toLowerCase();
+        const productName = row.cells[2].textContent.toLowerCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
+
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
+
+        if (matchesClient && matchesProduct) {
+            // Agrupamento por cliente e produto
+            const key = `${clientName}-${productName}`;
+            if (!aggregatedData[key]) {
+                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            }
+            aggregatedData[key].entryQuantity += entryQuantity;
+            aggregatedData[key].exitQuantity += exitQuantity;
+            aggregatedData[key].saldo += saldo;
+
+            row.style.display = 'none'; // Esconde a linha original temporariamente
+        } else {
+            row.style.display = 'none';
         }
-
-        // Exibir dados na tabela
-        displayTableData(filteredData, isGrouped);
-
-        // Atualizar totais no DOM
-        const totalEntradas = filteredData.reduce((sum, item) => sum + (isGrouped ? item.totalEntry : item.entryQuantity), 0);
-        const totalSaldo = filteredData.reduce((sum, item) => sum + (isGrouped ? item.totalSaldo : item.saldo), 0);
-
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
     });
+
+    // Exibir linhas agrupadas
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
+    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+            <td>${clientName}</td>
+            <td>${productName}</td>
+            <td>-</td>
+            <td>${entryQuantity}</td>
+            <td>${exitQuantity}</td>
+            <td>${saldo}</td>
+            <td></td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+
+        totalEntradas += entryQuantity;
+        totalSaldo += saldo;
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
-
-// Carrega os clientes ao carregar o DOM e aplica o filtro
-document.addEventListener('DOMContentLoaded', () => {
-    loadClientsFromFirestore().then(filterTable);
-});
-
-
-
-
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
