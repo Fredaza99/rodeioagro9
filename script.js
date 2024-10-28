@@ -4,43 +4,38 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-// Função para adicionar um cliente ao Firestore
-async function addClientToFirestore(client) {
+async function addClientToFirestore(clientData) {
     try {
-        await addDoc(collection(db, 'clients'), client);
-        console.log('Cliente salvo no Firestore');
+        const docRef = await addDoc(collection(db, 'clients'), clientData);
+        console.log("Documento escrito com ID: ", docRef.id);
     } catch (error) {
-        console.error('Erro ao salvar cliente:', error);
+        console.error("Erro ao adicionar documento: ", error);
     }
 }
+
 
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
     const querySnapshot = await getDocs(clientsCollection);
     const aggregatedData = {};
 
-    querySnapshot.forEach(docSnapshot => {
-        const data = docSnapshot.data();
-        const clientProductKey = `${data.clientName}-${data.productName}`; // Chave única para cada combinação cliente-produto
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const key = `${data.clientName}-${data.productName}`;
 
-        if (!aggregatedData[clientProductKey]) {
-            aggregatedData[clientProductKey] = {
-                clientName: data.clientName,
-                productName: data.productName,
-                totalEntries: 0,
-                totalExits: 0,
-                saldo: 0
-            };
+        if (!aggregatedData[key]) {
+            aggregatedData[key] = {...data, totalEntries: 0, totalExits: 0, saldo: 0};
         }
 
-        // Agregar os dados de entrada e saída
-        aggregatedData[clientProductKey].totalEntries += (data.entryQuantity || 0);
-        aggregatedData[clientProductKey].totalExits += (data.exitQuantity || 0);
-        aggregatedData[clientProductKey].saldo += (data.entryQuantity || 0) - (data.exitQuantity || 0);
+        aggregatedData[key].totalEntries += data.entryQuantity;
+        aggregatedData[key].totalExits += data.exitQuantity;
+        aggregatedData[key].saldo += data.entryQuantity - data.exitQuantity;
     });
 
-    displayAggregatedData(aggregatedData);
+    console.log(aggregatedData);
+    // Aqui, você chamaria a função para exibir os dados ou manipular mais, conforme necessário
 }
+
 
 function displayAggregatedData(aggregatedData) {
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
