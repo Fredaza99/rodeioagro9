@@ -157,46 +157,63 @@ function filterTable() {
         const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
-            // Agrupamento por cliente e produto
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            // Caso de filtro apenas por produto: consolidar dados
+            if (productFilter && !searchInput) {
+                const key = clientName; // Consolidar por cliente
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+                }
+                aggregatedData[key].entryQuantity += entryQuantity;
+                aggregatedData[key].exitQuantity += exitQuantity;
+                aggregatedData[key].saldo += saldo;
+                
+                row.style.display = 'none'; // Esconde a linha original temporariamente
             }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo += saldo;
-
-            row.style.display = 'none'; // Esconde a linha original temporariamente
+            // Caso de filtro apenas por cliente: exibir todas as transações
+            else if (searchInput && !productFilter) {
+                row.style.display = ''; // Mostra todas as transações
+                totalEntradas += entryQuantity;
+                totalSaldo += saldo;
+            }
+            // Caso de filtro por cliente e produto: exibir as transações específicas
+            else {
+                row.style.display = ''; // Mostra apenas transações para cliente e produto
+                totalEntradas += entryQuantity;
+                totalSaldo += saldo;
+            }
         } else {
             row.style.display = 'none';
         }
     });
 
-    // Exibir linhas agrupadas
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
+    // Exibir linhas agrupadas quando houver filtro de produto apenas
+    if (productFilter && !searchInput) {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpar a tabela para inserir linhas consolidadas
 
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-            <td>${clientName}</td>
-            <td>${productName}</td>
-            <td>-</td>
-            <td>${entryQuantity}</td>
-            <td>${exitQuantity}</td>
-            <td>${saldo}</td>
-            <td></td>
-        `;
-        clientHistoryTableBody.appendChild(row);
+        Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+                <td>${clientName}</td>
+                <td>${productName}</td>
+                <td>-</td>
+                <td>${entryQuantity}</td>
+                <td>${exitQuantity}</td>
+                <td>${saldo}</td>
+                <td></td>
+            `;
+            clientHistoryTableBody.appendChild(row);
 
-        totalEntradas += entryQuantity;
-        totalSaldo += saldo;
-    });
+            totalEntradas += entryQuantity;
+            totalSaldo += saldo;
+        });
+    }
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
