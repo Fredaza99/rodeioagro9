@@ -61,7 +61,7 @@ function displayAggregatedData(aggregatedData) {
     });
 }
 
-    } catch (error) {
+ catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
 }
