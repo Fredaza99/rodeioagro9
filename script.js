@@ -256,8 +256,29 @@ async function showAggregatedView() {
     };
 }
 
-// Attach showAggregatedView to button click
 document.getElementById('showAggregatedButton').addEventListener('click', showAggregatedView);
+
+async function showAggregatedView() {
+    const modal = document.getElementById('aggregatedModal');
+    modal.style.display = 'block'; // Show the modal
+    
+    // Populate aggregated data in the modal table
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    aggregatedTableBody.innerHTML = '';  // Clear previous data
+    // Add code to load aggregated data...
+}
+
+document.querySelector('.close').addEventListener('click', () => {
+    document.getElementById('aggregatedModal').style.display = 'none';
+});
+
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('aggregatedModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
 
 
 // Carrega os clientes ao carregar o DOM
