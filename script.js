@@ -135,39 +135,47 @@ function editClientRow(row, clientId) {
     });
 }
 
-async function filterTable() {
+// Função para filtrar e agrupar a tabela
+function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    // Clear previous results
-    clientHistoryTableBody.innerHTML = '';
+    const aggregatedData = {}; // Armazenará as somas por cliente/produto
 
-    const aggregatedData = {}; // To store totals by client and product
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    const querySnapshot = await getDocs(collection(db, 'clients'));
-    querySnapshot.forEach(doc => {
-        const client = doc.data();
-        const clientName = client.clientName.toLowerCase();
-        const productName = client.productName.toLowerCase();
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.toLowerCase();
+        const productName = row.cells[2].textContent.toLowerCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
 
         const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = productFilter && productName === productFilter;
+        const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
+            // Agrupamento por cliente e produto
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName: client.clientName, productName: client.productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
-            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
-            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
-            aggregatedData[key].saldo += client.saldo || 0;
+            aggregatedData[key].entryQuantity += entryQuantity;
+            aggregatedData[key].exitQuantity += exitQuantity;
+            aggregatedData[key].saldo += saldo;
+
+            row.style.display = 'none'; // Esconde a linha original temporariamente
+        } else {
+            row.style.display = 'none';
         }
     });
 
-    // Display merged rows for each client-product
+    // Exibir linhas agrupadas
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
     Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -189,75 +197,6 @@ async function filterTable() {
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
-
-async function showAggregatedView() {
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
-    const modal = document.getElementById('aggregatedModal');
-    const closeModal = document.getElementsByClassName('close')[0];
-
-    // Clear previous results
-    aggregatedTableBody.innerHTML = '';
-
-    const aggregatedData = {}; // Store totals by client and product
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
-    const querySnapshot = await getDocs(collection(db, 'clients'));
-    querySnapshot.forEach(doc => {
-        const client = doc.data();
-        const clientName = client.clientName.toLowerCase();
-        const productName = client.productName.toLowerCase();
-
-        const matchesProduct = productFilter && productName === productFilter;
-
-        if (matchesProduct) {
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName: client.clientName, productName: client.productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
-            }
-            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
-            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
-            aggregatedData[key].saldo += client.saldo || 0;
-        }
-    });
-
-    // Display aggregated data in modal
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-            <td>${clientName}</td>
-            <td>${productName}</td>
-            <td>${entryQuantity}</td>
-            <td>${exitQuantity}</td>
-            <td>${saldo}</td>
-        `;
-        aggregatedTableBody.appendChild(row);
-
-        totalEntradas += entryQuantity;
-        totalSaldo += saldo;
-    });
-
-    // Open modal
-    modal.style.display = 'block';
-
-    // Close modal
-    closeModal.onclick = function() {
-        modal.style.display = 'none';
-    };
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    };
-}
-
-// Attach showAggregatedView to a button click
-document.getElementById('showAggregatedButton').addEventListener('click', showAggregatedView);
-
-
-
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
