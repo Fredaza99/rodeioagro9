@@ -244,22 +244,27 @@ async function loadClientsFromFirestore() {
     <option value="">Todos os Produtos</option>
   </select>
 
-  <!-- Tabela de clientes -->
-  <table id="clientHistoryTable">
-    <thead>
-      <tr>
-        <th>Ação</th>
-        <th>Nome do Cliente</th>
-        <th>Produto</th>
-        <th>Data</th>
-        <th>Quantidade Entrada</th>
-        <th>Quantidade Retirada</th>
-        <th>Saldo</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<button id="showAggregatedButton">Show Aggregated View</button>
+
+<div id="aggregatedModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <table id="aggregatedTable">
+            <thead>
+                <tr>
+                    <th>Ação</th>
+                    <th>Nome do Cliente</th>
+                    <th>Produto</th>
+                    <th>Entradas</th>
+                    <th>Saídas</th>
+                    <th>Saldo</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
 
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
