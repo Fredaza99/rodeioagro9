@@ -136,18 +136,17 @@ function editClientRow(row, clientId) {
 }
 
 function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
     let aggregatedData = {};
 
     tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.toLowerCase();
+        const clientName = row.cells[1].textContent;
         const productName = row.cells[2].textContent.toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
-        const saldo = parseFloat(row.cells[6].textContent) || 0;
+        const saldo = entryQuantity - exitQuantity;
 
         if (productName === productFilter) {
             if (!aggregatedData[clientName]) {
@@ -159,24 +158,21 @@ function filterTable() {
         }
     });
 
-    // Limpa a tabela antes de reescrever os dados
     const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = '';
+    tbody.innerHTML = ''; // Clear table body
 
-    Object.entries(aggregatedData).forEach(([client, data]) => {
+    for (const [client, data] of Object.entries(aggregatedData)) {
         const newRow = tbody.insertRow();
-        newRow.innerHTML = `<td>${productFilter}</td>
+        newRow.innerHTML = `<td>-</td>
                             <td>${client}</td>
+                            <td>${productFilter}</td>
+                            <td>-</td> <!-- No specific date for aggregated data -->
                             <td>${data.entryQuantity}</td>
                             <td>${data.exitQuantity}</td>
-                            <td>${data.saldo}</td>`;
-    });
+                            <td>${data.saldo}</td>
+                            <td>-</td>`;
+    }
 }
-
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
-
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
