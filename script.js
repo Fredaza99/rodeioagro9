@@ -135,47 +135,39 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para filtrar e agrupar a tabela
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
-    const aggregatedData = {}; // Armazenará as somas por cliente/produto
-
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    
+    // Clear table before adding filtered results
+    clientHistoryTableBody.innerHTML = '';
+    
+    const aggregatedData = {}; // Store totals by client/product
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.toLowerCase();
-        const productName = row.cells[2].textContent.toLowerCase();
-        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
-        const saldo = parseFloat(row.cells[6].textContent) || 0;
+    const querySnapshot = await getDocs(collection(db, 'clients'));
+    querySnapshot.forEach(doc => {
+        const client = doc.data();
+        const clientName = client.clientName.toLowerCase();
+        const productName = client.productName.toLowerCase();
 
         const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = !productFilter || productName === productFilter;
+        const matchesProduct = !productFilter || productName.includes(productFilter);
 
         if (matchesClient && matchesProduct) {
-            // Agrupamento por cliente e produto
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+                aggregatedData[key] = { clientName: client.clientName, productName: client.productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo += saldo;
-
-            row.style.display = 'none'; // Esconde a linha original temporariamente
-        } else {
-            row.style.display = 'none';
+            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
+            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
+            aggregatedData[key].saldo += client.saldo || 0;
         }
     });
 
-    // Exibir linhas agrupadas
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
-
+    // Display filtered data
     Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity, saldo }) => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -197,6 +189,7 @@ function filterTable() {
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
