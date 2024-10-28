@@ -14,48 +14,53 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
-    try {
-        const clientsCollection = collection(db, 'clients');
-        const querySnapshot = await getDocs(clientsCollection);
+    const clientsCollection = collection(db, 'clients');
+    const querySnapshot = await getDocs(clientsCollection);
+    const aggregatedData = {};
 
-        // Extrair e ordenar dados dos clientes
-        const clients = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        
-        clients.sort((a, b) => {
-            const nameComparison = a.clientName.localeCompare(b.clientName);
-            if (nameComparison === 0) {
-                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
-            }
-            return nameComparison;
-        });
+    querySnapshot.forEach(docSnapshot => {
+        const data = docSnapshot.data();
+        const clientKey = `${data.clientName}-${data.productName}`; // Chave única para cada cliente e produto
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+        if (!aggregatedData[clientKey]) {
+            aggregatedData[clientKey] = {
+                clientName: data.clientName,
+                productName: data.productName,
+                entryQuantity: 0,
+                exitQuantity: 0,
+                saldo: 0
+            };
+        }
 
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+        aggregatedData[clientKey].entryQuantity += data.entryQuantity;
+        aggregatedData[clientKey].exitQuantity += data.exitQuantity;
+        aggregatedData[clientKey].saldo += data.entryQuantity - data.exitQuantity; // Atualiza o saldo
+    });
 
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+    displayAggregatedData(aggregatedData);
+}
+
+function displayAggregatedData(aggregatedData) {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
+    Object.values(aggregatedData).forEach(client => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${client.clientName}</td>
+            <td>${client.productName}</td>
+            <td>${client.entryQuantity}</td>
+            <td>${client.exitQuantity}</td>
+            <td>${client.saldo}</td>
+            <td>
+                <button onclick="viewClientDetails('${client.clientName}', '${client.productName}')">Detalhes</button>
+            </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+    });
+}
+
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
