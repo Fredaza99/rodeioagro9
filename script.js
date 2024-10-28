@@ -139,78 +139,71 @@ function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    const clientData = {};
 
-    const aggregatedData = {}; // Armazena os dados agrupados por cliente e produto
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    // Itera sobre as linhas da tabela para agregar dados
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.toLowerCase();
         const productName = row.cells[2].textContent.toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-        // Verifica se a linha corresponde ao filtro
         const matchesClient = clientName.includes(searchInput);
         const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
-            // Agrupa dados por cliente e produto
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0 };
-            }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
+            // Se há um produto específico no filtro, consolide as transações
+            if (productFilter) {
+                const clientId = clientName;
 
-            row.style.display = 'none'; // Esconde a linha original
+                if (!clientData[clientId]) {
+                    clientData[clientId] = { clientName, productName, totalEntryQuantity: 0, totalExitQuantity: 0, saldo: 0 };
+                }
+
+                clientData[clientId].totalEntryQuantity += entryQuantity;
+                clientData[clientId].totalExitQuantity += exitQuantity;
+                clientData[clientId].saldo += saldo;
+
+                row.style.display = 'none';  // Ocultar as linhas originais
+            } else {
+                row.style.display = '';  // Mostrar todas as transações para o cliente selecionado
+                totalEntradas += entryQuantity;
+                totalSaldo += saldo;
+            }
         } else {
             row.style.display = 'none';
         }
     });
 
-    // Limpa a tabela para exibir as linhas agrupadas
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
+    // Exibe as linhas consolidadas se o filtro de produto estiver aplicado
+    if (productFilter) {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = '';
 
-    // Exibe uma linha por cliente-produto com saldo calculado
-    Object.values(aggregatedData).forEach(({ clientName, productName, entryQuantity, exitQuantity }) => {
-        const saldo = entryQuantity - exitQuantity; // Calcula o saldo
-        const row = document.createElement('tr');
+        Object.values(clientData).forEach(client => {
+            const row = document.createElement('tr');
 
-        row.innerHTML = `
-            <td>${saldo >= 0 ? 'Entrada' : 'Saída'}</td>
-            <td>${clientName}</td>
-            <td>${productName}</td>
-            <td>-</td>
-            <td>${entryQuantity}</td>
-            <td>${exitQuantity}</td>
-            <td>${saldo}</td>
-            <td></td>
-        `;
+            row.innerHTML = `
+                <td>${client.clientName}</td>
+                <td>${client.productName}</td>
+                <td>${client.totalEntryQuantity}</td>
+                <td>${client.totalExitQuantity}</td>
+                <td class="${client.saldo >= 0 ? 'positive' : 'negative'}">${client.saldo}</td>
+            `;
 
-        // Aplica a coloração para facilitar a visualização
-        if (saldo < 0) {
-            row.style.backgroundColor = 'lightcoral';
-        } else if (saldo > 0) {
-            row.style.backgroundColor = 'lightgreen';
-        } else {
-            row.style.backgroundColor = 'white';
-        }
+            clientHistoryTableBody.appendChild(row);
+            totalEntradas += client.totalEntryQuantity;
+            totalSaldo += client.saldo;
+        });
+    }
 
-        // Adiciona a linha à tabela
-        clientHistoryTableBody.appendChild(row);
-
-        // Atualiza os totais para exibir no resumo
-        totalEntradas += entryQuantity;
-        totalSaldo += saldo;
-    });
-
-    // Atualiza os totais de entrada e saldo no painel de resumo
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
 
 
 
