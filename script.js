@@ -14,49 +14,42 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
-    try {
-        const clientsCollection = collection(db, 'clients');
-        const querySnapshot = await getDocs(clientsCollection);
+    const clientsCollection = collection(db, 'clients');
+    const querySnapshot = await getDocs(clientsCollection);
+    const clients = [];
 
-        // Extrair e ordenar dados dos clientes
-        const clients = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        
-        clients.sort((a, b) => {
-            const nameComparison = a.clientName.localeCompare(b.clientName);
-            if (nameComparison === 0) {
-                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
-            }
-            return nameComparison;
-        });
+    querySnapshot.forEach(docSnapshot => {
+        const client = docSnapshot.data();
+        client.id = docSnapshot.id;  // Preserva o ID para ações de edição/exclusão
+        clients.push(client);
+    });
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = ''; 
 
-        clients.forEach(client => {
-    const row = document.createElement('tr');
-    const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+    clients.forEach(client => {
+        const row = document.createElement('tr');
+        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-    row.innerHTML = `
-        <td>${action}</td>
-        <td>${client.clientName || ''}</td>
-        <td>${client.productName || ''}</td>
-        <td>${client.date || ''}</td>
-        <td>${client.entryQuantity || 0}</td>
-        <td>${client.exitQuantity || 0}</td>
-        <td>${client.saldo || 0}</td>
-        <td>
-            <button onclick="viewClientDetails('${client.id}')">Detalhes</button>
-            <button class="edit-client" data-id="${client.id}">Editar</button>
-            <button class="delete-btn" data-id="${client.id}">Excluir</button>
-        </td>
-    `;
-    clientHistoryTableBody.appendChild(row);
-});
+        row.innerHTML = `
+            <td>${action}</td>
+            <td>${client.clientName || ''}</td>
+            <td>${client.productName || ''}</td>
+            <td>${client.date || ''}</td>
+            <td>${client.entryQuantity || 0}</td>
+            <td>${client.exitQuantity || 0}</td>
+            <td>${client.saldo || 0}</td>
+            <td>
+                <button onclick="viewClientDetails('${client.id}')">Detalhes</button>
+                <button class="edit-client" data-id="${client.id}">Editar</button>
+                <button class="delete-btn" data-id="${client.id}">Excluir</button>
+            </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+    });
+}
+
 
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
