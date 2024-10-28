@@ -28,18 +28,18 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
- if (!sessionStorage.getItem('loggedIn')) {
+    if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-        // Add event listeners and load clients
         document.getElementById('productFilter').addEventListener('change', filterTable);
         document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-        await loadClientsFromFirestore();  // Ensure this is awaited
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
         
-
+        await loadClientsFromFirestore();
+        
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+    });
 
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
@@ -244,44 +244,22 @@ async function loadClientsFromFirestore() {
     <option value="">Todos os Produtos</option>
   </select>
 
-<button id="showAggregatedButton">Show Aggregated View</button>
-
-<table id="clientHistoryTable">
+  <!-- Tabela de clientes -->
+  <table id="clientHistoryTable">
     <thead>
-        <tr>
-            <th>Ação</th>
-            <th>Nome do Cliente</th>
-            <th>Produto</th>
-            <th>Data</th>
-            <th>Quantidade Entrada</th>
-            <th>Quantidade Retirada</th>
-            <th>Saldo</th>
-            <th>Ações</th>
-        </tr>
+      <tr>
+        <th>Ação</th>
+        <th>Nome do Cliente</th>
+        <th>Produto</th>
+        <th>Data</th>
+        <th>Quantidade Entrada</th>
+        <th>Quantidade Retirada</th>
+        <th>Saldo</th>
+        <th>Ações</th>
+      </tr>
     </thead>
     <tbody></tbody>
-</table>
-
-<div id="aggregatedModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <table id="aggregatedTable">
-            <thead>
-                <tr>
-                    <th>Ação</th>
-                    <th>Nome do Cliente</th>
-                    <th>Produto</th>
-                    <th>Entradas</th>
-                    <th>Saídas</th>
-                    <th>Saldo</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</div>
-
-
+  </table>
 
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
