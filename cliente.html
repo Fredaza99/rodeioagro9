@@ -39,9 +39,7 @@
         await loadClientsFromFirestore();  // Ensure this is awaited
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
         
-        // Ensure the modal button is set up correctly
-        document.getElementById('showAggregatedButton').addEventListener('click', showAggregatedView);
-    });
+
 
 async function loadClientsFromFirestore() {
     const clientsCollection = collection(db, 'clients');
