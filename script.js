@@ -80,30 +80,35 @@ document.getElementById("entryButton")?.addEventListener("click", () => setTrans
 document.getElementById("exitButton")?.addEventListener("click", () => setTransactionType("Saída"));
 
 // Função de envio do formulário para adicionar cliente ao Firestore
-document.getElementById('clientForm')?.addEventListener('submit', async function (e) {
-    e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+    const clientForm = document.getElementById('clientForm');
+    if (clientForm) {
+        clientForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-    const clientName = document.getElementById('clientName')?.value;
-    const productName = document.getElementById('productName')?.value;
-    const date = document.getElementById('date')?.value;
-    const quantity = parseInt(document.getElementById('quantity')?.value);
+            const clientName = document.getElementById('clientName')?.value;
+            const productName = document.getElementById('productName')?.value;
+            const date = document.getElementById('date')?.value;
+            const quantity = parseInt(document.getElementById('quantity')?.value);
 
-    if (!clientName || !productName || !date || isNaN(quantity)) {
-        console.error("Erro: Dados do formulário incompletos.");
-        return;
+            if (!clientName || !productName || !date || isNaN(quantity)) {
+                console.error("Erro: Dados do formulário incompletos.");
+                return;
+            }
+
+            const client = {
+                clientName,
+                productName,
+                date,
+                entryQuantity: transactionType === "Entrada" ? quantity : 0,
+                exitQuantity: transactionType === "Saída" ? quantity : 0,
+                saldo: transactionType === "Entrada" ? quantity : -quantity
+            };
+
+            await addClientToFirestore(client);
+            loadClientsFromFirestore(); // Recarrega a tabela após salvar
+        });
     }
-
-    const client = {
-        clientName,
-        productName,
-        date,
-        entryQuantity: transactionType === "Entrada" ? quantity : 0,
-        exitQuantity: transactionType === "Saída" ? quantity : 0,
-        saldo: transactionType === "Entrada" ? quantity : -quantity
-    };
-
-    await addClientToFirestore(client);
-    loadClientsFromFirestore(); // Recarrega a tabela após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -195,9 +200,12 @@ function filterTable() {
 }
 
 // Eventos para carregar clientes e aplicar filtros
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
-document.getElementById('productFilter')?.addEventListener('change', filterTable);
-document.getElementById('clientSearchInput')?.addEventListener('input', loadClientsFromFirestore);
+document.addEventListener('DOMContentLoaded', () => {
+    loadClientsFromFirestore(); // Carrega os clientes ao carregar a página
+    document.getElementById('productFilter')?.addEventListener('change', filterTable);
+    document.getElementById('clientSearchInput')?.addEventListener('input', loadClientsFromFirestore);
+});
+
 
 
 
