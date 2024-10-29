@@ -14,52 +14,99 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
+// Função para carregar clientes do Firestore e aplicar filtros
 async function loadClientsFromFirestore() {
+    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const isClientFilterActive = searchInput.length > 0;
+
+    // Limpa as tabelas antes de preenchê-las
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    const detailedTableBody = document.querySelector('#detailedTable tbody');
+    aggregatedTableBody.innerHTML = '';
+    detailedTableBody.innerHTML = '';
+
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes
-        const clients = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        
-        clients.sort((a, b) => {
-            const nameComparison = a.clientName.localeCompare(b.clientName);
-            if (nameComparison === 0) {
-                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
+        // Dados agregados para a visão condensada
+        const aggregatedData = {};
+
+        querySnapshot.forEach(docSnapshot => {
+            const client = docSnapshot.data();
+            const clientName = client.clientName.toLowerCase();
+            const productName = client.productName.toLowerCase();
+            const entryQuantity = client.entryQuantity || 0;
+            const exitQuantity = client.exitQuantity || 0;
+            const saldo = entryQuantity - exitQuantity;
+
+            // Verifica correspondência dos filtros
+            const matchesClient = clientName.includes(searchInput);
+            const matchesProduct = !productFilter || productName === productFilter;
+
+            if (matchesClient && matchesProduct) {
+                if (isClientFilterActive) {
+                    // Exibe todas as entradas e saídas do cliente filtrado
+                    const detailedRow = detailedTableBody.insertRow();
+                    detailedRow.innerHTML = `
+                        <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
+                        <td>${client.clientName}</td>
+                        <td>${client.productName}</td>
+                        <td>${client.date}</td>
+                        <td>${entryQuantity}</td>
+                        <td>${exitQuantity}</td>
+                        <td>${saldo}</td>
+                        <td>
+                            <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
+                            <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
+                        </td>
+                    `;
+                } else {
+                    // Agrega dados por cliente e produto
+                    const key = `${clientName}-${productName}`;
+                    if (!aggregatedData[key]) {
+                        aggregatedData[key] = { entryQuantity: 0, exitQuantity: 0, saldo: 0, clientName: client.clientName, productName: client.productName };
+                    }
+                    aggregatedData[key].entryQuantity += entryQuantity;
+                    aggregatedData[key].exitQuantity += exitQuantity;
+                    aggregatedData[key].saldo += saldo;
+                }
             }
-            return nameComparison;
         });
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+        // Adiciona dados agregados à tabela agregada se filtro de cliente não estiver ativo
+        if (!isClientFilterActive) {
+            Object.values(aggregatedData).forEach(data => {
+                const aggregatedRow = aggregatedTableBody.insertRow();
+                aggregatedRow.innerHTML = `
+                    <td>-</td>
+                    <td>${data.clientName}</td>
+                    <td>${data.productName}</td>
+                    <td>${data.entryQuantity}</td>
+                    <td>${data.exitQuantity}</td>
+                    <td>${data.saldo}</td>
+                    <td>-</td>
+                `;
+            });
+        }
 
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+        // Exibe a tabela apropriada
+        document.getElementById('aggregatedTable').style.display = isClientFilterActive ? 'none' : '';
+        document.getElementById('detailedTable').style.display = isClientFilterActive ? '' : 'none';
+        
     } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
+        console.error("Erro ao carregar clientes:", error);
     }
 }
+
+// Configura o evento de filtragem para carregar clientes
+document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
+document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
+
+// Carrega os clientes na inicialização da página
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 // Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
