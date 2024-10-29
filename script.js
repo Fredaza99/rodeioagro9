@@ -16,14 +16,6 @@ async function addClientToFirestore(client) {
 
 // Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    if (!clientHistoryTableBody) {
-        console.error("Erro: Elemento clientHistoryTable não encontrado.");
-        return;
-    }
-    
-    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
-
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
@@ -40,6 +32,9 @@ async function loadClientsFromFirestore() {
             }
             return nameComparison;
         });
+
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
         clients.forEach(client => {
             const row = document.createElement('tr');
@@ -65,50 +60,38 @@ async function loadClientsFromFirestore() {
     }
 }
 
-// Variável para definir o tipo de transação (Entrada ou Saída)
+// Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
-
-// Função para configurar o tipo de transação e destacar o botão ativo
 function setTransactionType(type) {
     transactionType = type;
-    document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
+    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
 }
 
 // Configura eventos de clique para os botões de transação
-document.getElementById("entryButton")?.addEventListener("click", () => setTransactionType("Entrada"));
-document.getElementById("exitButton")?.addEventListener("click", () => setTransactionType("Saída"));
+document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
 
-// Função de envio do formulário para adicionar cliente ao Firestore
-document.addEventListener("DOMContentLoaded", () => {
-    const clientForm = document.getElementById('clientForm');
-    if (clientForm) {
-        clientForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
+// Evento de envio do formulário de cliente
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-            const clientName = document.getElementById('clientName')?.value;
-            const productName = document.getElementById('productName')?.value;
-            const date = document.getElementById('date')?.value;
-            const quantity = parseInt(document.getElementById('quantity')?.value);
+    const clientName = document.getElementById('clientName').value;
+    const productName = document.getElementById('productName').value;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
 
-            if (!clientName || !productName || !date || isNaN(quantity)) {
-                console.error("Erro: Dados do formulário incompletos.");
-                return;
-            }
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
+    };
 
-            const client = {
-                clientName,
-                productName,
-                date,
-                entryQuantity: transactionType === "Entrada" ? quantity : 0,
-                exitQuantity: transactionType === "Saída" ? quantity : 0,
-                saldo: transactionType === "Entrada" ? quantity : -quantity
-            };
-
-            await addClientToFirestore(client);
-            loadClientsFromFirestore(); // Recarrega a tabela após salvar
-        });
-    }
+    await addClientToFirestore(client);
+    window.location.href = 'cliente.html'; // Redireciona após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -116,7 +99,6 @@ function editClientRow(row, clientId) {
     const cells = row.querySelectorAll('td');
     const originalValues = [...cells].map(cell => cell.textContent);
 
-    // Torna as células editáveis
     cells.forEach((cell, index) => {
         if (index > 0 && index < cells.length - 1) {
             cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
@@ -150,61 +132,63 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para exibir a tabela agregada com filtro de produto
-function filterTable() {
-    const productFilter = document.getElementById('productFilter')?.value.toLowerCase();
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+// Função para filtrar a tabela agregada por produto
+function loadAggregatedTable() {
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    aggregatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela agregada
 
-    if (!clientHistoryTableBody || !aggregatedTableBody) {
-        console.error("Erro: Tabelas não encontradas no DOM.");
-        return;
-    }
+    let aggregatedData = {};
 
-    aggregatedTableBody.innerHTML = ''; // Limpa a tabela agregada
-    const aggregatedData = {};
+    // Carrega todos os clientes do Firestore e agrupa por cliente e produto
+    const clientsCollection = collection(db, 'clients');
+    getDocs(clientsCollection).then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            const client = doc.data();
+            const clientName = client.clientName.toLowerCase();
+            const productName = client.productName.toLowerCase();
 
-    Array.from(clientHistoryTableBody.rows).forEach(row => {
-        const clientName = row.cells[1].textContent;
-        const productName = row.cells[2].textContent.toLowerCase();
-        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
-        const saldo = entryQuantity - exitQuantity;
+            if (productFilter && productName !== productFilter) return;
 
-        // Agrupa por cliente e produto
-        if (!productFilter || productName === productFilter) {
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
-                aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+                aggregatedData[key] = {
+                    clientName: client.clientName,
+                    productName: client.productName,
+                    entryQuantity: 0,
+                    exitQuantity: 0,
+                    saldo: 0
+                };
             }
-            aggregatedData[key].entryQuantity += entryQuantity;
-            aggregatedData[key].exitQuantity += exitQuantity;
-            aggregatedData[key].saldo += saldo;
-        }
-    });
 
-    // Adiciona linhas à tabela agregada
-    Object.values(aggregatedData).forEach(data => {
-        const row = aggregatedTableBody.insertRow();
-        row.innerHTML = `
-            <td>${data.clientName}</td>
-            <td>${data.productName}</td>
-            <td>${data.entryQuantity}</td>
-            <td>${data.exitQuantity}</td>
-            <td>${data.saldo}</td>
-        `;
-    });
+            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
+            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
+            aggregatedData[key].saldo += (client.entryQuantity || 0) - (client.exitQuantity || 0);
+        });
 
-    document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
-    document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
+        // Adiciona os dados agrupados à tabela agregada
+        Object.values(aggregatedData).forEach(data => {
+            const row = aggregatedTableBody.insertRow();
+            row.innerHTML = `
+                <td>${data.clientName}</td>
+                <td>${data.productName}</td>
+                <td>${data.entryQuantity}</td>
+                <td>${data.exitQuantity}</td>
+                <td>${data.saldo}</td>
+            `;
+        });
+
+        // Alterna a exibição entre a tabela detalhada e a agregada
+        document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
+        document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
+    });
 }
 
 // Eventos para carregar clientes e aplicar filtros
-document.addEventListener('DOMContentLoaded', () => {
-    loadClientsFromFirestore(); // Carrega os clientes ao carregar a página
-    document.getElementById('productFilter')?.addEventListener('change', filterTable);
-    document.getElementById('clientSearchInput')?.addEventListener('input', loadClientsFromFirestore);
-});
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+document.getElementById('productFilter').addEventListener('change', loadAggregatedTable);
+document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
+
 
 
 
