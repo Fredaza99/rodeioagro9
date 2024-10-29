@@ -78,7 +78,7 @@ function setTransactionType(type) {
 document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
 document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
 
-// Evento de envio do formulário de cliente com confirmação visual
+// Evento de envio do formulário de cliente
 document.getElementById('clientForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -105,64 +105,65 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     submitButton.disabled = false; // Reativa o botão após o envio
 });
 
-// Função para exibir a tabela agregada com filtro de produto
-function loadAggregatedTable() {
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+// Função para gerar a tabela agregada com base na tabela principal
+function generateAggregatedTable() {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
-    aggregatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela agregada
+    aggregatedTableBody.innerHTML = ''; // Limpa a tabela agregada
 
-    let aggregatedData = {};
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const aggregatedData = {};
 
-    // Carrega todos os clientes do Firestore e agrupa por cliente e produto
-    const clientsCollection = collection(db, 'clients');
-    getDocs(clientsCollection).then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-            const client = doc.data();
-            const clientName = client.clientName.toLowerCase();
-            const productName = client.productName.toLowerCase();
+    // Processa cada linha da tabela principal e agrupa por cliente e produto
+    Array.from(clientHistoryTableBody.rows).forEach(row => {
+        const clientName = row.cells[1].textContent.toLowerCase();
+        const productName = row.cells[2].textContent.toLowerCase();
+        const entryQuantity = parseInt(row.cells[4].textContent) || 0;
+        const exitQuantity = parseInt(row.cells[5].textContent) || 0;
+        const saldo = entryQuantity - exitQuantity;
 
-            if (productFilter && productName !== productFilter) return;
+        if (productFilter && productName !== productFilter) return;
 
-            const key = `${clientName}-${productName}`;
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = {
-                    clientName: client.clientName,
-                    productName: client.productName,
-                    entryQuantity: 0,
-                    exitQuantity: 0,
-                    saldo: 0
-                };
-            }
+        const key = `${clientName}-${productName}`;
+        if (!aggregatedData[key]) {
+            aggregatedData[key] = {
+                clientName: clientName,
+                productName: productName,
+                entryQuantity: 0,
+                exitQuantity: 0,
+                saldo: 0
+            };
+        }
 
-            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
-            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
-            aggregatedData[key].saldo += (client.entryQuantity || 0) - (client.exitQuantity || 0);
-        });
-
-        // Adiciona os dados agrupados à tabela agregada
-        Object.values(aggregatedData).forEach(data => {
-            const row = aggregatedTableBody.insertRow();
-            row.innerHTML = `
-                <td>${data.clientName}</td>
-                <td>${data.productName}</td>
-                <td>${data.entryQuantity}</td>
-                <td>${data.exitQuantity}</td>
-                <td>${data.saldo}</td>
-            `;
-        });
-
-        // Alterna a exibição entre a tabela detalhada e a agregada
-        document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
-        document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
+        aggregatedData[key].entryQuantity += entryQuantity;
+        aggregatedData[key].exitQuantity += exitQuantity;
+        aggregatedData[key].saldo += saldo;
     });
+
+    // Exibe os dados agrupados na tabela agregada
+    Object.values(aggregatedData).forEach(data => {
+        const row = aggregatedTableBody.insertRow();
+        row.innerHTML = `
+            <td>${data.clientName}</td>
+            <td>${data.productName}</td>
+            <td>${data.entryQuantity}</td>
+            <td>${data.exitQuantity}</td>
+            <td>${data.saldo}</td>
+        `;
+    });
+
+    // Alterna a exibição entre a tabela detalhada e a agregada
+    document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
+    document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
 }
 
-// Configura a exibição das tabelas ao carregar a página e ao usar filtros
+// Eventos para carregar clientes e aplicar filtros
 document.addEventListener('DOMContentLoaded', () => {
     loadClientsFromFirestore(); // Carrega a tabela de clientes detalhada ao carregar a página
-    document.getElementById('productFilter').addEventListener('change', loadAggregatedTable);
+    document.getElementById('productFilter').addEventListener('change', generateAggregatedTable);
     document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
 });
+
 
 
 
