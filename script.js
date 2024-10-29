@@ -16,11 +16,18 @@ async function addClientToFirestore(client) {
 
 // Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    if (!clientHistoryTableBody) {
+        console.error("Erro: Elemento clientHistoryTable não encontrado.");
+        return;
+    }
+    
+    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes
         const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -33,9 +40,6 @@ async function loadClientsFromFirestore() {
             }
             return nameComparison;
         });
-
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
         clients.forEach(client => {
             const row = document.createElement('tr');
@@ -61,28 +65,34 @@ async function loadClientsFromFirestore() {
     }
 }
 
-// Função para definir o tipo de transação e destacar o botão ativo
+// Variável para definir o tipo de transação (Entrada ou Saída)
 let transactionType = "Entrada";
+
+// Função para configurar o tipo de transação e destacar o botão ativo
 function setTransactionType(type) {
     transactionType = type;
-    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+    document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
 }
 
 // Configura eventos de clique para os botões de transação
-document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+document.getElementById("entryButton")?.addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton")?.addEventListener("click", () => setTransactionType("Saída"));
 
-// Evento de envio do formulário de cliente
-document.getElementById('clientForm').addEventListener('submit', async function (e) {
+// Função de envio do formulário para adicionar cliente ao Firestore
+document.getElementById('clientForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const clientName = document.getElementById('clientName').value;
-    const productName = document.getElementById('productName').value;
-    const date = document.getElementById('date').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
+    const clientName = document.getElementById('clientName')?.value;
+    const productName = document.getElementById('productName')?.value;
+    const date = document.getElementById('date')?.value;
+    const quantity = parseInt(document.getElementById('quantity')?.value);
 
-    // Define os dados do cliente com base no tipo de transação
+    if (!clientName || !productName || !date || isNaN(quantity)) {
+        console.error("Erro: Dados do formulário incompletos.");
+        return;
+    }
+
     const client = {
         clientName,
         productName,
@@ -135,23 +145,28 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para aplicar filtro de produto e exibição dinâmica de uma tabela agregada
+// Função para exibir a tabela agregada com filtro de produto
 function filterTable() {
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    const productFilter = document.getElementById('productFilter')?.value.toLowerCase();
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
-    aggregatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela agregada
 
+    if (!clientHistoryTableBody || !aggregatedTableBody) {
+        console.error("Erro: Tabelas não encontradas no DOM.");
+        return;
+    }
+
+    aggregatedTableBody.innerHTML = ''; // Limpa a tabela agregada
     const aggregatedData = {};
 
-    tableRows.forEach(row => {
+    Array.from(clientHistoryTableBody.rows).forEach(row => {
         const clientName = row.cells[1].textContent;
         const productName = row.cells[2].textContent.toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = entryQuantity - exitQuantity;
 
-        // Verifica se o filtro de produto corresponde ou se está vazio (todos os produtos)
+        // Agrupa por cliente e produto
         if (!productFilter || productName === productFilter) {
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
@@ -163,7 +178,7 @@ function filterTable() {
         }
     });
 
-    // Adiciona linhas agregadas à tabela agregada
+    // Adiciona linhas à tabela agregada
     Object.values(aggregatedData).forEach(data => {
         const row = aggregatedTableBody.insertRow();
         row.innerHTML = `
@@ -175,17 +190,15 @@ function filterTable() {
         `;
     });
 
-    // Controla a visibilidade das tabelas
     document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
     document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
 }
 
-// Carrega os clientes ao carregar o DOM
+// Eventos para carregar clientes e aplicar filtros
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+document.getElementById('productFilter')?.addEventListener('change', filterTable);
+document.getElementById('clientSearchInput')?.addEventListener('input', loadClientsFromFirestore);
 
-// Configura o evento de mudança no filtro de produto para exibir a tabela agregada
-document.getElementById('productFilter').addEventListener('change', filterTable);
-document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
 
 
 
