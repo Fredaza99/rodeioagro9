@@ -136,43 +136,68 @@ function editClientRow(row, clientId) {
 }
 
 function filterTable() {
+    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
+    // Define se estamos filtrando por cliente ou produto
+    const isClientFilterActive = searchInput.length > 0;
+    const isProductFilterActive = productFilter.length > 0;
+
+    // Dados agregados para exibição condensada
     let aggregatedData = {};
 
     tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent;
+        const clientName = row.cells[1].textContent.toLowerCase();
         const productName = row.cells[2].textContent.toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = entryQuantity - exitQuantity;
 
-        if (productName === productFilter) {
-            if (!aggregatedData[clientName]) {
-                aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+        // Aplica os filtros
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
+
+        if (matchesClient && matchesProduct) {
+            if (isClientFilterActive) {
+                // Modo detalhado: mostra cada entrada/saída para o cliente filtrado
+                row.style.display = '';
+            } else {
+                // Modo agregado: mescla entradas por cliente-produto para filtros gerais ou de produto
+                row.style.display = 'none'; // Esconde a linha original para substituição com dados agrupados
+                const key = `${clientName}-${productName}`;
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = { entryQuantity: 0, exitQuantity: 0, saldo: 0, clientName, productName };
+                }
+                aggregatedData[key].entryQuantity += entryQuantity;
+                aggregatedData[key].exitQuantity += exitQuantity;
+                aggregatedData[key].saldo += saldo;
             }
-            aggregatedData[clientName].entryQuantity += entryQuantity;
-            aggregatedData[clientName].exitQuantity += exitQuantity;
-            aggregatedData[clientName].saldo += saldo;
+        } else {
+            row.style.display = 'none'; // Esconde linhas que não correspondem aos filtros
         }
     });
 
-    const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = ''; // Clear table body
+    // Limpa a tabela e adiciona linhas agregadas, se não estivermos em modo detalhado
+    if (!isClientFilterActive) {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = '';
 
-    for (const [client, data] of Object.entries(aggregatedData)) {
-        const newRow = tbody.insertRow();
-        newRow.innerHTML = `<td>-</td>
-                            <td>${client}</td>
-                            <td>${productFilter}</td>
-                            <td>-</td> <!-- No specific date for aggregated data -->
-                            <td>${data.entryQuantity}</td>
-                            <td>${data.exitQuantity}</td>
-                            <td>${data.saldo}</td>
-                            <td>-</td>`;
+        Object.values(aggregatedData).forEach(data => {
+            const newRow = clientHistoryTableBody.insertRow();
+            newRow.innerHTML = `
+                <td>-</td>
+                <td>${data.clientName}</td>
+                <td>${data.productName}</td>
+                <td>-</td> <!-- Sem data específica para dados agrupados -->
+                <td>${data.entryQuantity}</td>
+                <td>${data.exitQuantity}</td>
+                <td>${data.saldo}</td>
+                <td>-</td>`;
+        });
     }
 }
+
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
