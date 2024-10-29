@@ -140,13 +140,13 @@ function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    // Define se estamos filtrando por cliente ou produto
     const isClientFilterActive = searchInput.length > 0;
     const isProductFilterActive = productFilter.length > 0;
 
     // Dados agregados para exibição condensada
     let aggregatedData = {};
 
+    // Passo 1: Agrupar dados ou exibir detalhes
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.toLowerCase();
         const productName = row.cells[2].textContent.toLowerCase();
@@ -154,17 +154,17 @@ function filterTable() {
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = entryQuantity - exitQuantity;
 
-        // Aplica os filtros
+        // Aplicar filtros
         const matchesClient = clientName.includes(searchInput);
         const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
             if (isClientFilterActive) {
-                // Modo detalhado: mostra cada entrada/saída para o cliente filtrado
+                // Exibe todas as linhas do cliente para um modo detalhado
                 row.style.display = '';
             } else {
-                // Modo agregado: mescla entradas por cliente-produto para filtros gerais ou de produto
-                row.style.display = 'none'; // Esconde a linha original para substituição com dados agrupados
+                // Agregar dados para filtro de produto ou exibição geral
+                row.style.display = 'none';
                 const key = `${clientName}-${productName}`;
                 if (!aggregatedData[key]) {
                     aggregatedData[key] = { entryQuantity: 0, exitQuantity: 0, saldo: 0, clientName, productName };
@@ -174,22 +174,23 @@ function filterTable() {
                 aggregatedData[key].saldo += saldo;
             }
         } else {
-            row.style.display = 'none'; // Esconde linhas que não correspondem aos filtros
+            row.style.display = 'none';
         }
     });
 
-    // Limpa a tabela e adiciona linhas agregadas, se não estivermos em modo detalhado
+    // Passo 2: Exibir linhas agregadas quando filtro de cliente não estiver ativo
     if (!isClientFilterActive) {
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = '';
+        clientHistoryTableBody.innerHTML = ''; // Limpa tabela para modo agregado
 
+        // Adiciona linhas de dados agregados
         Object.values(aggregatedData).forEach(data => {
             const newRow = clientHistoryTableBody.insertRow();
             newRow.innerHTML = `
                 <td>-</td>
                 <td>${data.clientName}</td>
                 <td>${data.productName}</td>
-                <td>-</td> <!-- Sem data específica para dados agrupados -->
+                <td>-</td>
                 <td>${data.entryQuantity}</td>
                 <td>${data.exitQuantity}</td>
                 <td>${data.saldo}</td>
@@ -197,6 +198,7 @@ function filterTable() {
         });
     }
 }
+
 
 
 // Carrega os clientes ao carregar o DOM
