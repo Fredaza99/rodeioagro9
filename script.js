@@ -14,23 +14,23 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar clientes do Firestore e aplicar filtros
 async function loadClientsFromFirestore() {
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const isClientFilterActive = searchInput.length > 0;
 
-    // Limpa as tabelas antes de preenchê-las
-    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
-    const detailedTableBody = document.querySelector('#detailedTable tbody');
-    aggregatedTableBody.innerHTML = '';
-    detailedTableBody.innerHTML = '';
+    // Seleciona o corpo da tabela e limpa antes de preenchê-lo
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Dados agregados para a visão condensada
+        // Dados agregados para visão de todos os produtos
         const aggregatedData = {};
 
         querySnapshot.forEach(docSnapshot => {
@@ -41,14 +41,14 @@ async function loadClientsFromFirestore() {
             const exitQuantity = client.exitQuantity || 0;
             const saldo = entryQuantity - exitQuantity;
 
-            // Verifica correspondência dos filtros
+            // Verifica correspondência com filtros
             const matchesClient = clientName.includes(searchInput);
             const matchesProduct = !productFilter || productName === productFilter;
 
             if (matchesClient && matchesProduct) {
                 if (isClientFilterActive) {
-                    // Exibe todas as entradas e saídas do cliente filtrado
-                    const detailedRow = detailedTableBody.insertRow();
+                    // Modo Detalhado: Exibe cada entrada e saída do cliente
+                    const detailedRow = clientHistoryTableBody.insertRow();
                     detailedRow.innerHTML = `
                         <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
                         <td>${client.clientName}</td>
@@ -62,8 +62,10 @@ async function loadClientsFromFirestore() {
                             <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
                         </td>
                     `;
+                    totalEntradas += entryQuantity;
+                    totalSaldo += saldo;
                 } else {
-                    // Agrega dados por cliente e produto
+                    // Modo Agregado: Agrupa dados por cliente-produto
                     const key = `${clientName}-${productName}`;
                     if (!aggregatedData[key]) {
                         aggregatedData[key] = { entryQuantity: 0, exitQuantity: 0, saldo: 0, clientName: client.clientName, productName: client.productName };
@@ -75,30 +77,41 @@ async function loadClientsFromFirestore() {
             }
         });
 
-        // Adiciona dados agregados à tabela agregada se filtro de cliente não estiver ativo
+        // Exibe dados agregados se não estiver no modo detalhado
         if (!isClientFilterActive) {
             Object.values(aggregatedData).forEach(data => {
-                const aggregatedRow = aggregatedTableBody.insertRow();
+                const aggregatedRow = clientHistoryTableBody.insertRow();
                 aggregatedRow.innerHTML = `
                     <td>-</td>
                     <td>${data.clientName}</td>
                     <td>${data.productName}</td>
+                    <td>-</td>
                     <td>${data.entryQuantity}</td>
                     <td>${data.exitQuantity}</td>
                     <td>${data.saldo}</td>
                     <td>-</td>
                 `;
+                totalEntradas += data.entryQuantity;
+                totalSaldo += data.saldo;
             });
         }
 
-        // Exibe a tabela apropriada
-        document.getElementById('aggregatedTable').style.display = isClientFilterActive ? 'none' : '';
-        document.getElementById('detailedTable').style.display = isClientFilterActive ? '' : 'none';
+        // Atualiza os totais de entrada e saldo
+        document.getElementById('totalEntradas').textContent = totalEntradas;
+        document.getElementById('totalSaldo').textContent = totalSaldo;
         
     } catch (error) {
         console.error("Erro ao carregar clientes:", error);
     }
 }
+
+// Configura o evento de filtragem para carregar clientes
+document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
+document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
+
+// Carrega os clientes na inicialização da página
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 // Configura o evento de filtragem para carregar clientes
 document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
