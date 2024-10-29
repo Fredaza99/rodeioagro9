@@ -14,117 +14,121 @@ async function addClientToFirestore(client) {
     }
 }
 
+// Função de carregamento e exibição de dados
 async function loadClientsFromFirestore() {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    clientHistoryTableBody.innerHTML = '';
+    aggregatedTableBody.innerHTML = '';
+
     const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const isClientFilterActive = searchInput.length > 0;
 
-    // Seleciona as tabelas agregada e detalhada e limpa antes de preenchê-las
-    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
-    const detailedTableBody = document.querySelector('#detailedTable tbody');
-    aggregatedTableBody.innerHTML = '';
-    detailedTableBody.innerHTML = '';
-
     let totalEntradas = 0;
     let totalSaldo = 0;
+    const aggregatedData = {};
 
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
-
-        // Dados agregados para a visão de todos os produtos
-        const aggregatedData = {};
-
-        querySnapshot.forEach(docSnapshot => {
-            const client = docSnapshot.data();
+        const clients = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        clients.forEach(client => {
             const clientName = client.clientName.toLowerCase();
             const productName = client.productName.toLowerCase();
             const entryQuantity = client.entryQuantity || 0;
             const exitQuantity = client.exitQuantity || 0;
             const saldo = entryQuantity - exitQuantity;
 
-            // Verifica correspondência com filtros
             const matchesClient = clientName.includes(searchInput);
             const matchesProduct = !productFilter || productName === productFilter;
 
-            if (matchesClient && matchesProduct) {
-                if (isClientFilterActive) {
-                    // Modo Detalhado: Exibe cada entrada e saída do cliente
-                    const detailedRow = detailedTableBody.insertRow();
-                    detailedRow.innerHTML = `
-                        <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
-                        <td>${client.clientName}</td>
-                        <td>${client.productName}</td>
-                        <td>${client.date}</td>
-                        <td>${entryQuantity}</td>
-                        <td>${exitQuantity}</td>
-                        <td>${saldo}</td>
-                        <td>
-                            <button class="edit-client" data-id="${docSnapshot.id}">Editar</button>
-                            <button class="delete-btn" data-id="${docSnapshot.id}">Excluir</button>
-                        </td>
-                    `;
-                    totalEntradas += entryQuantity;
-                    totalSaldo += saldo;
-                } else {
-                    // Modo Agregado: Agrupa dados por cliente-produto
-                    const key = `${clientName}-${productName}`;
-                    if (!aggregatedData[key]) {
-                        aggregatedData[key] = { entryQuantity: 0, exitQuantity: 0, saldo: 0, clientName: client.clientName, productName: client.productName };
-                    }
-                    aggregatedData[key].entryQuantity += entryQuantity;
-                    aggregatedData[key].exitQuantity += exitQuantity;
-                    aggregatedData[key].saldo += saldo;
+            if (isClientFilterActive) {
+                if (matchesClient) {
+                    addRowToTable(clientHistoryTableBody, client, entryQuantity, exitQuantity, saldo, client.id);
                 }
+            } else {
+                const key = `${client.clientName}-${client.productName}`;
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = { clientName: client.clientName, productName: client.productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+                }
+                aggregatedData[key].entryQuantity += entryQuantity;
+                aggregatedData[key].exitQuantity += exitQuantity;
+                aggregatedData[key].saldo += saldo;
+                totalEntradas += entryQuantity;
+                totalSaldo += saldo;
             }
         });
 
-        // Adiciona dados agregados à tabela agregada, se não estiver no modo detalhado
         if (!isClientFilterActive) {
             Object.values(aggregatedData).forEach(data => {
-                const aggregatedRow = aggregatedTableBody.insertRow();
-                aggregatedRow.innerHTML = `
-                    <td>-</td>
+                const newRow = aggregatedTableBody.insertRow();
+                newRow.innerHTML = `
                     <td>${data.clientName}</td>
                     <td>${data.productName}</td>
                     <td>${data.entryQuantity}</td>
                     <td>${data.exitQuantity}</td>
                     <td>${data.saldo}</td>
-                    <td>-</td>
                 `;
-                totalEntradas += data.entryQuantity;
-                totalSaldo += data.saldo;
             });
         }
 
-        // Atualiza os totais de entrada e saldo
         document.getElementById('totalEntradas').textContent = totalEntradas;
         document.getElementById('totalSaldo').textContent = totalSaldo;
-
-        // Exibe a tabela apropriada
+        document.getElementById('clientHistoryTable').style.display = isClientFilterActive ? '' : 'none';
         document.getElementById('aggregatedTable').style.display = isClientFilterActive ? 'none' : '';
-        document.getElementById('detailedTable').style.display = isClientFilterActive ? '' : 'none';
 
     } catch (error) {
-        console.error("Erro ao carregar clientes:", error);
+        console.error('Erro ao carregar clientes:', error);
     }
 }
 
-// Eventos de filtro para recarregar a tabela
+// Função para adicionar uma linha na tabela detalhada
+function addRowToTable(tableBody, client, entryQuantity, exitQuantity, saldo, clientId) {
+    const row = tableBody.insertRow();
+    const action = entryQuantity > 0 ? 'Entrada' : 'Saída';
+    row.innerHTML = `
+        <td>${action}</td>
+        <td>${client.clientName}</td>
+        <td>${client.productName}</td>
+        <td>${client.date}</td>
+        <td>${entryQuantity}</td>
+        <td>${exitQuantity}</td>
+        <td>${saldo}</td>
+        <td>
+            <button class="edit-client" data-id="${clientId}">Editar</button>
+            <button class="delete-btn" data-id="${clientId}">Excluir</button>
+        </td>
+    `;
+}
+
+// Configura eventos de clique e filtros
 document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
 document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
-
-// Carrega os clientes ao carregar a página
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
+// Funções existentes de adição e edição de clientes foram mantidas e adaptadas para as tabelas atuais.
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const clientName = document.getElementById('clientName').value;
+    const productName = document.getElementById('productName').value;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
 
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
+    };
 
-// Configura o evento de filtragem para carregar clientes
-document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
-document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
+    await addClientToFirestore(client);
+    loadClientsFromFirestore();
+});
 
-// Carrega os clientes na inicialização da página
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
 
 // Função para definir o tipo de transação e destacar o botão ativo
