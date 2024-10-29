@@ -19,9 +19,11 @@ async function loadClientsFromFirestore() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const isClientFilterActive = searchInput.length > 0;
 
-    // Seleciona o corpo da tabela e limpa antes de preenchê-lo
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = '';
+    // Seleciona as tabelas agregada e detalhada e limpa antes de preenchê-las
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    const detailedTableBody = document.querySelector('#detailedTable tbody');
+    aggregatedTableBody.innerHTML = '';
+    detailedTableBody.innerHTML = '';
 
     let totalEntradas = 0;
     let totalSaldo = 0;
@@ -30,7 +32,7 @@ async function loadClientsFromFirestore() {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Dados agregados para visão de todos os produtos
+        // Dados agregados para a visão de todos os produtos
         const aggregatedData = {};
 
         querySnapshot.forEach(docSnapshot => {
@@ -48,7 +50,7 @@ async function loadClientsFromFirestore() {
             if (matchesClient && matchesProduct) {
                 if (isClientFilterActive) {
                     // Modo Detalhado: Exibe cada entrada e saída do cliente
-                    const detailedRow = clientHistoryTableBody.insertRow();
+                    const detailedRow = detailedTableBody.insertRow();
                     detailedRow.innerHTML = `
                         <td>${entryQuantity > 0 ? 'Entrada' : 'Saída'}</td>
                         <td>${client.clientName}</td>
@@ -77,15 +79,14 @@ async function loadClientsFromFirestore() {
             }
         });
 
-        // Exibe dados agregados se não estiver no modo detalhado
+        // Adiciona dados agregados à tabela agregada, se não estiver no modo detalhado
         if (!isClientFilterActive) {
             Object.values(aggregatedData).forEach(data => {
-                const aggregatedRow = clientHistoryTableBody.insertRow();
+                const aggregatedRow = aggregatedTableBody.insertRow();
                 aggregatedRow.innerHTML = `
                     <td>-</td>
                     <td>${data.clientName}</td>
                     <td>${data.productName}</td>
-                    <td>-</td>
                     <td>${data.entryQuantity}</td>
                     <td>${data.exitQuantity}</td>
                     <td>${data.saldo}</td>
@@ -99,18 +100,23 @@ async function loadClientsFromFirestore() {
         // Atualiza os totais de entrada e saldo
         document.getElementById('totalEntradas').textContent = totalEntradas;
         document.getElementById('totalSaldo').textContent = totalSaldo;
-        
+
+        // Exibe a tabela apropriada
+        document.getElementById('aggregatedTable').style.display = isClientFilterActive ? 'none' : '';
+        document.getElementById('detailedTable').style.display = isClientFilterActive ? '' : 'none';
+
     } catch (error) {
         console.error("Erro ao carregar clientes:", error);
     }
 }
 
-// Configura o evento de filtragem para carregar clientes
+// Eventos de filtro para recarregar a tabela
 document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
 document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
 
-// Carrega os clientes na inicialização da página
+// Carrega os clientes ao carregar a página
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 // Configura o evento de filtragem para carregar clientes
