@@ -14,6 +14,42 @@ async function addClientToFirestore(client) {
     }
 }
 
+// Variável para controlar o tipo de transação (Entrada ou Saída)
+let transactionType = "Entrada";
+
+// Função para configurar o tipo de transação e destacar o botão ativo
+function setTransactionType(type) {
+    transactionType = type;
+    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+}
+
+// Configura os botões de Entrada e Saída
+document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+// Função de envio do formulário para adicionar cliente ao Firestore
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const clientName = document.getElementById('clientName').value;
+    const productName = document.getElementById('productName').value;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
+    };
+
+    await addClientToFirestore(client);
+    loadClientsFromFirestore();  // Recarrega a tabela após a adição
+});
+
 // Função de carregamento e exibição de dados
 async function loadClientsFromFirestore() {
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
@@ -103,45 +139,7 @@ function addRowToTable(tableBody, client, entryQuantity, exitQuantity, saldo, cl
     `;
 }
 
-// Configura eventos de clique e filtros
-document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
-document.getElementById('productFilter').addEventListener('change', loadClientsFromFirestore);
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
-
-// Função para definir o tipo de transação e destacar o botão ativo
-let transactionType = "Entrada";
-function setTransactionType(type) {
-    transactionType = type;
-    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
-}
-
-// Configura eventos de clique para os botões de transação
-document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
-
-// Função para adição de cliente
-document.getElementById('clientForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const clientName = document.getElementById('clientName').value;
-    const productName = document.getElementById('productName').value;
-    const date = document.getElementById('date').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-
-    const client = {
-        clientName,
-        productName,
-        date,
-        entryQuantity: transactionType === "Entrada" ? quantity : 0,
-        exitQuantity: transactionType === "Saída" ? quantity : 0,
-        saldo: transactionType === "Entrada" ? quantity : -quantity
-    };
-
-    await addClientToFirestore(client);
-    loadClientsFromFirestore();
-});
-
-// Função para edição de cliente
+// Função para editar uma linha de cliente
 function editClientRow(row, clientId) {
     const cells = row.querySelectorAll('td');
     const originalValues = [...cells].map(cell => cell.textContent);
@@ -184,7 +182,6 @@ function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
     
-    // Limpa o conteúdo da tabela agregada
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
     aggregatedTableBody.innerHTML = '';
 
@@ -197,7 +194,7 @@ function filterTable() {
         const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
         const saldo = entryQuantity - exitQuantity;
 
-        if (productName === productFilter) {
+        if (productFilter === '' || productName === productFilter) {
             const key = `${clientName}-${productName}`;
             if (!aggregatedData[key]) {
                 aggregatedData[key] = { clientName, productName, entryQuantity: 0, exitQuantity: 0, saldo: 0 };
@@ -219,12 +216,15 @@ function filterTable() {
         `;
     });
 
-    // Exibe a tabela correta
     document.getElementById('clientHistoryTable').style.display = productFilter ? 'none' : '';
     document.getElementById('aggregatedTable').style.display = productFilter ? '' : 'none';
 }
 
+// Eventos para carregar clientes e aplicar filtro
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 document.getElementById('productFilter').addEventListener('change', filterTable);
+document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
+
 
 
 
