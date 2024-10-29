@@ -243,11 +243,27 @@ async function loadClientsFromFirestore() {
   <select id="productFilter">
     <option value="">Todos os Produtos</option>
   </select>
-<!-- Tabela Agregada -->
-<table id="aggregatedTable">
+<!-- Tabela para exibição geral detalhada -->
+<table id="clientHistoryTable">
     <thead>
       <tr>
         <th>Ação</th>
+        <th>Nome do Cliente</th>
+        <th>Produto</th>
+        <th>Data</th>
+        <th>Quantidade Entrada</th>
+        <th>Quantidade Retirada</th>
+        <th>Saldo</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Tabela para exibição agregada -->
+<table id="aggregatedTable" style="display: none;">
+    <thead>
+      <tr>
         <th>Nome do Cliente</th>
         <th>Produto</th>
         <th>Quantidade Entrada</th>
@@ -258,21 +274,6 @@ async function loadClientsFromFirestore() {
     <tbody></tbody>
 </table>
 
-<!-- Tabela Detalhada -->
-<table id="detailedTable">
-    <thead>
-      <tr>
-        <th>Ação</th>
-        <th>Nome do Cliente</th>
-        <th>Produto</th>
-        <th>Data</th>
-        <th>Quantidade Entrada</th>
-        <th>Quantidade Retirada</th>
-        <th>Saldo</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-</table>
 
 
   <footer>
