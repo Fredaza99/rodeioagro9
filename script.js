@@ -54,6 +54,12 @@ async function loadClientsFromFirestore() {
                 </td>
             `;
             clientHistoryTableBody.appendChild(row);
+
+            // Adiciona evento de exclusão
+            row.querySelector('.delete-btn').addEventListener('click', async () => {
+                await deleteDoc(doc(db, 'clients', client.id));
+                loadClientsFromFirestore(); // Recarrega a tabela após exclusão
+            });
         });
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
@@ -91,7 +97,7 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     };
 
     await addClientToFirestore(client);
-    window.location.href = 'cliente.html'; // Redireciona após salvar
+    loadClientsFromFirestore(); // Recarrega a tabela após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -132,7 +138,7 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função para filtrar a tabela agregada por produto
+// Função para exibir a tabela agregada com filtro de produto
 function loadAggregatedTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
