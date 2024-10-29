@@ -14,8 +14,15 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
+// Função para carregar e exibir clientes na tabela detalhada
 async function loadClientsFromFirestore() {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    if (!clientHistoryTableBody) {
+        console.error("Erro: Elemento clientHistoryTable não encontrado.");
+        return;
+    }
+    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
@@ -32,9 +39,6 @@ async function loadClientsFromFirestore() {
             }
             return nameComparison;
         });
-
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
         clients.forEach(client => {
             const row = document.createElement('tr');
@@ -55,7 +59,7 @@ async function loadClientsFromFirestore() {
             `;
             clientHistoryTableBody.appendChild(row);
 
-            // Adiciona evento de exclusão
+            // Configura evento de exclusão para cada botão
             row.querySelector('.delete-btn').addEventListener('click', async () => {
                 await deleteDoc(doc(db, 'clients', client.id));
                 loadClientsFromFirestore(); // Recarrega a tabela após exclusão
@@ -66,82 +70,61 @@ async function loadClientsFromFirestore() {
     }
 }
 
-// Função para definir o tipo de transação e destacar o botão ativo
+// Variável para definir o tipo de transação (Entrada ou Saída)
 let transactionType = "Entrada";
+
+// Função para configurar o tipo de transação e destacar o botão ativo
 function setTransactionType(type) {
     transactionType = type;
-    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+    document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
 }
 
-// Configura eventos de clique para os botões de transação
-document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+// Configura eventos de clique para os botões de transação se existirem
+document.getElementById("entryButton")?.addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton")?.addEventListener("click", () => setTransactionType("Saída"));
 
-// Evento de envio do formulário de cliente
-document.getElementById('clientForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
+// Evento de envio do formulário de cliente após o DOM estar carregado
+document.addEventListener('DOMContentLoaded', () => {
+    const clientForm = document.getElementById('clientForm');
+    if (clientForm) {
+        clientForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-    const clientName = document.getElementById('clientName').value;
-    const productName = document.getElementById('productName').value;
-    const date = document.getElementById('date').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
+            const clientName = document.getElementById('clientName')?.value;
+            const productName = document.getElementById('productName')?.value;
+            const date = document.getElementById('date')?.value;
+            const quantity = parseInt(document.getElementById('quantity')?.value);
 
-    const client = {
-        clientName,
-        productName,
-        date,
-        entryQuantity: transactionType === "Entrada" ? quantity : 0,
-        exitQuantity: transactionType === "Saída" ? quantity : 0,
-        saldo: transactionType === "Entrada" ? quantity : -quantity
-    };
+            if (!clientName || !productName || !date || isNaN(quantity)) {
+                console.error("Erro: Dados do formulário incompletos.");
+                return;
+            }
 
-    await addClientToFirestore(client);
-    loadClientsFromFirestore(); // Recarrega a tabela após salvar
+            const client = {
+                clientName,
+                productName,
+                date,
+                entryQuantity: transactionType === "Entrada" ? quantity : 0,
+                exitQuantity: transactionType === "Saída" ? quantity : 0,
+                saldo: transactionType === "Entrada" ? quantity : -quantity
+            };
+
+            await addClientToFirestore(client);
+            loadClientsFromFirestore(); // Recarrega a tabela após salvar
+        });
+    }
 });
-
-// Função para editar uma linha de cliente
-function editClientRow(row, clientId) {
-    const cells = row.querySelectorAll('td');
-    const originalValues = [...cells].map(cell => cell.textContent);
-
-    cells.forEach((cell, index) => {
-        if (index > 0 && index < cells.length - 1) {
-            cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
-        }
-    });
-
-    const editButton = row.querySelector('.edit-client');
-    editButton.textContent = 'Salvar';
-    editButton.classList.remove('edit-client');
-    editButton.classList.add('save-client');
-
-    editButton.replaceWith(editButton.cloneNode(true)); // Remove eventos antigos
-
-    const saveButton = row.querySelector('.save-client');
-    saveButton.addEventListener('click', async () => {
-        const updatedClient = {
-            clientName: cells[1].querySelector('input').value,
-            productName: cells[2].querySelector('input').value,
-            date: cells[3].querySelector('input').value,
-            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0,
-            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0,
-            saldo: parseInt(cells[4].querySelector('input').value) - parseInt(cells[5].querySelector('input').value)
-        };
-
-        try {
-            await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
-        }
-    });
-}
 
 // Função para exibir a tabela agregada com filtro de produto
 function loadAggregatedTable() {
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const productFilter = document.getElementById('productFilter')?.value.toLowerCase();
     const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    if (!aggregatedTableBody) {
+        console.error("Erro: Elemento aggregatedTable não encontrado.");
+        return;
+    }
+
     aggregatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela agregada
 
     let aggregatedData = {};
@@ -190,10 +173,13 @@ function loadAggregatedTable() {
     });
 }
 
-// Eventos para carregar clientes e aplicar filtros
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
-document.getElementById('productFilter').addEventListener('change', loadAggregatedTable);
-document.getElementById('clientSearchInput').addEventListener('input', loadClientsFromFirestore);
+// Eventos para carregar clientes e aplicar filtros após o DOM estar pronto
+document.addEventListener('DOMContentLoaded', () => {
+    loadClientsFromFirestore(); // Carrega a tabela de clientes detalhada ao carregar a página
+    document.getElementById('productFilter')?.addEventListener('change', loadAggregatedTable);
+    document.getElementById('clientSearchInput')?.addEventListener('input', loadClientsFromFirestore);
+});
+
 
 
 
