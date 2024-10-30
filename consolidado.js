@@ -1,141 +1,203 @@
 // Import Firestore functions
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 // Inicializa Firestore
 const db = getFirestore();
 
-// Função para carregar e consolidar clientes
-async function loadConsolidatedClients() {
+// Função para adicionar um cliente ao Firestore
+async function addClientToFirestore(client) {
+    try {
+        await addDoc(collection(db, 'clients'), client);
+        console.log('Cliente salvo no Firestore');
+    } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
+    }
+}
+
+// Função para carregar e exibir clientes
+async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e consolidar dados dos clientes
-        const aggregatedData = {};
-        const productOptions = new Set();
-
-        querySnapshot.forEach(docSnapshot => {
-            const client = docSnapshot.data();
-            const key = `${client.clientName.toUpperCase()} | ${client.productName.toUpperCase()}`;
-
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = {
-                    clientName: client.clientName,
-                    productName: client.productName,
-                    entryQuantity: 0,
-                    exitQuantity: 0,
-                    saldo: 0
-                };
+        // Extrair e ordenar dados dos clientes
+        const clients = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        clients.sort((a, b) => {
+            const nameComparison = a.clientName.localeCompare(b.clientName);
+            if (nameComparison === 0) {
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
             }
-
-            aggregatedData[key].entryQuantity += client.entryQuantity || 0;
-            aggregatedData[key].exitQuantity += client.exitQuantity || 0;
-            aggregatedData[key].saldo += (client.entryQuantity || 0) - (client.exitQuantity || 0);
-
-            // Adicionar produto ao conjunto para o dropdown
-            productOptions.add(client.productName);
+            return nameComparison;
         });
 
-        renderConsolidatedTable(aggregatedData);
-        updateTotals(aggregatedData);
-        populateProductFilter(productOptions);
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
     } catch (error) {
-        console.error('Erro ao carregar dados consolidados:', error);
+        console.error('Erro ao carregar clientes:', error);
     }
 }
 
-// Função para preencher a tabela consolidada
-function renderConsolidatedTable(aggregatedData) {
-    const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
-    consolidatedTableBody.innerHTML = '';
+// Função para definir o tipo de transação e destacar o botão ativo
+let transactionType = "Entrada";
+function setTransactionType(type) {
+    transactionType = type;
+    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+}
 
-    Object.values(aggregatedData).forEach(data => {
-        const newRow = document.createElement('tr');
+// Configura eventos de clique para os botões de transação
+document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+// Evento de envio do formulário de cliente
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const clientName = document.getElementById('clientName').value;
+    const productName = document.getElementById('productName').value;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+
+    // Define os dados do cliente com base no tipo de transação
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
+    };
+
+    await addClientToFirestore(client);
+    window.location.href = 'cliente.html'; // Redireciona após salvar
+});
+
+// Função para editar uma linha de cliente
+function editClientRow(row, clientId) {
+    const cells = row.querySelectorAll('td');
+    const originalValues = [...cells].map(cell => cell.textContent);
+
+    // Torna as células editáveis
+    cells.forEach((cell, index) => {
+        if (index > 0 && index < cells.length - 1) {
+            cell.innerHTML = `<input type="text" value="${originalValues[index].trim()}" />`;
+        }
+    });
+
+    const editButton = row.querySelector('.edit-client');
+    editButton.textContent = 'Salvar';
+    editButton.classList.remove('edit-client');
+    editButton.classList.add('save-client');
+
+    editButton.replaceWith(editButton.cloneNode(true)); // Remove eventos antigos
+
+    const saveButton = row.querySelector('.save-client');
+    saveButton.addEventListener('click', async () => {
+        const updatedClient = {
+            clientName: cells[1].querySelector('input').value,
+            productName: cells[2].querySelector('input').value,
+            date: cells[3].querySelector('input').value,
+            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0,
+            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0,
+            saldo: parseInt(cells[4].querySelector('input').value) - parseInt(cells[5].querySelector('input').value)
+        };
+
+        try {
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao atualizar cliente:', error);
+        }
+    });
+}
+
+// Função de Filtragem
+function filterTable() {
+    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+    // Cria um objeto para armazenar dados agregados por cliente
+    let aggregatedData = {};
+
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.trim().toUpperCase();
+        const productName = row.cells[2].textContent.toLowerCase().trim();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+
+        if ((clientFilter === "" || clientName.includes(clientFilter)) && (productFilter === "" || productName === productFilter)) {
+            if (!aggregatedData[clientName]) {
+                aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
+            }
+
+            // Agrega os valores de entrada e saída
+            aggregatedData[clientName].entryQuantity += entryQuantity;
+            aggregatedData[clientName].exitQuantity += exitQuantity;
+            aggregatedData[clientName].saldo += (entryQuantity - exitQuantity);
+        }
+    });
+
+    // Limpa a tabela existente
+    const tbody = document.querySelector('#clientHistoryTable tbody');
+    tbody.innerHTML = '';
+
+    // Preenche a tabela com os dados agregados
+    for (const [clientName, data] of Object.entries(aggregatedData)) {
+        const newRow = tbody.insertRow();
         newRow.innerHTML = `
-            <td>${data.clientName}</td>
-            <td>${data.productName}</td>
+            <td>-</td>
+            <td>${clientName}</td>
+            <td>${productFilter}</td>
+            <td>-</td> <!-- Sem data específica para os dados agregados -->
             <td>${data.entryQuantity}</td>
             <td>${data.exitQuantity}</td>
             <td>${data.saldo}</td>
+            <td>-</td>
         `;
-        consolidatedTableBody.appendChild(newRow);
-    });
-}
+    }
 
-// Função para atualizar os totais de entradas e saldo
-function updateTotals(aggregatedData) {
+    // Atualiza os totais de entrada e saldo
     let totalEntradas = 0;
     let totalSaldo = 0;
-
-    Object.values(aggregatedData).forEach(data => {
-        totalEntradas += data.entryQuantity;
-        totalSaldo += data.saldo;
-    });
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
-}
-
-// Função para preencher o dropdown de produtos
-function populateProductFilter(productOptions) {
-    const productFilter = document.getElementById('productFilter');
-    productFilter.innerHTML = '<option value="">Todos os Produtos</option>';
-
-    productOptions.forEach(product => {
-        const option = document.createElement('option');
-        option.value = product;
-        option.textContent = product;
-        productFilter.appendChild(option);
-    });
-}
-
-// Função para aplicar filtros
-function applyFilters() {
-    const clientFilter = document.getElementById('clientFilter').value.trim().toUpperCase();
-    const productFilter = document.getElementById('productFilter').value;
-
-    const tableRows = document.querySelectorAll('#consolidatedTable tbody tr');
-    tableRows.forEach(row => {
-        const clientName = row.cells[0].textContent.toUpperCase();
-        const productName = row.cells[1].textContent;
-
-        const matchesClient = !clientFilter || clientName.includes(clientFilter);
-        const matchesProduct = !productFilter || productName === productFilter;
-
-        if (matchesClient && matchesProduct) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    updateTotalsFromVisibleRows();
-}
-
-// Função para recalcular os totais com base nas linhas visíveis após filtragem
-function updateTotalsFromVisibleRows() {
-    const tableRows = document.querySelectorAll('#consolidatedTable tbody tr');
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
-    tableRows.forEach(row => {
-        if (row.style.display !== 'none') {
-            const entryQuantity = parseFloat(row.cells[2].textContent) || 0;
-            const saldo = parseFloat(row.cells[4].textContent) || 0;
-
-            totalEntradas += entryQuantity;
-            totalSaldo += saldo;
-        }
-    });
+    for (const client of Object.values(aggregatedData)) {
+        totalEntradas += client.entryQuantity;
+        totalSaldo += client.saldo;
+    }
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Carrega os clientes ao carregar o DOM
-document.addEventListener('DOMContentLoaded', loadConsolidatedClients);
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
-// Configura evento de clique para o botão de filtro
-document.getElementById('filterButton').addEventListener('click', applyFilters);
+// Evento para filtrar enquanto digita
+document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+document.getElementById('productFilter').addEventListener('change', filterTable);
+
 
