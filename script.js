@@ -4,6 +4,27 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
+// Certificar que o DOM está pronto antes de manipular elementos
+document.addEventListener('DOMContentLoaded', () => {
+    // Carrega os clientes ao carregar o DOM
+    loadClientsFromFirestore();
+
+    // Configura eventos de clique para os botões de transação
+    const entryButton = document.getElementById("entryButton");
+    const exitButton = document.getElementById("exitButton");
+
+    if (entryButton && exitButton) {
+        entryButton.addEventListener("click", () => setTransactionType("Entrada"));
+        exitButton.addEventListener("click", () => setTransactionType("Saída"));
+    }
+
+    // Evento de filtro
+    const clientSearchInput = document.getElementById('clientSearchInput');
+    if (clientSearchInput) {
+        clientSearchInput.addEventListener('input', filterTable);
+    }
+});
+
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
     try {
@@ -14,11 +35,17 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes
+// Função para carregar e exibir clientes de forma detalhada
 async function loadClientsFromFirestore() {
     try {
+        console.log("Carregando clientes do Firestore...");
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
+
+        if (querySnapshot.empty) {
+            console.warn("Nenhum cliente encontrado no Firestore.");
+            return;
+        }
 
         // Extrair e ordenar dados dos clientes
         const clients = querySnapshot.docs.map(doc => ({
@@ -26,6 +53,8 @@ async function loadClientsFromFirestore() {
             ...doc.data()
         }));
         
+        console.log("Clientes carregados:", clients);
+
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
@@ -34,114 +63,54 @@ async function loadClientsFromFirestore() {
             return nameComparison;
         });
 
+        // Preencher Tabela Detalhada
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+        if (clientHistoryTableBody) {
+            clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela detalhada
 
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+                row.innerHTML = `
+                    <td>${action}</td>
+                    <td>${client.clientName || ''}</td>
+                    <td>${client.productName || ''}</td>
+                    <td>${client.date || ''}</td>
+                    <td>${client.entryQuantity || 0}</td>
+                    <td>${client.exitQuantity || 0}</td>
+                    <td>${client.saldo || 0}</td>
+                    <td>
+                        <button class="edit-client" data-id="${client.id}">Editar</button>
+                        <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                    </td>
+                `;
+                clientHistoryTableBody.appendChild(row);
+            });
+        } else {
+            console.error("Erro: Tabela detalhada não encontrada no DOM.");
+        }
 
-        // Chamar a função de consolidação após carregar os clientes
+        // Consolidar Tabela Após Carregar Detalhes
         consolidateTable();
+
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
 }
 
-// Função para definir o tipo de transação e destacar o botão ativo
-let transactionType = "Entrada";
-function setTransactionType(type) {
-    transactionType = type;
-    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
-}
-
-// Configura eventos de clique para os botões de transação
-document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
-
-// Evento de envio do formulário de cliente
-document.getElementById('clientForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const clientName = document.getElementById('clientName').value;
-    const productName = document.getElementById('productName').value;
-    const date = document.getElementById('date').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-
-    // Define os dados do cliente com base no tipo de transação
-    const client = {
-        clientName,
-        productName,
-        date,
-        entryQuantity: transactionType === "Entrada" ? quantity : 0,
-        exitQuantity: transactionType === "Saída" ? quantity : 0,
-        saldo: transactionType === "Entrada" ? quantity : -quantity
-    };
-
-    await addClientToFirestore(client);
-    window.location.href = 'cliente.html'; // Redireciona após salvar
-});
-
-// Função para editar uma linha de cliente
-function editClientRow(row, clientId) {
-    const cells = row.querySelectorAll('td');
-    const originalValues = [...cells].map(cell => cell.textContent);
-
-    // Torna as células editáveis
-    cells.forEach((cell, index) => {
-        if (index > 0 && index < cells.length - 1) {
-            cell.innerHTML = `<input type="text" value="${originalValues[index].trim()}" />`;
-        }
-    });
-
-    const editButton = row.querySelector('.edit-client');
-    editButton.textContent = 'Salvar';
-    editButton.classList.remove('edit-client');
-    editButton.classList.add('save-client');
-
-    editButton.replaceWith(editButton.cloneNode(true)); // Remove eventos antigos
-
-    const saveButton = row.querySelector('.save-client');
-    saveButton.addEventListener('click', async () => {
-        const updatedClient = {
-            clientName: cells[1].querySelector('input').value,
-            productName: cells[2].querySelector('input').value,
-            date: cells[3].querySelector('input').value,
-            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0,
-            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0,
-            saldo: parseInt(cells[4].querySelector('input').value) - parseInt(cells[5].querySelector('input').value)
-        };
-
-        try {
-            await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
-        }
-    });
-}
-
 // Função para consolidar dados da primeira tabela e preencher a segunda tabela
 function consolidateTable() {
     console.log("Consolidando tabela...");
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    const tableRows = clientHistoryTableBody ? clientHistoryTableBody.querySelectorAll('tr') : [];
+
+    if (tableRows.length === 0) {
+        console.warn("Nenhuma linha encontrada para consolidar.");
+        return;
+    }
+
     const aggregatedData = {};
 
     tableRows.forEach(row => {
@@ -187,6 +156,14 @@ function consolidateTable() {
     }
 }
 
+// Função para definir o tipo de transação e destacar o botão ativo
+let transactionType = "Entrada";
+function setTransactionType(type) {
+    transactionType = type;
+    document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
+}
+
 // Função de Filtragem
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase().replace(/\s+/g, ' ');
@@ -211,9 +188,6 @@ function filterTable() {
         document.getElementById('clientHistoryTable').style.display = 'none';
     }
 }
-
-// Carrega os clientes ao carregar o DOM
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
 
 
