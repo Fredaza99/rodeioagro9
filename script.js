@@ -23,6 +23,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clientSearchInput) {
         clientSearchInput.addEventListener('input', filterTable);
     }
+
+    // Evento de submissão do formulário de cliente
+    const clientForm = document.getElementById('clientForm');
+    if (clientForm) {
+        clientForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const clientNameElement = document.getElementById('clientName');
+            const productNameElement = document.getElementById('productName');
+            const dateElement = document.getElementById('date');
+            const quantityElement = document.getElementById('quantity');
+
+            if (clientNameElement && productNameElement && dateElement && quantityElement) {
+                const clientName = clientNameElement.value;
+                const productName = productNameElement.value;
+                const date = dateElement.value;
+                const quantity = parseInt(quantityElement.value);
+
+                // Define os dados do cliente com base no tipo de transação
+                const client = {
+                    clientName,
+                    productName,
+                    date,
+                    entryQuantity: transactionType === "Entrada" ? quantity : 0,
+                    exitQuantity: transactionType === "Saída" ? quantity : 0,
+                    saldo: transactionType === "Entrada" ? quantity : -quantity
+                };
+
+                await addClientToFirestore(client);
+                window.location.href = 'cliente.html'; // Redireciona após salvar
+            } else {
+                console.error("Erro: Elementos do formulário não encontrados.");
+            }
+        });
+    }
 });
 
 // Função para adicionar um cliente ao Firestore
@@ -52,7 +87,7 @@ async function loadClientsFromFirestore() {
             id: doc.id,
             ...doc.data()
         }));
-        
+
         console.log("Clientes carregados:", clients);
 
         clients.sort((a, b) => {
@@ -87,12 +122,12 @@ async function loadClientsFromFirestore() {
                 `;
                 clientHistoryTableBody.appendChild(row);
             });
+
+            // Consolidar a Tabela Após Carregar a Tabela Detalhada
+            consolidateTable();
         } else {
             console.error("Erro: Tabela detalhada não encontrada no DOM.");
         }
-
-        // Consolidar Tabela Após Carregar Detalhes
-        consolidateTable();
 
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
@@ -104,8 +139,12 @@ function consolidateTable() {
     console.log("Consolidando tabela...");
 
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    const tableRows = clientHistoryTableBody ? clientHistoryTableBody.querySelectorAll('tr') : [];
+    if (!clientHistoryTableBody) {
+        console.error("Erro: Tabela detalhada não encontrada no DOM.");
+        return;
+    }
 
+    const tableRows = clientHistoryTableBody.querySelectorAll('tr');
     if (tableRows.length === 0) {
         console.warn("Nenhuma linha encontrada para consolidar.");
         return;
@@ -188,6 +227,7 @@ function filterTable() {
         document.getElementById('clientHistoryTable').style.display = 'none';
     }
 }
+
 
 
 
