@@ -135,42 +135,11 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função de Filtragem (somente a lógica original)
+// Função de Filtragem (baseada na página cliente.html)
 function filterTable() {
-    const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
+    const clientFilter = document.getElementById('clientFilter').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
-    tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.trim().toUpperCase();
-        const productName = row.cells[2].textContent.trim().toUpperCase();
-
-        const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
-        const matchesProduct = productFilter === "" || productName.includes(productFilter);
-
-        if (matchesClient && matchesProduct) {
-            row.style.display = '';
-            totalEntradas += parseFloat(row.cells[4].textContent) || 0;
-            totalSaldo += parseFloat(row.cells[6].textContent) || 0;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
-}
-
-// Carrega os clientes ao carregar o DOM
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
-
-// Eventos para filtrar enquanto digita
-document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-document.getElementById('productFilter').addEventListener('input', filterTable);
-
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody
 
 
 
