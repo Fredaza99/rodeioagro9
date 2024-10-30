@@ -34,31 +34,36 @@ async function loadClientsFromFirestore() {
             return nameComparison;
         });
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+        renderTable(clients);
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
+}
+
+// Função para renderizar a tabela
+function renderTable(clients) {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+
+    clients.forEach(client => {
+        const row = document.createElement('tr');
+        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+        row.innerHTML = `
+            <td>${action}</td>
+            <td>${client.clientName || ''}</td>
+            <td>${client.productName || ''}</td>
+            <td>${client.date || ''}</td>
+            <td>${client.entryQuantity || 0}</td>
+            <td>${client.exitQuantity || 0}</td>
+            <td>${client.saldo || 0}</td>
+            <td>
+                <button class="edit-client" data-id="${client.id}">Editar</button>
+                <button class="delete-btn" data-id="${client.id}">Excluir</button>
+            </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+    });
 }
 
 // Função para definir o tipo de transação e destacar o botão ativo
@@ -135,8 +140,26 @@ function editClientRow(row, clientId) {
     });
 }
 
+// Função para excluir um cliente
+async function deleteClient(clientId) {
+    try {
+        await deleteDoc(doc(db, 'clients', clientId));
+        console.log('Cliente excluído com sucesso!');
+        loadClientsFromFirestore(); // Atualiza a tabela após exclusão
+    } catch (error) {
+        console.error('Erro ao excluir cliente:', error);
+    }
+}
+
+// Função para filtrar e agregar os clientes
 function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    if (productFilter === "") {
+        // Se não há filtro, carregue todos os clientes normalmente
+        loadClientsFromFirestore();
+        return;
+    }
+
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
     // Cria um objeto para armazenar dados agregados por cliente
@@ -191,9 +214,25 @@ function filterTable() {
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
+// Evento para filtrar clientes quando o filtro de produto mudar
+document.getElementById('productFilter').addEventListener('change', filterTable);
+
+// Evento para lidar com cliques na tabela de clientes
+document.querySelector('#clientHistoryTable tbody').addEventListener('click', async (event) => {
+    const button = event.target;
+    const row = button.closest('tr');
+    const clientId = button.getAttribute('data-id');
+
+    if (button.classList.contains('delete-btn')) {
+        await deleteClient(clientId);
+    } else if (button.classList.contains('edit-client')) {
+        editClientRow(row, clientId);
+    }
+});
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
