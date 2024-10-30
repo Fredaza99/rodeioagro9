@@ -65,7 +65,6 @@ async function loadClientsFromFirestore() {
     }
 }
 
-// Função de filtragem atualizada
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase().replace(/\s+/g, ' ');
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase().replace(/\s+/g, ' ');
@@ -76,31 +75,87 @@ function filterTable() {
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    tableRows.forEach((row, index) => {
-        const clientName = row.cells[1].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
-        const productName = row.cells[2].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
-        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const saldo = parseFloat(row.cells[6].textContent) || 0;
+    // Se um produto estiver filtrado, mostra todas as transações de cada cliente para aquele produto
+    if (productFilter !== "") {
+        tableRows.forEach((row, index) => {
+            const clientName = row.cells[1].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+            const productName = row.cells[2].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+            const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+            const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-        console.log(`Linha ${index} - Cliente: ${clientName} | Produto: ${productName}`);
+            const matchesClient = clientName.includes(searchInput);
+            const matchesProduct = productName === productFilter;
 
-        const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = productFilter === "" || productName === productFilter;
+            if (matchesClient && matchesProduct) {
+                row.style.display = '';
+                totalEntradas += entryQuantity;
+                totalSaldo += saldo;
+            } else {
+                row.style.display = 'none';
+            }
+        });
 
-        console.log(`Linha ${index} - Correspondência Cliente: ${matchesClient} | Correspondência Produto: ${matchesProduct}`);
+    } else {
+        // Se não houver filtro de produto, agrupar por cliente e produto
+        const aggregatedData = {};
 
-        if (matchesClient && matchesProduct) {
-            row.style.display = '';
-            totalEntradas += entryQuantity;
-            totalSaldo += saldo;
-        } else {
-            row.style.display = 'none';
-        }
-    });
+        tableRows.forEach(row => {
+            const clientName = row.cells[1].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+            const productName = row.cells[2].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+            const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+            const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
 
+            const matchesClient = clientName.includes(searchInput);
+
+            if (matchesClient) {
+                const key = `${clientName} | ${productName}`;
+
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = {
+                        clientName: row.cells[1].textContent.trim(),
+                        productName: row.cells[2].textContent.trim(),
+                        entryQuantity: 0,
+                        exitQuantity: 0,
+                        saldo: 0
+                    };
+                }
+
+                aggregatedData[key].entryQuantity += entryQuantity;
+                aggregatedData[key].exitQuantity += exitQuantity;
+                aggregatedData[key].saldo += (entryQuantity - exitQuantity);
+            }
+
+            row.style.display = 'none'; // Ocultar todas as linhas para depois mostrar apenas as agregadas
+        });
+
+        // Limpa o conteúdo da tabela e insere as linhas agregadas
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = '';
+
+        Object.values(aggregatedData).forEach(data => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>-</td>
+                <td>${data.clientName}</td>
+                <td>${data.productName}</td>
+                <td>-</td> <!-- Sem data específica para os dados agregados -->
+                <td>${data.entryQuantity}</td>
+                <td>${data.exitQuantity}</td>
+                <td>${data.saldo}</td>
+                <td>-</td>
+            `;
+            clientHistoryTableBody.appendChild(newRow);
+
+            totalEntradas += data.entryQuantity;
+            totalSaldo += data.saldo;
+        });
+    }
+
+    // Atualiza os totais de entrada e saldo
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
 
 // Adiciona um botão para testar o filtro manualmente
 const testFilterButton = document.createElement('button');
