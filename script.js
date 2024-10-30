@@ -136,8 +136,8 @@ function editClientRow(row, clientId) {
 }
 
 function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase();
-    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
+    const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase().replace(/\s+/g, ' ');
+    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase().replace(/\s+/g, ' ');
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
     console.log("Filtro de Cliente:", searchInput, "| Filtro de Produto:", productFilter);
@@ -146,8 +146,9 @@ function filterTable() {
     let totalSaldo = 0;
 
     tableRows.forEach((row, index) => {
-        const clientName = row.cells[1].textContent.trim().toUpperCase();
-        const productName = row.cells[2].textContent.trim().toUpperCase();
+        // Removendo espaços extras dos nomes antes de comparar
+        const clientName = row.cells[1].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
+        const productName = row.cells[2].textContent.trim().toUpperCase().replace(/\s+/g, ' ');
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const saldo = parseFloat(row.cells[6].textContent) || 0;
 
