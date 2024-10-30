@@ -1,8 +1,28 @@
-// Import Firestore functions
+// Import Firebase functions
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// Inicializa Firestore
-const db = getFirestore();
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+  authDomain: "rodeioagro-fee43.firebaseapp.com",
+  projectId: "rodeioagro-fee43",
+  storageBucket: "rodeioagro-fee43.appspot.com",
+  messagingSenderId: "981787707311",
+  appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+  measurementId: "G-FM9TP3QF6N"
+};
+
+// Inicializa Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+
+// Verificação de sessão
+if (!sessionStorage.getItem('loggedIn')) {
+    window.location.href = 'login.html';
+}
 
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
