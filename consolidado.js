@@ -141,53 +141,29 @@ function filterTable() {
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    // Cria um objeto para armazenar dados agregados por cliente
-    let aggregatedData = {};
-
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.trim().toUpperCase();
         const productName = row.cells[2].textContent.toLowerCase().trim();
-        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
 
-        if ((clientFilter === "" || clientName.includes(clientFilter)) && (productFilter === "" || productName === productFilter)) {
-            if (!aggregatedData[clientName]) {
-                aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
-            }
+        const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
+        const matchesProduct = productFilter === "" || productName.includes(productFilter);
 
-            // Agrega os valores de entrada e saída
-            aggregatedData[clientName].entryQuantity += entryQuantity;
-            aggregatedData[clientName].exitQuantity += exitQuantity;
-            aggregatedData[clientName].saldo += (entryQuantity - exitQuantity);
+        if (matchesClient && matchesProduct) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
         }
     });
-
-    // Limpa a tabela existente
-    const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = '';
-
-    // Preenche a tabela com os dados agregados
-    for (const [clientName, data] of Object.entries(aggregatedData)) {
-        const newRow = tbody.insertRow();
-        newRow.innerHTML = `
-            <td>-</td>
-            <td>${clientName}</td>
-            <td>${productFilter}</td>
-            <td>-</td> <!-- Sem data específica para os dados agregados -->
-            <td>${data.entryQuantity}</td>
-            <td>${data.exitQuantity}</td>
-            <td>${data.saldo}</td>
-            <td>-</td>
-        `;
-    }
 
     // Atualiza os totais de entrada e saldo
     let totalEntradas = 0;
     let totalSaldo = 0;
-    for (const client of Object.values(aggregatedData)) {
-        totalEntradas += client.entryQuantity;
-        totalSaldo += client.saldo;
-    }
+    tableRows.forEach(row => {
+        if (row.style.display !== 'none') {
+            totalEntradas += parseFloat(row.cells[4].textContent) || 0;
+            totalSaldo += parseFloat(row.cells[6].textContent) || 0;
+        }
+    });
 
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
@@ -196,8 +172,9 @@ function filterTable() {
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
-// Evento para filtrar enquanto digita
+// Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-document.getElementById('productFilter').addEventListener('change', filterTable);
+document.getElementById('productFilter').addEventListener('input', filterTable);
+
 
 
