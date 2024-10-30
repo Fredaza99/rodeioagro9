@@ -39,7 +39,9 @@
         <input type="text" id="clientFilter" placeholder="Digite o nome do cliente...">
 
         <label for="productFilter">Filtrar por Produto:</label>
-        <input type="text" id="productFilter" placeholder="Digite o nome do produto...">
+        <select id="productFilter">
+            <option value="">Todos os Produtos</option>
+        </select>
 
         <button id="filterButton">Filtrar</button>
     </div>
@@ -72,6 +74,12 @@
         <tbody>
             <!-- Conteúdo da tabela será preenchido pelo JavaScript -->
         </tbody>
+    </table>
+
+    <script type="module" src="consolidado.js"></script>
+</body>
+</html>
+
     </table>
 
     <script type="module" src="consolidado.js"></script>
