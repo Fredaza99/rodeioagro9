@@ -6,8 +6,15 @@ const db = getFirestore();
 
 // Certificar que o DOM está pronto antes de manipular elementos
 document.addEventListener('DOMContentLoaded', () => {
-    // Carrega os clientes ao carregar o DOM
-    loadClientsFromFirestore();
+    // Aguardar até que a tabela esteja disponível no DOM
+    const waitForTable = setInterval(() => {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        if (clientHistoryTableBody) {
+            clearInterval(waitForTable);
+            // Carrega os clientes após confirmar que a tabela está no DOM
+            loadClientsFromFirestore();
+        }
+    }, 100);
 
     // Configura eventos de clique para os botões de transação
     const entryButton = document.getElementById("entryButton");
@@ -195,38 +202,6 @@ function consolidateTable() {
     }
 }
 
-// Função para definir o tipo de transação e destacar o botão ativo
-let transactionType = "Entrada";
-function setTransactionType(type) {
-    transactionType = type;
-    document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
-    document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
-}
-
-// Função de Filtragem
-function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase().replace(/\s+/g, ' ');
-
-    if (searchInput !== "") {
-        // Mostrar Tabela Detalhada e ocultar Tabela Consolidada
-        document.getElementById('consolidatedTable').style.display = 'none';
-        document.getElementById('clientHistoryTable').style.display = 'table';
-
-        const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-        tableRows.forEach(row => {
-            const clientName = row.cells[1].textContent.trim().toUpperCase();
-            if (clientName.includes(searchInput)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    } else {
-        // Mostrar Tabela Consolidada e ocultar Tabela Detalhada
-        document.getElementById('consolidatedTable').style.display = 'table';
-        document.getElementById('clientHistoryTable').style.display = 'none';
-    }
-}
 
 
 
