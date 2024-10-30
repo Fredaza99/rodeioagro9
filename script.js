@@ -135,47 +135,40 @@ function editClientRow(row, clientId) {
     });
 }
 
+// Nova função de filtragem
 function filterTable() {
+    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-    let aggregatedData = {};
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
     tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent;
+        const clientName = row.cells[1].textContent.toLowerCase();
         const productName = row.cells[2].textContent.toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
-        const saldo = entryQuantity - exitQuantity;
+        const saldo = parseFloat(row.cells[6].textContent) || 0;
 
-        if (productName === productFilter) {
-            if (!aggregatedData[clientName]) {
-                aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
-            }
-            aggregatedData[clientName].entryQuantity += entryQuantity;
-            aggregatedData[clientName].exitQuantity += exitQuantity;
-            aggregatedData[clientName].saldo += saldo;
+        const matchesClient = clientName.includes(searchInput);
+        const matchesProduct = !productFilter || productName === productFilter;
+
+        if (matchesClient && matchesProduct) {
+            row.style.display = '';
+            totalEntradas += entryQuantity;
+            totalSaldo += saldo;
+        } else {
+            row.style.display = 'none';
         }
     });
 
-    const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = ''; // Clear table body
-
-    for (const [client, data] of Object.entries(aggregatedData)) {
-        const newRow = tbody.insertRow();
-        newRow.innerHTML = `<td>-</td>
-                            <td>${client}</td>
-                            <td>${productFilter}</td>
-                            <td>-</td> <!-- No specific date for aggregated data -->
-                            <td>${data.entryQuantity}</td>
-                            <td>${data.exitQuantity}</td>
-                            <td>${data.saldo}</td>
-                            <td>-</td>`;
-    }
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
