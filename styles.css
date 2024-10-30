@@ -12,14 +12,14 @@ h1, h2 {
     margin-top: 20px;
 }
 
- .logo-row{
+.logo-row {
     text-align: center;
-  }
-  .logo {
+}
+.logo {
     width: 175px;
     height: 175px;
     text-align: center;
-  }
+}
 
 nav {
     background-color: #202122;
@@ -166,28 +166,10 @@ table tbody tr:hover {
 }
 
 /* Barra de Pesquisa */
-#clientSearchInput {
+#clientSearchInput, #productFilter {
     width: 50%;
     padding: 8px;
     margin: 20px auto;
-    display: block;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#clientSearchInput:focus {
-    border-color: #18bc9c;
-    outline: none;
-    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-}
-
-/* Dropdown Filter Styles */
-#productFilter {
-    width: 50%;
-    padding: 8px;
-    margin: 10px auto;
     display: block;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -196,7 +178,7 @@ table tbody tr:hover {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#productFilter:focus {
+#clientSearchInput:focus, #productFilter:focus {
     border-color: #18bc9c;
     outline: none;
     box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
