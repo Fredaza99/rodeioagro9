@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clientSearchInput) {
         clientSearchInput.addEventListener('input', filterTable);
     }
+
+    // Botão para consolidar a tabela
+    const consolidateButton = document.getElementById('consolidateButton');
+    if (consolidateButton) {
+        consolidateButton.addEventListener('click', consolidateTable);
+    }
 });
 
 // Função para adicionar um cliente ao Firestore
@@ -35,7 +41,7 @@ async function addClientToFirestore(client) {
     }
 }
 
-// Função para carregar e exibir clientes de forma consolidada ou detalhada
+// Função para carregar e exibir clientes de forma detalhada
 async function loadClientsFromFirestore() {
     try {
         console.log("Carregando clientes do Firestore...");
@@ -91,49 +97,57 @@ async function loadClientsFromFirestore() {
             console.error("Erro: Tabela detalhada não encontrada no DOM.");
         }
 
-        // Preencher Tabela Consolidada
-        const aggregatedData = {};
-        clients.forEach(client => {
-            const key = `${client.clientName} | ${client.productName}`;
-
-            if (!aggregatedData[key]) {
-                aggregatedData[key] = {
-                    clientName: client.clientName,
-                    productName: client.productName,
-                    entryQuantity: 0,
-                    exitQuantity: 0,
-                    saldo: 0
-                };
-            }
-
-            aggregatedData[key].entryQuantity += client.entryQuantity;
-            aggregatedData[key].exitQuantity += client.exitQuantity;
-            aggregatedData[key].saldo += (client.entryQuantity - client.exitQuantity);
-        });
-
-        console.log("Dados agregados para tabela consolidada:", aggregatedData);
-
-        const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
-        if (consolidatedTableBody) {
-            consolidatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela consolidada
-
-            Object.values(aggregatedData).forEach(data => {
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td>${data.clientName}</td>
-                    <td>${data.productName}</td>
-                    <td>${data.entryQuantity}</td>
-                    <td>${data.exitQuantity}</td>
-                    <td>${data.saldo}</td>
-                `;
-                consolidatedTableBody.appendChild(newRow);
-            });
-        } else {
-            console.error("Erro: Tabela consolidada não encontrada no DOM.");
-        }
-
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
+    }
+}
+
+// Função para consolidar dados da primeira tabela e preencher a segunda tabela
+function consolidateTable() {
+    console.log("Consolidando tabela...");
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    const aggregatedData = {};
+
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.trim().toUpperCase();
+        const productName = row.cells[2].textContent.trim().toUpperCase();
+        const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
+        const exitQuantity = parseFloat(row.cells[5].textContent) || 0;
+
+        const key = `${clientName} | ${productName}`;
+
+        if (!aggregatedData[key]) {
+            aggregatedData[key] = {
+                clientName: row.cells[1].textContent.trim(),
+                productName: row.cells[2].textContent.trim(),
+                entryQuantity: 0,
+                exitQuantity: 0,
+                saldo: 0
+            };
+        }
+
+        aggregatedData[key].entryQuantity += entryQuantity;
+        aggregatedData[key].exitQuantity += exitQuantity;
+        aggregatedData[key].saldo += (entryQuantity - exitQuantity);
+    });
+
+    const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
+    if (consolidatedTableBody) {
+        consolidatedTableBody.innerHTML = ''; // Limpa o conteúdo da tabela consolidada
+
+        Object.values(aggregatedData).forEach(data => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${data.clientName}</td>
+                <td>${data.productName}</td>
+                <td>${data.entryQuantity}</td>
+                <td>${data.exitQuantity}</td>
+                <td>${data.saldo}</td>
+            `;
+            consolidatedTableBody.appendChild(newRow);
+        });
+    } else {
+        console.error("Erro: Tabela consolidada não encontrada no DOM.");
     }
 }
 
@@ -169,6 +183,7 @@ function setTransactionType(type) {
     document.getElementById("entryButton")?.classList.toggle("active", type === "Entrada");
     document.getElementById("exitButton")?.classList.toggle("active", type === "Saída");
 }
+
 
 
 
