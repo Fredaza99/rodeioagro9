@@ -18,41 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         exitButton.addEventListener("click", () => setTransactionType("Saída"));
     }
 
-    // Evento de envio do formulário de cliente
-    const clientForm = document.getElementById('clientForm');
-    if (clientForm) {
-        clientForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const clientNameElement = document.getElementById('clientName');
-            const productNameElement = document.getElementById('productName');
-            const dateElement = document.getElementById('date');
-            const quantityElement = document.getElementById('quantity');
-
-            if (clientNameElement && productNameElement && dateElement && quantityElement) {
-                const clientName = clientNameElement.value;
-                const productName = productNameElement.value;
-                const date = dateElement.value;
-                const quantity = parseInt(quantityElement.value);
-
-                // Define os dados do cliente com base no tipo de transação
-                const client = {
-                    clientName,
-                    productName,
-                    date,
-                    entryQuantity: transactionType === "Entrada" ? quantity : 0,
-                    exitQuantity: transactionType === "Saída" ? quantity : 0,
-                    saldo: transactionType === "Entrada" ? quantity : -quantity
-                };
-
-                await addClientToFirestore(client);
-                window.location.href = 'cliente.html'; // Redireciona após salvar
-            } else {
-                console.error("Erro: Elementos do formulário não encontrados.");
-            }
-        });
-    }
-
     // Evento de filtro
     const clientSearchInput = document.getElementById('clientSearchInput');
     if (clientSearchInput) {
@@ -73,8 +38,14 @@ async function addClientToFirestore(client) {
 // Função para carregar e exibir clientes de forma consolidada ou detalhada
 async function loadClientsFromFirestore() {
     try {
+        console.log("Carregando clientes do Firestore...");
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
+
+        if (querySnapshot.empty) {
+            console.warn("Nenhum cliente encontrado no Firestore.");
+            return;
+        }
 
         // Extrair e ordenar dados dos clientes
         const clients = querySnapshot.docs.map(doc => ({
@@ -82,6 +53,8 @@ async function loadClientsFromFirestore() {
             ...doc.data()
         }));
         
+        console.log("Clientes carregados:", clients);
+
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
@@ -137,6 +110,8 @@ async function loadClientsFromFirestore() {
             aggregatedData[key].exitQuantity += client.exitQuantity;
             aggregatedData[key].saldo += (client.entryQuantity - client.exitQuantity);
         });
+
+        console.log("Dados agregados para tabela consolidada:", aggregatedData);
 
         const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
         if (consolidatedTableBody) {
