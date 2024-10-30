@@ -40,7 +40,7 @@ async function loadClientsFromFirestore() {
     }
 }
 
-// Função para renderizar a tabela
+// Função para renderizar a tabela detalhada
 function renderTable(clients) {
     const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
     clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
@@ -98,7 +98,7 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     };
 
     await addClientToFirestore(client);
-    window.location.href = 'cliente.html'; // Redireciona após salvar
+    loadClientsFromFirestore(); // Recarrega a tabela após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -154,15 +154,20 @@ async function deleteClient(clientId) {
 // Função para filtrar e agregar os clientes
 function filterTable() {
     const productFilter = document.getElementById('productFilter').value.toLowerCase();
+
     if (productFilter === "") {
-        // Se não há filtro, carregue todos os clientes normalmente
+        // Se não há filtro, mostrar todos os registros detalhados
+        document.getElementById('clientHistoryTable').style.display = '';
+        document.getElementById('aggregatedTable').style.display = 'none';
         loadClientsFromFirestore();
         return;
     }
 
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+    // Caso contrário, mostrar a tabela agregada
+    document.getElementById('clientHistoryTable').style.display = 'none';
+    document.getElementById('aggregatedTable').style.display = '';
 
-    // Cria um objeto para armazenar dados agregados por cliente
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
     let aggregatedData = {};
 
     tableRows.forEach(row => {
@@ -176,42 +181,25 @@ function filterTable() {
                 aggregatedData[clientName] = { entryQuantity: 0, exitQuantity: 0, saldo: 0 };
             }
 
-            // Agrega os valores de entrada e saída
             aggregatedData[clientName].entryQuantity += entryQuantity;
             aggregatedData[clientName].exitQuantity += exitQuantity;
             aggregatedData[clientName].saldo += (entryQuantity - exitQuantity);
         }
     });
 
-    // Limpa a tabela existente
-    const tbody = document.querySelector('#clientHistoryTable tbody');
-    tbody.innerHTML = '';
+    const aggregatedTableBody = document.querySelector('#aggregatedTable tbody');
+    aggregatedTableBody.innerHTML = ''; // Limpa a tabela agregada antes de preencher
 
-    // Preenche a tabela com os dados agregados
     for (const [clientName, data] of Object.entries(aggregatedData)) {
-        const newRow = tbody.insertRow();
+        const newRow = aggregatedTableBody.insertRow();
         newRow.innerHTML = `
-            <td>-</td>
             <td>${clientName}</td>
             <td>${productFilter}</td>
-            <td>-</td> <!-- Sem data específica para os dados agregados -->
             <td>${data.entryQuantity}</td>
             <td>${data.exitQuantity}</td>
             <td>${data.saldo}</td>
-            <td>-</td>
         `;
     }
-
-    // Atualiza os totais de entrada e saldo
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-    for (const client of Object.values(aggregatedData)) {
-        totalEntradas += client.entryQuantity;
-        totalSaldo += client.saldo;
-    }
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Evento para filtrar clientes quando o filtro de produto mudar
@@ -232,6 +220,7 @@ document.querySelector('#clientHistoryTable tbody').addEventListener('click', as
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
