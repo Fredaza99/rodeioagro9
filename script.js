@@ -57,13 +57,6 @@ async function loadClientsFromFirestore() {
             clientHistoryTableBody.appendChild(row);
         });
 
-        // Chama a função de filtro explicitamente após carregar os clientes
-        filterTable();
-
-    } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-    }
-}
 
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase().replace(/\s+/g, ' ');
