@@ -104,7 +104,7 @@ function editClientRow(row, clientId) {
     // Torna as células editáveis
     cells.forEach((cell, index) => {
         if (index > 0 && index < cells.length - 1) {
-            cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            cell.innerHTML = `<input type="text" value="${originalValues[index].trim()}" />`;
         }
     });
 
@@ -135,23 +135,23 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Nova função de filtragem
+// Função de filtragem atualizada
 function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
+    const searchInput = document.getElementById('clientSearchInput').value.trim().toLowerCase();
+    const productFilter = document.getElementById('productFilter').value.trim().toLowerCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
     let totalEntradas = 0;
     let totalSaldo = 0;
 
     tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.toLowerCase();
-        const productName = row.cells[2].textContent.toLowerCase();
+        const clientName = row.cells[1].textContent.trim().toLowerCase();
+        const productName = row.cells[2].textContent.trim().toLowerCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const saldo = parseFloat(row.cells[6].textContent) || 0;
 
         const matchesClient = clientName.includes(searchInput);
-        const matchesProduct = !productFilter || productName === productFilter;
+        const matchesProduct = productFilter === "" || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
             row.style.display = '';
@@ -168,6 +168,7 @@ function filterTable() {
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
