@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório Consolidado - Agronegócio</title>
-    <link rel="stylesheet" href="styles.css">
+
     <style>
-        /* Global Styles */
+  /* Global Styles */
 body {
     font-family: Arial, sans-serif;
     background: #3D3B40;
@@ -18,15 +18,6 @@ h1, h2 {
     color: whitesmoke;
     text-align: center;
     margin-top: 20px;
-}
-
-.logo-row {
-    text-align: center;
-}
-.logo {
-    width: 175px;
-    height: 175px;
-    text-align: center;
 }
 
 nav {
@@ -57,51 +48,47 @@ nav {
     text-decoration: underline;
 }
 
-/* Form Styles */
-form {
-    max-width: 500px;
-    margin: 20px auto;
-    background-color: #F3F8FF;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-form label {
-    display: grid;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-form input[type="text"], form input[type="date"], form input[type="number"] {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    transition: all 0.2s ease-in-out;
-    font-size: 14px;
-}
-
-form input[type="text"]:focus, form input[type="date"]:focus, form input[type="number"]:focus {
-    border-color: #18bc9c;
-    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
-}
-
-form button {
-    padding: 10px 16px;
-    background-color: #00ADB5;
+/* Totals Cards */
+.totals-cards {
     display: flex;
-    justify-content: right;
-    color: white;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    justify-content: space-around;
+    margin: 20px 0;
+    gap: 20px;
+    padding: 10px;
+    flex-wrap: wrap;
 }
 
-form button:hover {
-    background-color: #16a085;
+.card {
+    background-color: #2e2e34;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    flex: 1;
+    min-width: 200px;
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card span {
+    font-size: 28px;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 16px;
+    margin: 10px 0;
+    color: #f0f0f0;
+}
+
+.card h2 {
+    font-size: 24px;
+    margin: 0;
+    color: #00c42e;
 }
 
 /* Table Styles */
@@ -110,12 +97,12 @@ table {
     margin: 20px auto;
     border-collapse: collapse;
     background-color: #F3F8FF;
-    font-size: 14px;
+    font-size: 16px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 table th, table td {
-    padding: 10px;
+    padding: 15px;
     text-align: center;
     border-bottom: 1px solid #ddd;
 }
@@ -128,7 +115,7 @@ table th {
 }
 
 table td {
-    min-width: 80px;
+    min-width: 100px;
 }
 
 table tbody tr:hover {
@@ -137,72 +124,29 @@ table tbody tr:hover {
 }
 
 /* Barra de Pesquisa */
-#clientSearchInput, #productFilter {
+#clientFilter, #productFilter {
     width: 50%;
-    padding: 8px;
+    padding: 12px;
     margin: 20px auto;
     display: block;
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 16px;
     background-color: #F3F8FF;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#clientSearchInput:focus, #productFilter:focus {
+#clientFilter:focus, #productFilter:focus {
     border-color: #18bc9c;
     outline: none;
     box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
 }
 
-/* Totals Cards */
-.totals-cards {
-    display: flex;
-    justify-content: space-around;
-    margin: 10px 0;
-    gap: 10px;
-    padding: 10px;
-    flex-wrap: wrap;
-}
-
-.card {
-    background-color: #d5d9e6;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    flex: 1;
-    min-width: 120px;
-    transition: transform 0.3s;
-}
-
-.card:hover {
-    transform: scale(1.05);
-}
-
-.card span {
-    font-size: 28px;
-    color: #007bff;
-    margin-bottom: 5px;
-}
-
-.card p {
-    font-size: 14px;
-    margin: 5px 0;
-    color: #333;
-}
-
-.card h2 {
-    font-size: 20px;
-    margin: 0;
-    color: #00c42e;
-}
-
 /* Footer */
 footer {
     text-align: center;
-    padding: 0;
-    background-color: transparent;
+    padding: 20px;
+    background-color: #202122;
     color: white;
     position: static;
     width: 100%;
@@ -220,10 +164,6 @@ footer {
     .totals-cards {
         flex-direction: column;
         align-items: center;
-    }
-
-    form {
-        padding: 20px;
     }
 
     table {
