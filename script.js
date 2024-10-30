@@ -135,18 +135,18 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função de filtragem atualizada
+// Função de filtragem atualizada para maiúsculas
 function filterTable() {
-    const searchInput = document.getElementById('clientSearchInput').value.trim().toLowerCase();
-    const productFilter = document.getElementById('productFilter').value.trim().toLowerCase();
+    const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase();
+    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
     let totalEntradas = 0;
     let totalSaldo = 0;
 
     tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.trim().toLowerCase();
-        const productName = row.cells[2].textContent.trim().toLowerCase();
+        const clientName = row.cells[1].textContent.trim().toUpperCase();
+        const productName = row.cells[2].textContent.trim().toUpperCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const saldo = parseFloat(row.cells[6].textContent) || 0;
 
@@ -168,6 +168,7 @@ function filterTable() {
 
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
 
 
 
