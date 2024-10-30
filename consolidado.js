@@ -12,6 +12,7 @@ async function loadConsolidatedClients() {
 
         // Extrair e consolidar dados dos clientes
         const aggregatedData = {};
+        const productOptions = new Set();
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
@@ -30,10 +31,14 @@ async function loadConsolidatedClients() {
             aggregatedData[key].entryQuantity += client.entryQuantity || 0;
             aggregatedData[key].exitQuantity += client.exitQuantity || 0;
             aggregatedData[key].saldo += (client.entryQuantity || 0) - (client.exitQuantity || 0);
+
+            // Adicionar produto ao conjunto para o dropdown
+            productOptions.add(client.productName);
         });
 
         renderConsolidatedTable(aggregatedData);
         updateTotals(aggregatedData);
+        populateProductFilter(productOptions);
 
     } catch (error) {
         console.error('Erro ao carregar dados consolidados:', error);
@@ -72,18 +77,31 @@ function updateTotals(aggregatedData) {
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
+// Função para preencher o dropdown de produtos
+function populateProductFilter(productOptions) {
+    const productFilter = document.getElementById('productFilter');
+    productFilter.innerHTML = '<option value="">Todos os Produtos</option>';
+
+    productOptions.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product;
+        option.textContent = product;
+        productFilter.appendChild(option);
+    });
+}
+
 // Função para aplicar filtros
 function applyFilters() {
     const clientFilter = document.getElementById('clientFilter').value.trim().toUpperCase();
-    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
+    const productFilter = document.getElementById('productFilter').value;
 
     const tableRows = document.querySelectorAll('#consolidatedTable tbody tr');
     tableRows.forEach(row => {
         const clientName = row.cells[0].textContent.toUpperCase();
-        const productName = row.cells[1].textContent.toUpperCase();
+        const productName = row.cells[1].textContent;
 
         const matchesClient = !clientFilter || clientName.includes(clientFilter);
-        const matchesProduct = !productFilter || productName.includes(productFilter);
+        const matchesProduct = !productFilter || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
             row.style.display = '';
@@ -91,6 +109,28 @@ function applyFilters() {
             row.style.display = 'none';
         }
     });
+
+    updateTotalsFromVisibleRows();
+}
+
+// Função para recalcular os totais com base nas linhas visíveis após filtragem
+function updateTotalsFromVisibleRows() {
+    const tableRows = document.querySelectorAll('#consolidatedTable tbody tr');
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    tableRows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const entryQuantity = parseFloat(row.cells[2].textContent) || 0;
+            const saldo = parseFloat(row.cells[4].textContent) || 0;
+
+            totalEntradas += entryQuantity;
+            totalSaldo += saldo;
+        }
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Carrega os clientes ao carregar o DOM
@@ -98,3 +138,4 @@ document.addEventListener('DOMContentLoaded', loadConsolidatedClients);
 
 // Configura evento de clique para o botão de filtro
 document.getElementById('filterButton').addEventListener('click', applyFilters);
+
