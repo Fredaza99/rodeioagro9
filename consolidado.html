@@ -36,39 +36,34 @@
     </script>
 
     <nav>
-        <ul class="navbar">
-            <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-            <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-            <li><a href="consolidado.html"><span class="material-icons">report</span> Relatório</a></li>
-        </ul>
-    </nav>
-    
-    <h1>Relatório Consolidado - Cliente/Produto</h1>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="estoque.html"><span class="material-icons">store</span> Controle de Estoque</a></li>
+    </ul>
+  </nav>
 
-    <!-- Filtros -->
-    <div class="filters">
-        <label for="clientFilter">Filtrar por Cliente:</label>
-        <input type="text" id="clientFilter" placeholder="Digite o nome do cliente...">
-
-        <label for="productFilter">Filtrar por Produto:</label>
-        <select id="productFilter">
-            <option value="">Todos os Produtos</option>
-        </select>
+  <!-- Cartões de resumo -->
+  <div class="totals-cards">
+    <div class="card">
+      <span class="material-icons">add_circle</span>
+      <p>Total de Entradas</p>
+      <h2 id="totalEntradas">0</h2>
     </div>
-
-    <!-- Cartões de Resumo -->
-    <div class="totals-cards">
-        <div class="card">
-            <span class="material-icons">add_circle</span>
-            <p>Total de Entradas</p>
-            <h2 id="totalEntradas">0</h2>
-        </div>
-        <div class="card">
-            <span class="material-icons">account_balance_wallet</span>
-            <p>Total de Saldo</p>
-            <h2 id="totalSaldo">0</h2>
-        </div>
+    <div class="card">
+      <span class="material-icons">account_balance_wallet</span>
+      <p>Total de Saldo</p>
+      <h2 id="totalSaldo">0</h2>
     </div>
+  </div>
+
+  <!-- Campo de pesquisa e filtro -->
+  <h1>Pesquisar Clientes</h1>
+  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+  
+  <select id="productFilter">
+    <option value="">Todos os Produtos</option>
+  </select>
 
     <!-- Tabela Consolidada -->
     <table id="consolidatedTable">
