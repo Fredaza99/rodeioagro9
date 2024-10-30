@@ -215,12 +215,6 @@ function filterTable() {
 // Carrega os clientes ao carregar o DOM
 document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
-// Configura evento de clique para o botão de consolidação (caso exista)
-const consolidateButton = document.getElementById('consolidateButton');
-if (consolidateButton) {
-    consolidateButton.addEventListener('click', consolidateTable);
-}
-
 
 
 
