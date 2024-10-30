@@ -135,33 +135,28 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função de Filtragem
+// Função de Filtragem (somente a lógica original)
 function filterTable() {
-    const productFilter = document.getElementById('productFilter').value.toLowerCase();
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
+    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
     tableRows.forEach(row => {
         const clientName = row.cells[1].textContent.trim().toUpperCase();
-        const productName = row.cells[2].textContent.toLowerCase().trim();
+        const productName = row.cells[2].textContent.trim().toUpperCase();
 
         const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
         const matchesProduct = productFilter === "" || productName.includes(productFilter);
 
         if (matchesClient && matchesProduct) {
             row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // Atualiza os totais de entrada e saldo
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-    tableRows.forEach(row => {
-        if (row.style.display !== 'none') {
             totalEntradas += parseFloat(row.cells[4].textContent) || 0;
             totalSaldo += parseFloat(row.cells[6].textContent) || 0;
+        } else {
+            row.style.display = 'none';
         }
     });
 
@@ -175,6 +170,7 @@ document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
 document.getElementById('productFilter').addEventListener('input', filterTable);
+
 
 
 
