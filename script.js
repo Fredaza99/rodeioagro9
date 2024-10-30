@@ -135,23 +135,28 @@ function editClientRow(row, clientId) {
     });
 }
 
-// Função de filtragem atualizada para maiúsculas
 function filterTable() {
     const searchInput = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
+    console.log("Filtro de Cliente:", searchInput, "| Filtro de Produto:", productFilter);
+
     let totalEntradas = 0;
     let totalSaldo = 0;
 
-    tableRows.forEach(row => {
+    tableRows.forEach((row, index) => {
         const clientName = row.cells[1].textContent.trim().toUpperCase();
         const productName = row.cells[2].textContent.trim().toUpperCase();
         const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
         const saldo = parseFloat(row.cells[6].textContent) || 0;
 
+        console.log(`Linha ${index} - Cliente: ${clientName} | Produto: ${productName}`);
+
         const matchesClient = clientName.includes(searchInput);
         const matchesProduct = productFilter === "" || productName === productFilter;
+
+        console.log(`Linha ${index} - Correspondência Cliente: ${matchesClient} | Correspondência Produto: ${matchesProduct}`);
 
         if (matchesClient && matchesProduct) {
             row.style.display = '';
