@@ -16,7 +16,7 @@
 
     // Firebase configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+        apiKey: "YOUR_API_KEY",
         authDomain: "rodeioagro-fee43.firebaseapp.com",
         projectId: "rodeioagro-fee43",
         storageBucket: "rodeioagro-fee43.appspot.com",
@@ -30,31 +30,43 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    let clients = [];
-
     // Redirect to login if the user is not logged in
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-
-        await loadClientsFromFirestore();
+        loadClientsFromCacheOrFirestore();
     });
 
-    // Function to load clients from Firestore
+    // Function to load clients from cache or Firestore
+    async function loadClientsFromCacheOrFirestore() {
+        const cachedClients = localStorage.getItem('cachedClients');
+        if (cachedClients) {
+            const clients = JSON.parse(cachedClients);
+            renderClients(clients);
+            populateProductDropdown(clients);
+        } else {
+            await loadClientsFromFirestore();
+        }
+    }
+
+    // Function to load clients from Firestore and save to localStorage
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
             const querySnapshot = await getDocs(clientsCollection);
 
-            clients = querySnapshot.docs.map(docSnapshot => ({
+            const clients = querySnapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
+
+            // Save data to localStorage to save future reads
+            localStorage.setItem('cachedClients', JSON.stringify(clients));
 
             renderClients(clients);
             populateProductDropdown(clients);
@@ -83,14 +95,19 @@
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+        const cachedClients = localStorage.getItem('cachedClients');
 
-        const filteredClients = clients.filter(client => {
-            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-            return clientNameMatches && productMatches;
-        });
+        if (cachedClients) {
+            const clients = JSON.parse(cachedClients);
 
-        renderClients(filteredClients);
+            const filteredClients = clients.filter(client => {
+                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+                return clientNameMatches && productMatches;
+            });
+
+            renderClients(filteredClients);
+        }
     }
 
     // Function to render clients in the table
@@ -159,7 +176,8 @@
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            await loadClientsFromFirestore();
+            localStorage.removeItem('cachedClients'); // Clear cache to force update
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
             alert('Erro ao excluir cliente.');
@@ -208,7 +226,8 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            await loadClientsFromFirestore();
+            localStorage.removeItem('cachedClients'); // Clear cache to force update
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');
@@ -270,6 +289,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
