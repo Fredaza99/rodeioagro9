@@ -49,6 +49,24 @@
     <button type="submit">Enviar</button>
   </form>
 
+  <!-- Tabela Detalhada -->
+  <h2>Tabela Detalhada</h2>
+  <table id="clientHistoryTable">
+    <thead>
+      <tr>
+        <th>Ação</th>
+        <th>Nome do Cliente</th>
+        <th>Produto</th>
+        <th>Data</th>
+        <th>Quantidade Entrada</th>
+        <th>Quantidade Retirada</th>
+        <th>Saldo</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <!-- Footer -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
@@ -84,17 +102,19 @@
 
     // Tipo de transação (Entrada ou Saída)
     let transactionType = "Entrada";
-    document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-    document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
 
-    function setTransactionType(type) {
-      transactionType = type;
-      document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-      document.getElementById("exitButton").classList.toggle("active", type === "Saída");
-    }
-
-    // Função para enviar o formulário
     document.addEventListener("DOMContentLoaded", () => {
+      // Eventos dos botões de Entrada e Saída
+      document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+      document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+      function setTransactionType(type) {
+        transactionType = type;
+        document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+        document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+      }
+
+      // Função para enviar o formulário
       document.getElementById('clientForm').addEventListener('submit', async (event) => {
         event.preventDefault();
 
@@ -124,6 +144,13 @@
           alert('Erro ao adicionar cliente. Tente novamente.');
         }
       });
+
+      // Garantir que a tabela e os campos necessários estejam disponíveis
+      const clientHistoryTable = document.getElementById('clientHistoryTable');
+      if (!clientHistoryTable) {
+        console.error('Elemento da tabela não encontrado.');
+        return;
+      }
     });
   </script>
 
@@ -131,6 +158,7 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
