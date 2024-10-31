@@ -10,10 +10,10 @@
    
 </head>
 <body>
- <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
@@ -60,11 +60,12 @@
         try {
             let clientsQuery = collection(db, 'clients');
 
+            // Adiciona os filtros conforme os campos preenchidos
             if (clientSearchInput) {
                 clientsQuery = query(clientsQuery, where('clientName', '>=', clientSearchInput), where('clientName', '<=', clientSearchInput + '\uf8ff'));
             }
 
-            if (productFilterValue) {
+            if (productFilterValue && productFilterValue !== "") {
                 clientsQuery = query(clientsQuery, where('productName', '==', productFilterValue));
             }
 
@@ -204,6 +205,7 @@
         }
     }
 </script>
+
 
 
 
