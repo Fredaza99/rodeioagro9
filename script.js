@@ -4,40 +4,42 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-let clients = []; // Variável global para armazenar os clientes
+// Variável para armazenar clientes globalmente
+let clients = [];
 
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
     try {
-        await addDoc(collection(db, 'clients'), client);
-        console.log('Cliente salvo no Firestore');
-        await loadClientsFromFirestore(); // Recarrega os clientes após adicionar
+        const docRef = await addDoc(collection(db, 'clients'), client);
+        console.log('Cliente salvo no Firestore com ID:', docRef.id);
+
+        // Recarrega os clientes após adicionar
+        await loadClientsFromFirestore();
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
 }
 
-// Função para carregar e exibir clientes
+// Função para carregar e exibir clientes do Firestore
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Extrair e ordenar dados dos clientes
         clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-        
+
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
+                return new Date(b.date).getTime() - new Date(a.date).getTime();
             }
             return nameComparison;
         });
 
-        renderClients(clients); // Renderiza os clientes carregados
+        renderClients(clients);
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
@@ -108,7 +110,6 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     };
 
     await addClientToFirestore(client);
-    window.location.href = 'cliente.html'; // Redireciona após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -152,11 +153,6 @@ function editClientRow(row, clientId) {
 
 // Função de Filtragem
 function filterTable() {
-    if (!clients || clients.length === 0) {
-        console.error('Erro: clients não está definido ou está vazio.');
-        return;
-    }
-
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
@@ -192,6 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
 document.getElementById('productFilter').addEventListener('change', filterTable);
+
 
 
 
