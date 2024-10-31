@@ -68,7 +68,6 @@
         <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
     </footer>
 
-    <!-- Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
@@ -76,7 +75,7 @@
 
         // Configuração do Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+            apiKey: "API_KEY",
             authDomain: "rodeioagro-fee43.firebaseapp.com",
             projectId: "rodeioagro-fee43",
             storageBucket: "rodeioagro-fee43.appspot.com",
@@ -98,15 +97,16 @@
         let currentPage = 1;
         const rowsPerPage = 10;
 
+        // Executa após a DOM estar completamente carregada
         document.addEventListener('DOMContentLoaded', () => {
-            // Referências aos elementos do DOM
+            // Obtendo os elementos
             const productFilter = document.getElementById('productFilter');
             const clientSearchInput = document.getElementById('clientSearchInput');
             const clientTableBody = document.querySelector('#clientHistoryTable tbody');
             const previousPageButton = document.getElementById('previousPage');
             const nextPageButton = document.getElementById('nextPage');
 
-            // Adiciona os event listeners apenas se os elementos forem encontrados
+            // Verificando se os elementos foram encontrados
             if (productFilter && clientSearchInput && clientTableBody && previousPageButton && nextPageButton) {
                 productFilter.addEventListener('change', filterClients);
                 clientSearchInput.addEventListener('input', filterClients);
@@ -272,9 +272,9 @@
             currentPage += direction;
             filterClients();
         }
-
     </script>
 </body>
 </html>
+
 
 
