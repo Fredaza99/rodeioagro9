@@ -11,73 +11,48 @@
 </head>
 <body>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  // Import Firestore functions
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
-    };
+// Inicializa Firestore
+const db = getFirestore();
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
-
-    if (!sessionStorage.getItem('loggedIn')) {
-        window.location.href = 'login.html';
+// Função para adicionar um cliente ao Firestore
+async function addClientToFirestore(client) {
+    try {
+        await addDoc(collection(db, 'clients'), client);
+        console.log('Cliente salvo no Firestore');
+    } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
     }
+}
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        document.getElementById('productFilter').addEventListener('change', filterTable);
-        document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-        
-        await loadClientsFromFirestore();
-        
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-    });
-
-    async function loadClientsFromFirestore() {
+// Função para carregar e exibir clientes
+async function loadClientsFromFirestore() {
+    try {
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        const clients = [];
-
-        querySnapshot.forEach(docSnapshot => {
-            const client = docSnapshot.data();
-            client.id = docSnapshot.id;  // Preserva o ID para ações de edição/exclusão
-            clients.push(client);
-        });
-
-        // Ordena por nome alfabético e por data (cronológica decrescente)
+        // Extrair e ordenar dados dos clientes
+        const clients = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                return new Date(b.date) - new Date(a.date);  // Ordena por data descrescente se o nome for igual
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
             }
             return nameComparison;
         });
 
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; 
-        
-        const productFilterDropdown = document.getElementById('productFilter');
-        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-
-        let totalEntradas = 0;
-        let totalSaldo = 0;
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
         clients.forEach(client => {
             const row = document.createElement('tr');
             const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            totalEntradas += client.entryQuantity || 0;
-            totalSaldo += client.saldo || 0;
 
             row.innerHTML = `
                 <td>${action}</td>
@@ -93,123 +68,122 @@
                 </td>
             `;
             clientHistoryTableBody.appendChild(row);
-
-            if (![...productFilterDropdown.options].some(option => option.value === client.productName)) {
-                const option = document.createElement('option');
-                option.value = client.productName;
-                option.textContent = client.productName;
-                productFilterDropdown.appendChild(option);
-            }
         });
-
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
+    } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
     }
+}
 
-    async function handleTableClick(event) {
-        const button = event.target;
+// Função para definir o tipo de transação e destacar o botão ativo
+let transactionType = "Entrada";
+function setTransactionType(type) {
+    transactionType = type;
+    document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+    document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+}
 
-        if (button.classList.contains('delete-btn')) {
-            const clientId = button.getAttribute('data-id');
-            await deleteClient(clientId);
-        } else if (button.classList.contains('edit-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            startEditingRow(row, clientId);
-        } else if (button.classList.contains('save-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            await saveEditedRow(row, clientId);
+// Configura eventos de clique para os botões de transação
+document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+// Evento de envio do formulário de cliente
+document.getElementById('clientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const clientName = document.getElementById('clientName').value;
+    const productName = document.getElementById('productName').value;
+    const date = document.getElementById('date').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+
+    // Define os dados do cliente com base no tipo de transação
+    const client = {
+        clientName,
+        productName,
+        date,
+        entryQuantity: transactionType === "Entrada" ? quantity : 0,
+        exitQuantity: transactionType === "Saída" ? quantity : 0,
+        saldo: transactionType === "Entrada" ? quantity : -quantity
+    };
+
+    await addClientToFirestore(client);
+    window.location.href = 'cliente.html'; // Redireciona após salvar
+});
+
+// Função para editar uma linha de cliente
+function editClientRow(row, clientId) {
+    const cells = row.querySelectorAll('td');
+    const originalValues = [...cells].map(cell => cell.textContent);
+
+    // Torna as células editáveis
+    cells.forEach((cell, index) => {
+        if (index > 0 && index < cells.length - 1) {
+            cell.innerHTML = `<input type="text" value="${originalValues[index].trim()}" />`;
         }
-    }
+    });
 
-    async function deleteClient(clientId) {
-        try {
-            await deleteDoc(doc(db, 'clients', clientId));
-            alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao excluir cliente:', error);
-            alert('Erro ao excluir cliente.');
-        }
-    }
+    const editButton = row.querySelector('.edit-client');
+    editButton.textContent = 'Salvar';
+    editButton.classList.remove('edit-client');
+    editButton.classList.add('save-client');
 
-    function startEditingRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
-        const originalValues = [...cells].map(cell => cell.textContent);
+    editButton.replaceWith(editButton.cloneNode(true)); // Remove eventos antigos
 
-        cells.forEach((cell, index) => {
-            if (index > 0 && index < cells.length - 1) { 
-                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
-            }
-        });
-
-        const editButton = row.querySelector('.edit-client');
-        editButton.textContent = 'Salvar';
-        editButton.classList.remove('edit-client');
-        editButton.classList.add('save-client');
-
-        // Atualizar o saldo automaticamente ao alterar entrada/saída
-        cells[4].querySelector('input').addEventListener('input', updateSaldo);
-        cells[5].querySelector('input').addEventListener('input', updateSaldo);
-
-        function updateSaldo() {
-            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
-            const saida = parseInt(cells[5].querySelector('input').value) || 0;
-            const saldo = entrada - saida;
-            cells[6].textContent = saldo; // Atualiza a célula de saldo com o novo valor
-        }
-    }
-
-    async function saveEditedRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
+    const saveButton = row.querySelector('.save-client');
+    saveButton.addEventListener('click', async () => {
         const updatedClient = {
             clientName: cells[1].querySelector('input').value,
             productName: cells[2].querySelector('input').value,
             date: cells[3].querySelector('input').value,
-            entryQuantity: parseInt(cells[4].querySelector('input').value),
-            exitQuantity: parseInt(cells[5].querySelector('input').value),
-            saldo: parseInt(cells[6].textContent) // Pega o saldo atualizado
+            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0,
+            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0,
+            saldo: parseInt(cells[4].querySelector('input').value) - parseInt(cells[5].querySelector('input').value)
         };
 
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            alert('Cliente atualizado com sucesso!');
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
-            alert('Erro ao atualizar cliente.');
         }
-    }
+    });
+}
 
-    function filterTable() {
-        const searchInput = document.getElementById('clientSearchInput').value.toLowerCase();
-        const productFilter = document.getElementById('productFilter').value.toLowerCase();
-        const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+// Função de Filtragem (somente a lógica original)
+function filterTable() {
+    const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
+    const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
 
-        let totalEntradas = 0;
-        let totalSaldo = 0;
+    let totalEntradas = 0;
+    let totalSaldo = 0;
 
-        tableRows.forEach(row => {
-            const clientName = row.cells[1].textContent.toLowerCase();
-            const productName = row.cells[2].textContent.toLowerCase();
-            const entryQuantity = parseFloat(row.cells[4].textContent) || 0;
-            const saldo = parseFloat(row.cells[6].textContent) || 0;
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.trim().toUpperCase();
+        const productName = row.cells[2].textContent.trim().toUpperCase();
 
-            const matchesClient = clientName.includes(searchInput);
-            const matchesProduct = !productFilter || productName === productFilter;
+        const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
+        const matchesProduct = productFilter === "" || productName.includes(productFilter);
 
-            if (matchesClient && matchesProduct) {
-                row.style.display = '';
-                totalEntradas += entryQuantity;
-                totalSaldo += saldo;
-            } else {
-                row.style.display = 'none';
-            }
-        });
+        if (matchesClient && matchesProduct) {
+            row.style.display = '';
+            totalEntradas += parseFloat(row.cells[4].textContent) || 0;
+            totalSaldo += parseFloat(row.cells[6].textContent) || 0;
+        } else {
+            row.style.display = 'none';
+        }
+    });
 
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+}
+
+// Carrega os clientes ao carregar o DOM
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+
+// Eventos para filtrar enquanto digita
+document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+document.getElementById('productFilter').addEventListener('input', filterTable);
+
     }
   </script>
 
