@@ -14,7 +14,7 @@
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-    // Firebase configuration
+    // Configuração do Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
         authDomain: "rodeioagro-fee43.firebaseapp.com",
@@ -25,12 +25,12 @@
         measurementId: "G-FM9TP3QF6N"
     };
 
-    // Initialize Firebase
+    // Inicializando Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Redirect to login if the user is not logged in
+    // Redireciona para login se o usuário não estiver autenticado
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
@@ -39,22 +39,10 @@
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        loadClientsFromCacheOrFirestore();
+        loadClientsFromFirestore();
     });
 
-    // Function to load clients from cache or Firestore
-    async function loadClientsFromCacheOrFirestore() {
-        const cachedClients = localStorage.getItem('cachedClients');
-        if (cachedClients) {
-            const clients = JSON.parse(cachedClients);
-            renderClients(clients);
-            populateProductDropdown(clients);
-        } else {
-            await loadClientsFromFirestore();
-        }
-    }
-
-    // Function to load clients from Firestore and save to localStorage
+    // Função para carregar clientes do Firestore
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
@@ -65,9 +53,6 @@
                 ...docSnapshot.data()
             }));
 
-            // Save data to localStorage to save future reads
-            localStorage.setItem('cachedClients', JSON.stringify(clients));
-
             renderClients(clients);
             populateProductDropdown(clients);
         } catch (error) {
@@ -75,7 +60,7 @@
         }
     }
 
-    // Function to populate the product filter dropdown
+    // Função para popular o dropdown de produtos
     function populateProductDropdown(clients) {
         const productFilterDropdown = document.getElementById('productFilter');
         productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
@@ -91,26 +76,22 @@
         });
     }
 
-    // Function to filter and display clients
+    // Função para filtrar e exibir clientes
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
-        const cachedClients = localStorage.getItem('cachedClients');
-
-        if (cachedClients) {
-            const clients = JSON.parse(cachedClients);
-
+        
+        loadClientsFromFirestore().then(clients => {
             const filteredClients = clients.filter(client => {
                 const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
                 const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
                 return clientNameMatches && productMatches;
             });
-
             renderClients(filteredClients);
-        }
+        });
     }
 
-    // Function to render clients in the table
+    // Função para renderizar os clientes na tabela
     function renderClients(clients) {
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; 
@@ -153,7 +134,7 @@
         document.getElementById('totalSaldo').textContent = totalSaldo;
     }
 
-    // Function to handle table button clicks
+    // Função para lidar com cliques na tabela
     async function handleTableClick(event) {
         const button = event.target;
 
@@ -171,12 +152,11 @@
         }
     }
 
-    // Function to delete a client
+    // Função para deletar um cliente
     async function deleteClient(clientId) {
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            localStorage.removeItem('cachedClients'); // Clear cache to force update
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
@@ -184,7 +164,7 @@
         }
     }
 
-    // Function to edit a client row
+    // Função para editar uma linha de cliente
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
@@ -211,7 +191,7 @@
         }
     }
 
-    // Function to save edited client data
+    // Função para salvar as alterações feitas na linha do cliente
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const updatedClient = {
@@ -226,7 +206,6 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            localStorage.removeItem('cachedClients'); // Clear cache to force update
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
@@ -286,7 +265,7 @@
 <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
 </footer>
-    <script type="module"></script>
+<script type="module"></script>
 </body>
 </html>
 
