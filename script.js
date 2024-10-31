@@ -4,11 +4,14 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
+let clients = []; // Variável global para armazenar os clientes
+
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
     try {
         await addDoc(collection(db, 'clients'), client);
         console.log('Cliente salvo no Firestore');
+        await loadClientsFromFirestore(); // Recarrega os clientes após adicionar
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
@@ -21,7 +24,7 @@ async function loadClientsFromFirestore() {
         const querySnapshot = await getDocs(clientsCollection);
 
         // Extrair e ordenar dados dos clientes
-        const clients = querySnapshot.docs.map(doc => ({
+        clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
@@ -34,31 +37,43 @@ async function loadClientsFromFirestore() {
             return nameComparison;
         });
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
+        renderClients(clients); // Renderiza os clientes carregados
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
+}
+
+// Função para renderizar clientes na tabela
+function renderClients(clients) {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    if (!clientHistoryTableBody) {
+        console.error('Elemento da tabela não encontrado.');
+        return;
+    }
+
+    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+
+    clients.forEach(client => {
+        const row = document.createElement('tr');
+        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+        row.innerHTML = `
+            <td>${action}</td>
+            <td>${client.clientName || ''}</td>
+            <td>${client.productName || ''}</td>
+            <td>${client.date || ''}</td>
+            <td>${client.entryQuantity || 0}</td>
+            <td>${client.exitQuantity || 0}</td>
+            <td>${client.saldo || 0}</td>
+            <td>
+                <button class="edit-client" data-id="${client.id}">Editar</button>
+                <button class="delete-btn" data-id="${client.id}">Excluir</button>
+            </td>
+        `;
+        clientHistoryTableBody.appendChild(row);
+    });
+
+    filterTable(); // Aplica o filtro após carregar os clientes
 }
 
 // Função para definir o tipo de transação e destacar o botão ativo
@@ -128,15 +143,20 @@ function editClientRow(row, clientId) {
 
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            loadClientsFromFirestore();
+            await loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
         }
     });
 }
 
-// Função de Filtragem (somente a lógica original)
+// Função de Filtragem
 function filterTable() {
+    if (!clients || clients.length === 0) {
+        console.error('Erro: clients não está definido ou está vazio.');
+        return;
+    }
+
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
     const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
@@ -165,11 +185,14 @@ function filterTable() {
 }
 
 // Carrega os clientes ao carregar o DOM
-document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadClientsFromFirestore();
+});
 
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-document.getElementById('productFilter').addEventListener('input', filterTable);
+document.getElementById('productFilter').addEventListener('change', filterTable);
+
 
 
 
