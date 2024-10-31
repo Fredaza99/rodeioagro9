@@ -99,24 +99,25 @@
 
         // Executa após a DOM estar completamente carregada
         document.addEventListener('DOMContentLoaded', () => {
-            // Obtendo os elementos
             const productFilter = document.getElementById('productFilter');
             const clientSearchInput = document.getElementById('clientSearchInput');
             const clientTableBody = document.querySelector('#clientHistoryTable tbody');
             const previousPageButton = document.getElementById('previousPage');
             const nextPageButton = document.getElementById('nextPage');
 
-            // Verificando se os elementos foram encontrados
-            if (productFilter && clientSearchInput && clientTableBody && previousPageButton && nextPageButton) {
-                productFilter.addEventListener('change', filterClients);
-                clientSearchInput.addEventListener('input', filterClients);
-                clientTableBody.addEventListener('click', handleTableClick);
-                previousPageButton.addEventListener('click', () => changePage(-1));
-                nextPageButton.addEventListener('click', () => changePage(1));
-                loadClientsFromCacheOrFirestore();
-            } else {
+            if (!productFilter || !clientSearchInput || !clientTableBody || !previousPageButton || !nextPageButton) {
                 console.error("Erro: Um ou mais elementos não foram encontrados na página.");
+                return;
             }
+
+            productFilter.addEventListener('change', filterClients);
+            clientSearchInput.addEventListener('input', filterClients);
+            clientTableBody.addEventListener('click', handleTableClick);
+            previousPageButton.addEventListener('click', () => changePage(-1));
+            nextPageButton.addEventListener('click', () => changePage(1));
+
+            // Carrega os clientes do cache ou do Firestore
+            loadClientsFromCacheOrFirestore();
         });
 
         async function loadClientsFromCacheOrFirestore() {
@@ -272,10 +273,87 @@
             currentPage += direction;
             filterClients();
         }
+
+        async function handleTableClick(event) {
+            const button = event.target;
+
+            if (button.classList.contains('delete-btn')) {
+                const clientId = button.getAttribute('data-id');
+                await deleteClient(clientId);
+            } else if (button.classList.contains('edit-client')) {
+                const row = button.closest('tr');
+                const clientId = button.getAttribute('data-id');
+                startEditingRow(row, clientId);
+            } else if (button.classList.contains('save-client')) {
+                const row = button.closest('tr');
+                const clientId = button.getAttribute('data-id');
+                await saveEditedRow(row, clientId);
+            }
+        }
+
+        async function deleteClient(clientId) {
+            try {
+                await deleteDoc(doc(db, 'clients', clientId));
+                alert('Cliente excluído com sucesso!');
+                localStorage.removeItem('cachedClients');
+                loadClientsFromFirestore();
+            } catch (error) {
+                console.error('Erro ao excluir cliente:', error);
+                alert('Erro ao excluir cliente.');
+            }
+        }
+
+        function startEditingRow(row, clientId) {
+            const cells = row.querySelectorAll('td');
+            const originalValues = [...cells].map(cell => cell.textContent);
+
+            cells.forEach((cell, index) => {
+                if (index > 0 && index < cells.length - 1) { 
+                    cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+                }
+            });
+
+            const editButton = row.querySelector('.edit-client');
+            editButton.textContent = 'Salvar';
+            editButton.classList.remove('edit-client');
+            editButton.classList.add('save-client');
+
+            cells[4].querySelector('input').addEventListener('input', updateSaldo);
+            cells[5].querySelector('input').addEventListener('input', updateSaldo);
+
+            function updateSaldo() {
+                const entrada = parseInt(cells[4].querySelector('input').value) || 0;
+                const saida = parseInt(cells[5].querySelector('input').value) || 0;
+                const saldo = entrada - saida;
+                cells[6].textContent = saldo;
+            }
+        }
+
+        async function saveEditedRow(row, clientId) {
+            const cells = row.querySelectorAll('td');
+            const updatedClient = {
+                clientName: cells[1].querySelector('input').value,
+                productName: cells[2].querySelector('input').value,
+                date: cells[3].querySelector('input').value,
+                entryQuantity: parseInt(cells[4].querySelector('input').value),
+                exitQuantity: parseInt(cells[5].querySelector('input').value),
+                saldo: parseInt(cells[6].textContent)
+            };
+
+            try {
+                await updateDoc(doc(db, 'clients', clientId), updatedClient);
+                alert('Cliente atualizado com sucesso!');
+                localStorage.removeItem('cachedClients');
+                loadClientsFromFirestore();
+            } catch (error) {
+                console.error('Erro ao atualizar cliente:', error);
+                alert('Erro ao atualizar cliente.');
+            }
+        }
     </script>
-    <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
