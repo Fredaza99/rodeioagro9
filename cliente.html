@@ -30,16 +30,19 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
+    let clients = [];
+
     // Redirect to login if the user is not logged in
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        loadClientsFromFirestore();
+
+        await loadClientsFromFirestore();
     });
 
     // Function to load clients from Firestore
@@ -48,7 +51,7 @@
             const clientsCollection = collection(db, 'clients');
             const querySnapshot = await getDocs(clientsCollection);
 
-            const clients = querySnapshot.docs.map(docSnapshot => ({
+            clients = querySnapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
@@ -81,15 +84,13 @@
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
-        loadClientsFromFirestore().then(clients => {
-            const filteredClients = clients.filter(client => {
-                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-                return clientNameMatches && productMatches;
-            });
-
-            renderClients(filteredClients);
+        const filteredClients = clients.filter(client => {
+            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+            return clientNameMatches && productMatches;
         });
+
+        renderClients(filteredClients);
     }
 
     // Function to render clients in the table
@@ -158,7 +159,7 @@
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
+            await loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
             alert('Erro ao excluir cliente.');
@@ -207,7 +208,7 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore();
+            await loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');
@@ -269,6 +270,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
