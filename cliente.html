@@ -40,16 +40,31 @@
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        populateProductDropdown();
     });
 
-    // Função para adicionar um cliente ao Firestore
-    async function addClientToFirestore(client) {
-        try {
-            await addDoc(collection(db, 'clients'), client);
-            console.log('Cliente salvo no Firestore');
-        } catch (error) {
-            console.error('Erro ao salvar cliente:', error);
-        }
+    // Função para popular o dropdown de produtos
+    async function populateProductDropdown() {
+        const clientsCollection = collection(db, 'clients');
+        const querySnapshot = await getDocs(clientsCollection);
+
+        const products = new Set();
+        querySnapshot.forEach(docSnapshot => {
+            const client = docSnapshot.data();
+            if (client.productName) {
+                products.add(client.productName);
+            }
+        });
+
+        const productFilterDropdown = document.getElementById('productFilter');
+        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+        products.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.toLowerCase();
+            option.textContent = product;
+            productFilterDropdown.appendChild(option);
+        });
     }
 
     // Função para filtrar e exibir clientes
@@ -65,17 +80,19 @@
                 clientsQuery = query(clientsQuery, where('clientName', '>=', clientSearchInput), where('clientName', '<=', clientSearchInput + '\uf8ff'));
             }
 
-            if (productFilterValue && productFilterValue !== "") {
-                clientsQuery = query(clientsQuery, where('productName', '==', productFilterValue));
-            }
-
             const querySnapshot = await getDocs(clientsQuery);
             const clients = querySnapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
 
-            renderClients(clients);
+            // Filtragem adicional por produto no lado do cliente
+            const filteredClients = clients.filter(client => {
+                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+                return productMatches;
+            });
+
+            renderClients(filteredClients);
         } catch (error) {
             console.error('Erro ao filtrar clientes:', error);
         }
@@ -205,6 +222,7 @@
         }
     }
 </script>
+
 
 
 
