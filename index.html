@@ -118,15 +118,17 @@
           saldo: transactionType === "Entrada" ? quantity : -quantity
         };
 
-        // Tenta adicionar o cliente ao Firestore
         try {
-          const docRef = await addDoc(collection(db, 'clients'), client);
-          console.log("Cliente salvo no Firestore com ID: ", docRef.id);
-          alert('Cliente adicionado com sucesso!');
-        } catch (error) {
-          console.error("Erro ao adicionar cliente: ", error);
-          alert('Erro ao adicionar cliente. Tente novamente.');
-        }
+  const docRef = await addDoc(collection(db, 'clients'), client);
+  console.log("Cliente salvo no Firestore com ID: ", docRef.id);
+  alert('Cliente adicionado com sucesso!');
+  
+  // Atualize os dados do localStorage chamando a função de carregamento
+  loadClientsFromFirestore();
+} catch (error) {
+  console.error("Erro ao adicionar cliente: ", error);
+  alert('Erro ao adicionar cliente. Tente novamente.');
+}
       });
 
       // Garantir que a tabela e os campos necessários estejam disponíveis
