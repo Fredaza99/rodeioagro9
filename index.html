@@ -5,66 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-   <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
   <title>Rodeio Agronegócio</title>
 </head>
 <body>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
-    };
-  
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app); // Initialize Firestore
-     if (!sessionStorage.getItem('loggedIn')) {
-      window.location.href = 'login.html';
-    }
-
-    // Function to handle form submission
-    document.getElementById('clientForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      
-      const clientData = {
-        name: document.getElementById('clientName').value,
-        productName: document.getElementById('productName').value,
-        entryDate: document.getElementById('entryDate').value,
-        entryQuantity: document.getElementById('entryQuantity').value,
-        exitQuantity: document.getElementById('exitQuantity').value,
-        exitDate: document.getElementById('exitDate').value,
-      };
-      
-      // Add the client data to Firestore
-      try {
-        const docRef = await db.collection('clients').add(clientData);
-        console.log("Document written with ID: ", docRef.id);
-      } catch (error) {
-        console.error("Error adding document: ", error);
-      }
-    });
-  </script>
-  
   <nav>
-        <ul class="navbar">
-            <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-            <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
-        </ul>
-    </nav>
+    <ul class="navbar">
+      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+      <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+    </ul>
+  </nav>
 
   <header>
     <div class="row">
@@ -73,9 +25,9 @@
       </div>
     </div>
   </header>
-    
- <!-- Formulário de cadastro em index.html -->
-<form id="clientForm">
+
+  <!-- Formulário de cadastro em index.html -->
+  <form id="clientForm">
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
 
@@ -90,19 +42,90 @@
 
     <!-- Botões para selecionar Entrada ou Saída -->
     <div id="transactionButtons">
-        <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
-        <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+      <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
+      <button type="button" id="exitButton" class="transaction-btn">Saída</button>
     </div>
 
     <button type="submit">Enviar</button>
-</form>
-
-
+  </form>
 
   <!-- Footer -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
   </footer>
+
+  <!-- Firebase and Form Handling JavaScript -->
+  <script type="module">
+    // Import the functions from the Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"; // Import Firestore functions
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app); // Initialize Firestore
+
+    // Redireciona para login se o usuário não estiver autenticado
+    if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'login.html';
+    }
+
+    // Tipo de transação (Entrada ou Saída)
+    let transactionType = "Entrada";
+    document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+    document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+
+    function setTransactionType(type) {
+      transactionType = type;
+      document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+      document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+    }
+
+    // Função para enviar o formulário
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById('clientForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Coletar dados do formulário
+        const clientName = document.getElementById('clientName').value;
+        const productName = document.getElementById('productName').value;
+        const date = document.getElementById('date').value;
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        // Define os dados do cliente com base no tipo de transação
+        const client = {
+          clientName,
+          productName,
+          date,
+          entryQuantity: transactionType === "Entrada" ? quantity : 0,
+          exitQuantity: transactionType === "Saída" ? quantity : 0,
+          saldo: transactionType === "Entrada" ? quantity : -quantity
+        };
+
+        // Tenta adicionar o cliente ao Firestore
+        try {
+          const docRef = await addDoc(collection(db, 'clients'), client);
+          console.log("Cliente salvo no Firestore com ID: ", docRef.id);
+          alert('Cliente adicionado com sucesso!');
+        } catch (error) {
+          console.error("Erro ao adicionar cliente: ", error);
+          alert('Erro ao adicionar cliente. Tente novamente.');
+        }
+      });
+    });
+  </script>
 
   <!-- Reference to the main JavaScript file -->
   <script type="module" src="script.js"></script>
