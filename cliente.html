@@ -35,6 +35,8 @@
         window.location.href = 'login.html';
     }
 
+    let allClients = []; // Armazena todos os clientes para filtragem
+
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
@@ -48,13 +50,13 @@
             const clientsCollection = collection(db, 'clients');
             const querySnapshot = await getDocs(clientsCollection);
 
-            const clients = querySnapshot.docs.map(docSnapshot => ({
+            allClients = querySnapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
 
-            renderClients(clients);
-            populateProductDropdown(clients);
+            renderClients(allClients);
+            populateProductDropdown(allClients);
         } catch (error) {
             console.error('Erro ao carregar clientes do Firestore:', error);
         }
@@ -80,15 +82,14 @@
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
-        
-        loadClientsFromFirestore().then(clients => {
-            const filteredClients = clients.filter(client => {
-                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-                return clientNameMatches && productMatches;
-            });
-            renderClients(filteredClients);
+
+        const filteredClients = allClients.filter(client => {
+            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+            return clientNameMatches && productMatches;
         });
+
+        renderClients(filteredClients);
     }
 
     // Função para renderizar os clientes na tabela
@@ -268,6 +269,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
