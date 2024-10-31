@@ -15,6 +15,7 @@ async function addClientToFirestore(client) {
 
         // Recarrega os clientes do Firestore após adicionar um novo cliente
         await loadClientsPage(true);
+        await calculateTotalEntriesAndSaldo(); // Atualiza os totais
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
@@ -70,15 +71,18 @@ async function calculateTotalEntriesAndSaldo() {
             totalSaldo += client.saldo || 0;
         });
 
-        const totalEntradasElem = document.getElementById('totalEntradas');
-        const totalSaldoElem = document.getElementById('totalSaldo');
+        const interval = setInterval(() => {
+            const totalEntradasElem = document.getElementById('totalEntradas');
+            const totalSaldoElem = document.getElementById('totalSaldo');
 
-        if (totalEntradasElem && totalSaldoElem) {
-            totalEntradasElem.textContent = totalEntradas;
-            totalSaldoElem.textContent = totalSaldo;
-        } else {
-            console.error('Elementos para entradas e saldo não encontrados.');
-        }
+            if (totalEntradasElem && totalSaldoElem) {
+                totalEntradasElem.textContent = totalEntradas;
+                totalSaldoElem.textContent = totalSaldo;
+                clearInterval(interval);
+            } else {
+                console.warn('Elementos para entradas e saldo não encontrados, tentando novamente...');
+            }
+        }, 100); // Tenta a cada 100ms até encontrar os elementos
     } catch (error) {
         console.error('Erro ao calcular entradas e saldo total:', error);
     }
@@ -86,45 +90,47 @@ async function calculateTotalEntriesAndSaldo() {
 
 // Função que renderiza os clientes na tabela
 function renderClients(clients) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    const interval = setInterval(() => {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        if (clientHistoryTableBody) {
+            clientHistoryTableBody.innerHTML = '';
 
-    if (clientHistoryTableBody) {
-        clientHistoryTableBody.innerHTML = '';
-
-        const productFilterDropdown = document.getElementById('productFilter');
-        if (productFilterDropdown) {
-            productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-        }
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-
-            if (productFilterDropdown && ![...productFilterDropdown.options].some(option => option.value === client.productName)) {
-                const option = document.createElement('option');
-                option.value = client.productName;
-                option.textContent = client.productName;
-                productFilterDropdown.appendChild(option);
+            const productFilterDropdown = document.getElementById('productFilter');
+            if (productFilterDropdown) {
+                productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
             }
-        });
-    } else {
-        console.error('Elemento da tabela não encontrado.');
-    }
+
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+                row.innerHTML = `
+                    <td>${action}</td>
+                    <td>${client.clientName || ''}</td>
+                    <td>${client.productName || ''}</td>
+                    <td>${client.date || ''}</td>
+                    <td>${client.entryQuantity || 0}</td>
+                    <td>${client.exitQuantity || 0}</td>
+                    <td>${client.saldo || 0}</td>
+                    <td>
+                        <button class="edit-client" data-id="${client.id}">Editar</button>
+                        <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                    </td>
+                `;
+                clientHistoryTableBody.appendChild(row);
+
+                if (productFilterDropdown && ![...productFilterDropdown.options].some(option => option.value === client.productName)) {
+                    const option = document.createElement('option');
+                    option.value = client.productName;
+                    option.textContent = client.productName;
+                    productFilterDropdown.appendChild(option);
+                }
+            });
+            clearInterval(interval);
+        } else {
+            console.error('Elemento da tabela não encontrado, tentando novamente...');
+        }
+    }, 100); // Tenta a cada 100ms até encontrar o elemento da tabela
 }
 
 // Função para definir o tipo de transação e destacar o botão ativo
