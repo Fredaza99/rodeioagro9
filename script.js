@@ -1,8 +1,11 @@
 // Import Firestore functions
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 // Inicializa Firestore
 const db = getFirestore();
+
+const pageSize = 10; // Defina o tamanho da página
+let lastVisible = null;
 
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
@@ -10,20 +13,54 @@ async function addClientToFirestore(client) {
         await addDoc(collection(db, 'clients'), client);
         console.log('Cliente salvo no Firestore');
 
-        // Recarrega os clientes do Firestore após adicionar um novo cliente
-        await loadAllClients();
-        await calculateTotalEntriesAndSaldo(); // Atualiza os totais
+        // Atualiza o localStorage após adicionar cliente
+        await refreshClientsCache();
+
+        renderClientsFromCache(); // Renderiza a tabela com os dados atualizados do localStorage
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
 }
 
-// Função para carregar e exibir todos os clientes
-async function loadAllClients() {
+// Função para recarregar todos os clientes do Firestore e atualizar o cache
+async function refreshClientsCache() {
     try {
-        console.log('Carregando todos os dados do Firestore');
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
+
+        const clients = querySnapshot.docs.map(docSnapshot => ({
+            id: docSnapshot.id,
+            ...docSnapshot.data()
+        }));
+
+        // Armazena os dados atualizados no localStorage
+        localStorage.setItem('clientsData', JSON.stringify(clients));
+    } catch (error) {
+        console.error('Erro ao atualizar cache de clientes:', error);
+    }
+}
+
+// Função para carregar e exibir clientes de uma página
+async function loadClientsPage() {
+    try {
+        console.log('Carregando página de dados do Firestore');
+        const clientsCollection = collection(db, 'clients');
+        let clientsQuery;
+
+        if (lastVisible) {
+            clientsQuery = query(clientsCollection, startAfter(lastVisible), limit(pageSize));
+        } else {
+            clientsQuery = query(clientsCollection, limit(pageSize));
+        }
+
+        const querySnapshot = await getDocs(clientsQuery);
+
+        if (querySnapshot.empty) {
+            console.log('Nenhum cliente encontrado');
+            return;
+        }
+
+        lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
 
         const clients = querySnapshot.docs.map(docSnapshot => {
             const client = docSnapshot.data();
@@ -52,16 +89,19 @@ async function calculateTotalEntriesAndSaldo() {
             totalSaldo += client.saldo || 0;
         });
 
-        // Atualiza os elementos de total de entradas e saldo
-        const totalEntradasElem = document.getElementById('totalEntradas');
-        const totalSaldoElem = document.getElementById('totalSaldo');
+        // Verifica repetidamente até que os elementos estejam disponíveis
+        const interval = setInterval(() => {
+            const totalEntradasElem = document.getElementById('totalEntradas');
+            const totalSaldoElem = document.getElementById('totalSaldo');
 
-        if (totalEntradasElem && totalSaldoElem) {
-            totalEntradasElem.textContent = totalEntradas;
-            totalSaldoElem.textContent = totalSaldo;
-        } else {
-            console.error('Elementos para entradas e saldo não encontrados.');
-        }
+            if (totalEntradasElem && totalSaldoElem) {
+                totalEntradasElem.textContent = totalEntradas;
+                totalSaldoElem.textContent = totalSaldo;
+                clearInterval(interval);
+            } else {
+                console.error('Elementos para entradas e saldo não encontrados, tentando novamente...');
+            }
+        }, 100); // Tenta a cada 100ms
     } catch (error) {
         console.error('Erro ao calcular entradas e saldo total:', error);
     }
@@ -69,66 +109,56 @@ async function calculateTotalEntriesAndSaldo() {
 
 // Função que renderiza os clientes na tabela
 function renderClients(clients) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    if (clientHistoryTableBody) {
-        clientHistoryTableBody.innerHTML = '';
+    // Espera até o elemento da tabela estar disponível
+    const interval = setInterval(() => {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        if (clientHistoryTableBody) {
+            clientHistoryTableBody.innerHTML = '';
 
-        const productFilterDropdown = document.getElementById('productFilter');
-        if (productFilterDropdown) {
-            productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-        }
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-
-            if (productFilterDropdown && ![...productFilterDropdown.options].some(option => option.value === client.productName)) {
-                const option = document.createElement('option');
-                option.value = client.productName;
-                option.textContent = client.productName;
-                productFilterDropdown.appendChild(option);
+            const productFilterDropdown = document.getElementById('productFilter');
+            if (productFilterDropdown) {
+                productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
             }
-        });
-    } else {
-        console.error('Elemento da tabela não encontrado.');
-    }
-}
 
-// Função para definir o tipo de transação e destacar o botão ativo
-let transactionType = "Entrada";
-function setTransactionType(type) {
-    transactionType = type;
-    const entryButton = document.getElementById("entryButton");
-    const exitButton = document.getElementById("exitButton");
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-    if (entryButton && exitButton) {
-        entryButton.classList.toggle("active", type === "Entrada");
-        exitButton.classList.toggle("active", type === "Saída");
-    } else {
-        console.error('Botões de transação não encontrados.');
-    }
+                row.innerHTML = `
+                    <td>${action}</td>
+                    <td>${client.clientName || ''}</td>
+                    <td>${client.productName || ''}</td>
+                    <td>${client.date || ''}</td>
+                    <td>${client.entryQuantity || 0}</td>
+                    <td>${client.exitQuantity || 0}</td>
+                    <td>${client.saldo || 0}</td>
+                    <td>
+                        <button class="edit-client" data-id="${client.id}">Editar</button>
+                        <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                    </td>
+                `;
+                clientHistoryTableBody.appendChild(row);
+
+                if (productFilterDropdown && ![...productFilterDropdown.options].some(option => option.value === client.productName)) {
+                    const option = document.createElement('option');
+                    option.value = client.productName;
+                    option.textContent = client.productName;
+                    productFilterDropdown.appendChild(option);
+                }
+            });
+            clearInterval(interval);
+        } else {
+            console.error('Elemento da tabela não encontrado, tentando novamente...');
+        }
+    }, 100); // Tenta a cada 100ms
 }
 
 // Evento de carregamento do DOM
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const entryButton = document.getElementById("entryButton");
     const exitButton = document.getElementById("exitButton");
     const clientForm = document.getElementById('clientForm');
+    const nextPageButton = document.getElementById('nextPageButton');
 
     if (entryButton) {
         entryButton.addEventListener("click", () => setTransactionType("Entrada"));
@@ -157,10 +187,20 @@ document.addEventListener('DOMContentLoaded', () => {
             await addClientToFirestore(client);
         });
     }
+    if (nextPageButton) {
+        nextPageButton.addEventListener('click', loadClientsPage);
+    }
 
-    calculateTotalEntriesAndSaldo();
-    loadAllClients(); // Inicialmente, carrega todos os clientes
+    await refreshClientsCache(); // Carrega clientes do Firestore e armazena no localStorage
+    renderClientsFromCache(); // Renderiza clientes do cache
+    calculateTotalEntriesAndSaldo(); // Calcula totais
 });
+
+// Função para renderizar clientes do cache
+function renderClientsFromCache() {
+    const clients = JSON.parse(localStorage.getItem('clientsData')) || [];
+    renderClients(clients);
+}
 
 
 
