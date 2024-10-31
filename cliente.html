@@ -7,53 +7,55 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
-   
 </head>
 <body>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
- const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+    const firebaseConfig = {
+        apiKey: "API_KEY",
+        authDomain: "rodeioagro-fee43.firebaseapp.com",
+        projectId: "rodeioagro-fee43",
+        storageBucket: "rodeioagro-fee43.appspot.com",
+        messagingSenderId: "981787707311",
+        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+        measurementId: "G-FM9TP3QF6N"
     };
 
-    // Inicializando Firebase e Firestore
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Redireciona para login se o usuário não estiver autenticado
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
+
+    let currentPage = 1;
+    const rowsPerPage = 10;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        document.getElementById('previousPage').addEventListener('click', () => changePage(-1));
+        document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+
         loadClientsFromCacheOrFirestore();
     });
 
-    // Função para carregar clientes do cache (localStorage) ou do Firestore
     async function loadClientsFromCacheOrFirestore() {
         const cachedClients = localStorage.getItem('cachedClients');
         if (cachedClients) {
-            renderClients(JSON.parse(cachedClients));
-            populateProductDropdown(JSON.parse(cachedClients));
+            const clients = JSON.parse(cachedClients);
+            renderClients(clients, currentPage);
+            populateProductDropdown(clients);
         } else {
             await loadClientsFromFirestore();
         }
     }
 
-    // Função para carregar clientes do Firestore e salvar no localStorage
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
@@ -64,17 +66,15 @@
                 ...docSnapshot.data()
             }));
 
-            // Salva os dados no localStorage para economizar leituras futuras
             localStorage.setItem('cachedClients', JSON.stringify(clients));
 
-            renderClients(clients);
+            renderClients(clients, currentPage);
             populateProductDropdown(clients);
         } catch (error) {
             console.error('Erro ao carregar clientes do Firestore:', error);
         }
     }
 
-    // Função para popular o dropdown de produtos
     function populateProductDropdown(clients) {
         const productFilterDropdown = document.getElementById('productFilter');
         productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
@@ -90,7 +90,6 @@
         });
     }
 
-    // Função para filtrar e exibir clientes
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
@@ -98,39 +97,43 @@
 
         if (cachedClients) {
             const clients = JSON.parse(cachedClients);
-
             const filteredClients = clients.filter(client => {
                 const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
                 const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
                 return clientNameMatches && productMatches;
             });
 
-            renderClients(filteredClients);
+            renderClients(filteredClients, currentPage);
         }
     }
 
-    // Função para renderizar os clientes na tabela
-    function renderClients(clients) {
+    function renderClients(clients, page) {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; 
+
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                return new Date(b.date) - new Date(a.date);  // Ordena por data descrescente se o nome for igual
+                return new Date(b.date) - new Date(a.date);
             }
             return nameComparison;
         });
 
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; 
-        
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const paginatedClients = clients.slice(start, end);
+
         let totalEntradas = 0;
         let totalSaldo = 0;
 
         clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
             totalEntradas += client.entryQuantity || 0;
             totalSaldo += client.saldo || 0;
+        });
+
+        paginatedClients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
             row.innerHTML = `
                 <td>${action}</td>
@@ -150,9 +153,21 @@
 
         document.getElementById('totalEntradas').textContent = totalEntradas;
         document.getElementById('totalSaldo').textContent = totalSaldo;
+
+        updatePaginationControls(clients.length, page);
     }
 
-    // Função para lidar com clique na tabela
+    function updatePaginationControls(totalItems, page) {
+        document.getElementById('currentPage').textContent = `Página ${page}`;
+        document.getElementById('previousPage').disabled = page === 1;
+        document.getElementById('nextPage').disabled = page * rowsPerPage >= totalItems;
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        filterClients();
+    }
+
     async function handleTableClick(event) {
         const button = event.target;
 
@@ -170,12 +185,11 @@
         }
     }
 
-    // Função para deletar um cliente
     async function deleteClient(clientId) {
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            localStorage.removeItem('cachedClients'); // Limpa o cache para forçar atualização
+            localStorage.removeItem('cachedClients');
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
@@ -183,7 +197,6 @@
         }
     }
 
-    // Função para editar uma linha de cliente
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
@@ -199,7 +212,6 @@
         editButton.classList.remove('edit-client');
         editButton.classList.add('save-client');
 
-        // Atualizar o saldo automaticamente ao alterar entrada/saída
         cells[4].querySelector('input').addEventListener('input', updateSaldo);
         cells[5].querySelector('input').addEventListener('input', updateSaldo);
 
@@ -207,11 +219,10 @@
             const entrada = parseInt(cells[4].querySelector('input').value) || 0;
             const saida = parseInt(cells[5].querySelector('input').value) || 0;
             const saldo = entrada - saida;
-            cells[6].textContent = saldo; // Atualiza a célula de saldo com o novo valor
+            cells[6].textContent = saldo;
         }
     }
 
-    // Função para salvar as alterações feitas na linha do cliente
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const updatedClient = {
@@ -220,13 +231,13 @@
             date: cells[3].querySelector('input').value,
             entryQuantity: parseInt(cells[4].querySelector('input').value),
             exitQuantity: parseInt(cells[5].querySelector('input').value),
-            saldo: parseInt(cells[6].textContent) // Pega o saldo atualizado
+            saldo: parseInt(cells[6].textContent)
         };
 
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            localStorage.removeItem('cachedClients'); // Limpa o cache para forçar atualização
+            localStorage.removeItem('cachedClients');
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
@@ -235,40 +246,35 @@
     }
 </script>
 
+<nav>
+    <ul class="navbar">
+        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+        <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+    </ul>
+</nav>
 
-
-
-
-   <nav>
-        <ul class="navbar">
-            <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-            <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
-        </ul>
-    </nav>
-
-  <!-- Cartões de resumo -->
-  <div class="totals-cards">
+<!-- Cartões de resumo -->
+<div class="totals-cards">
     <div class="card">
-      <span class="material-icons">arrow_upward</span>
-      <p>Total de Entradas</p>
-      <h2 id="totalEntradas">0</h2>
+        <span class="material-icons">arrow_upward</span>
+        <p>Total de Entradas</p>
+        <h2 id="totalEntradas">0</h2>
     </div>
     <div class="card">
-      <span class="material-icons">paid</span>
-      <p>Total de Saldo</p>
-      <h2 id="totalSaldo">0</h2>
+        <span class="material-icons">paid</span>
+        <p>Total de Saldo</p>
+        <h2 id="totalSaldo">0</h2>
     </div>
-  </div>
+</div>
 
-  <!-- Campo de pesquisa e filtro -->
-  <h1>Pesquisar Clientes</h1>
-  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
-  
-  <select id="productFilter">
+<!-- Campo de pesquisa e filtro -->
+<h1>Pesquisar Clientes</h1>
+<input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+
+<select id="productFilter">
     <option value="">Todos os Produtos</option>
-  </select>
-
+</select>
 
 <!-- Tabela Detalhada -->
 <h2>Tabela Detalhada</h2>
@@ -288,11 +294,18 @@
     <tbody></tbody>
 </table>
 
-  <footer>
-    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
-  </footer>
+<!-- Controles de Paginação -->
+<div class="pagination-controls">
+    <button id="previousPage">Página Anterior</button>
+    <span id="currentPage">Página 1</span>
+    <button id="nextPage">Próxima Página</button>
+</div>
 
-  <script type="module"></script>
+<footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+</footer>
+
+<script type="module"></script>
 </body>
 </html>
 
