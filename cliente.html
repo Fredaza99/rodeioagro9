@@ -12,11 +12,11 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     // Configuração do Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+        apiKey: "YOUR_API_KEY",
         authDomain: "rodeioagro-fee43.firebaseapp.com",
         projectId: "rodeioagro-fee43",
         storageBucket: "rodeioagro-fee43.appspot.com",
@@ -73,15 +73,18 @@
                 ...docSnapshot.data()
             }));
 
-            // Salva dados no localStorage
-            localStorage.setItem('cachedClients', JSON.stringify(allClients));
-            localStorage.setItem('cacheTimestamp', new Date().getTime());
-
+            updateLocalStorage(allClients);
             renderClients(allClients);
             populateProductDropdown(allClients);
         } catch (error) {
             console.error('Erro ao carregar clientes do Firestore:', error);
         }
+    }
+
+    // Função para atualizar o localStorage
+    function updateLocalStorage(clients) {
+        localStorage.setItem('cachedClients', JSON.stringify(clients));
+        localStorage.setItem('cacheTimestamp', new Date().getTime());
     }
 
     // Função para popular o dropdown de produtos
@@ -180,7 +183,9 @@
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
+            allClients = allClients.filter(client => client.id !== clientId);
+            updateLocalStorage(allClients);
+            renderClients(allClients);
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
             alert('Erro ao excluir cliente.');
@@ -229,7 +234,9 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore();
+            allClients = allClients.map(client => client.id === clientId ? updatedClient : client);
+            updateLocalStorage(allClients);
+            renderClients(allClients);
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');
@@ -291,6 +298,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
