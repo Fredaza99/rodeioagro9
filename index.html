@@ -82,9 +82,11 @@
           clientsData.push({ id: docRef.id, ...client });
           localStorage.setItem('clientsData', JSON.stringify(clientsData));
 
-          // Re-render the table with the updated data
+          // Check if renderClients function exists and call it
           if (typeof renderClients === 'function') {
             renderClients(clientsData);
+          } else {
+            console.warn('A função renderClients não está definida.');
           }
         } catch (error) {
           console.error("Erro ao adicionar cliente: ", error);
@@ -149,6 +151,7 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
