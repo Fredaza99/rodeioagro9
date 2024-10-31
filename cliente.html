@@ -16,13 +16,13 @@
 
     // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+        apiKey: "API_KEY",
+        authDomain: "rodeioagro-fee43.firebaseapp.com",
+        projectId: "rodeioagro-fee43",
+        storageBucket: "rodeioagro-fee43.appspot.com",
+        messagingSenderId: "981787707311",
+        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+        measurementId: "G-FM9TP3QF6N"
     };
 
     // Initialize Firebase
@@ -36,25 +36,28 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('productFilter').addEventListener('change', filterClients);
-        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        loadClientsFromCacheOrFirestore();
-    });
+        // Verifica se há dados armazenados no localStorage
+        const clientsData = localStorage.getItem('clientsData');
+        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+        const CACHE_VALIDITY_TIME = 10 * 60 * 1000; // 10 minutos de validade
 
-    // Function to load clients from cache or Firestore
-    async function loadClientsFromCacheOrFirestore() {
-        const cachedClients = localStorage.getItem('cachedClients');
-        if (cachedClients) {
-            const clients = JSON.parse(cachedClients);
+        if (clientsData && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_VALIDITY_TIME) {
+            // Carrega dados do localStorage se estiverem válidos
+            const clients = JSON.parse(clientsData);
             renderClients(clients);
             populateProductDropdown(clients);
         } else {
-            await loadClientsFromFirestore();
+            // Carrega do Firestore se o cache não for válido
+            loadClientsFromFirestore();
         }
-    }
 
-    // Function to load clients from Firestore and save to localStorage
+        // Eventos para filtro
+        document.getElementById('productFilter').addEventListener('change', filterTable);
+        document.getElementById('clientSearchInput').addEventListener('input', filterTable);
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+    });
+
+    // Função para carregar clientes do Firestore e atualizar o localStorage
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
@@ -65,8 +68,9 @@
                 ...docSnapshot.data()
             }));
 
-            // Save data to localStorage to save future reads
-            localStorage.setItem('cachedClients', JSON.stringify(clients));
+            // Atualiza localStorage com os dados carregados do Firestore
+            localStorage.setItem('clientsData', JSON.stringify(clients));
+            localStorage.setItem('cacheTimestamp', Date.now());
 
             renderClients(clients);
             populateProductDropdown(clients);
@@ -75,7 +79,7 @@
         }
     }
 
-    // Function to populate the product filter dropdown
+    // Função para popular o dropdown de produtos
     function populateProductDropdown(clients) {
         const productFilterDropdown = document.getElementById('productFilter');
         productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
@@ -91,14 +95,14 @@
         });
     }
 
-    // Function to filter and display clients
-    function filterClients() {
+    // Função para filtrar e exibir clientes
+    function filterTable() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
-        const cachedClients = localStorage.getItem('cachedClients');
 
-        if (cachedClients) {
-            const clients = JSON.parse(cachedClients);
+        const clientsData = localStorage.getItem('clientsData');
+        if (clientsData) {
+            const clients = JSON.parse(clientsData);
 
             const filteredClients = clients.filter(client => {
                 const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
@@ -110,7 +114,7 @@
         }
     }
 
-    // Function to render clients in the table
+    // Função para renderizar os clientes na tabela
     function renderClients(clients) {
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; 
@@ -153,7 +157,7 @@
         document.getElementById('totalSaldo').textContent = totalSaldo;
     }
 
-    // Function to handle table button clicks
+    // Função para lidar com clique na tabela
     async function handleTableClick(event) {
         const button = event.target;
 
@@ -171,12 +175,11 @@
         }
     }
 
-    // Function to delete a client
+    // Função para deletar um cliente
     async function deleteClient(clientId) {
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            localStorage.removeItem('cachedClients'); // Clear cache to force update
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
@@ -184,7 +187,7 @@
         }
     }
 
-    // Function to edit a client row
+    // Função para editar uma linha de cliente
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
@@ -211,7 +214,7 @@
         }
     }
 
-    // Function to save edited client data
+    // Função para salvar as alterações feitas na linha do cliente
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const updatedClient = {
@@ -226,7 +229,6 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            localStorage.removeItem('cachedClients'); // Clear cache to force update
             loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
@@ -289,6 +291,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
