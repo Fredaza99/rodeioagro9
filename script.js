@@ -4,97 +4,61 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-// Variável para armazenar os clientes
-let clients = [];
-
 // Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
     try {
-        const docRef = await addDoc(collection(db, 'clients'), client);
-        console.log('Cliente salvo no Firestore com ID:', docRef.id);
-        
-        // Recarrega clientes e atualiza a interface após a adição
-        await loadClientsFromFirestore();
+        await addDoc(collection(db, 'clients'), client);
+        console.log('Cliente salvo no Firestore');
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
 }
 
-// Função para carregar clientes do Firestore
+// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
     try {
-        console.log('Carregando clientes do Firestore...');
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
-        // Mapeia os dados dos documentos para o array de clientes
-        clients = querySnapshot.docs.map(doc => ({
+        // Extrair e ordenar dados dos clientes
+        const clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-
-        // Ordena os clientes por nome e data
+        
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
-                return new Date(b.date).getTime() - new Date(a.date).getTime();
+                return new Date(b.date).getTime() - new Date(a.date).getTime(); // Ordena por data decrescente
             }
             return nameComparison;
         });
 
-        // Atualiza a tabela com os clientes
-        renderClients(clients);
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
+
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
     } catch (error) {
-        console.error('Erro ao carregar clientes do Firestore:', error);
+        console.error('Erro ao carregar clientes:', error);
     }
-}
-
-// Função para renderizar clientes na tabela
-function renderClients(clients) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    if (!clientHistoryTableBody) {
-        console.error('Elemento da tabela não encontrado.');
-        return;
-    }
-
-    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
-
-    clients.forEach(client => {
-        const row = document.createElement('tr');
-        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-        row.innerHTML = `
-            <td>${action}</td>
-            <td>${client.clientName || ''}</td>
-            <td>${client.productName || ''}</td>
-            <td>${client.date || ''}</td>
-            <td>${client.entryQuantity || 0}</td>
-            <td>${client.exitQuantity || 0}</td>
-            <td>${client.saldo || 0}</td>
-            <td>
-                <button class="edit-client" data-id="${client.id}">Editar</button>
-                <button class="delete-btn" data-id="${client.id}">Excluir</button>
-            </td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-    });
-
-    // Atualiza os valores totais de entradas e saldo após renderizar
-    updateTotals(clients);
-}
-
-// Função para atualizar os totais de entradas e saldo
-function updateTotals(clients) {
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
-    clients.forEach(client => {
-        totalEntradas += client.entryQuantity || 0;
-        totalSaldo += client.saldo || 0;
-    });
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Função para definir o tipo de transação e destacar o botão ativo
@@ -129,6 +93,7 @@ document.getElementById('clientForm').addEventListener('submit', async function 
     };
 
     await addClientToFirestore(client);
+    window.location.href = 'cliente.html'; // Redireciona após salvar
 });
 
 // Função para editar uma linha de cliente
@@ -163,34 +128,49 @@ function editClientRow(row, clientId) {
 
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            await loadClientsFromFirestore();
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
         }
     });
 }
 
-// Função de Filtragem
+// Função de Filtragem (somente a lógica original)
 function filterTable() {
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
-    const filteredClients = clients.filter(client => {
-        const clientNameMatches = client.clientName.toUpperCase().includes(clientFilter);
-        const productNameMatches = productFilter === "" || client.productName.toUpperCase().includes(productFilter);
-        return clientNameMatches && productNameMatches;
+    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
+
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    tableRows.forEach(row => {
+        const clientName = row.cells[1].textContent.trim().toUpperCase();
+        const productName = row.cells[2].textContent.trim().toUpperCase();
+
+        const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
+        const matchesProduct = productFilter === "" || productName.includes(productFilter);
+
+        if (matchesClient && matchesProduct) {
+            row.style.display = '';
+            totalEntradas += parseFloat(row.cells[4].textContent) || 0;
+            totalSaldo += parseFloat(row.cells[6].textContent) || 0;
+        } else {
+            row.style.display = 'none';
+        }
     });
 
-    renderClients(filteredClients);
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Carrega os clientes ao carregar o DOM
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadClientsFromFirestore();
-});
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-document.getElementById('productFilter').addEventListener('change', filterTable);
+document.getElementById('productFilter').addEventListener('input', filterTable);
+
 
 
 
