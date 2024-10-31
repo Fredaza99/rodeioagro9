@@ -26,7 +26,6 @@ async function addClientToFirestore(client) {
 
 // Função para carregar e exibir clientes de uma página
 async function loadClientsPage() {
-    // Carrega clientes do Firestore em partes (página)
     try {
         console.log('Carregando página de dados do Firestore');
         const clientsCollection = collection(db, 'clients');
@@ -74,7 +73,6 @@ async function calculateTotalEntriesAndSaldo() {
             totalSaldo += client.saldo || 0;
         });
 
-        // Garantir que os elementos existem antes de atribuir valores
         const totalEntradasElem = document.getElementById('totalEntradas');
         const totalSaldoElem = document.getElementById('totalSaldo');
 
@@ -122,7 +120,6 @@ function renderClients(clients) {
         `;
         clientHistoryTableBody.appendChild(row);
 
-        // Adiciona o produto ao dropdown se não estiver presente
         if (productFilterDropdown && ![...productFilterDropdown.options].some(option => option.value === client.productName)) {
             const option = document.createElement('option');
             option.value = client.productName;
@@ -147,7 +144,7 @@ function setTransactionType(type) {
     }
 }
 
-// Configura eventos de clique para os botões de transação
+// Evento de carregamento do DOM
 document.addEventListener('DOMContentLoaded', () => {
     const entryButton = document.getElementById("entryButton");
     const exitButton = document.getElementById("exitButton");
@@ -169,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = document.getElementById('date').value;
             const quantity = parseInt(document.getElementById('quantity').value);
 
-            // Define os dados do cliente com base no tipo de transação
             const client = {
                 clientName,
                 productName,
@@ -180,16 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             await addClientToFirestore(client);
-            window.location.href = 'cliente.html'; // Redireciona após salvar
+            window.location.href = 'cliente.html';
         });
     }
     if (nextPageButton) {
         nextPageButton.addEventListener('click', loadClientsPage);
     }
 
-    // Espera que o DOM esteja pronto antes de chamar essas funções
-    calculateTotalEntriesAndSaldo(); // Calcula totais ao carregar a página
-    loadClientsPage(); // Carrega a primeira página dos clientes
+    calculateTotalEntriesAndSaldo();
+    loadClientsPage();
 });
 
 // Função para editar uma linha de cliente
@@ -197,7 +192,6 @@ function editClientRow(row, clientId) {
     const cells = row.querySelectorAll('td');
     const originalValues = [...cells].map(cell => cell.textContent);
 
-    // Torna as células editáveis
     cells.forEach((cell, index) => {
         if (index > 0 && index < cells.length - 1) {
             cell.innerHTML = `<input type="text" value="${originalValues[index].trim()}" />`;
@@ -209,7 +203,7 @@ function editClientRow(row, clientId) {
     editButton.classList.remove('edit-client');
     editButton.classList.add('save-client');
 
-    editButton.replaceWith(editButton.cloneNode(true)); // Remove eventos antigos
+    editButton.replaceWith(editButton.cloneNode(true));
 
     const saveButton = row.querySelector('.save-client');
     saveButton.addEventListener('click', async () => {
@@ -225,7 +219,6 @@ function editClientRow(row, clientId) {
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
 
-            // Atualiza o localStorage
             let clients = JSON.parse(localStorage.getItem('clientsData')) || [];
             clients = clients.map(client => client.id === clientId ? updatedClient : client);
             localStorage.setItem('clientsData', JSON.stringify(clients));
