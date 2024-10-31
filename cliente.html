@@ -14,25 +14,16 @@
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
- // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-
-  authDomain: "rodeioagro-fee43.firebaseapp.com",
-
-  projectId: "rodeioagro-fee43",
-
-  storageBucket: "rodeioagro-fee43.firebasestorage.app",
-
-  messagingSenderId: "981787707311",
-
-  appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-
-  measurementId: "G-FM9TP3QF6N"
-
-};
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+        authDomain: "rodeioagro-fee43.firebaseapp.com",
+        projectId: "rodeioagro-fee43",
+        storageBucket: "rodeioagro-fee43.appspot.com",
+        messagingSenderId: "981787707311",
+        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+        measurementId: "G-FM9TP3QF6N"
+    };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
@@ -48,28 +39,10 @@ const firebaseConfig = {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        
-        loadClientsFromCacheOrFirestore();
+        loadClientsFromFirestore();
     });
 
-    // Função para carregar clientes do cache ou do Firestore
-    async function loadClientsFromCacheOrFirestore() {
-        const cachedClients = localStorage.getItem('clientsData');
-        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
-        const CACHE_VALIDITY_TIME = 10 * 60 * 1000; // 10 minutos
-
-        if (cachedClients && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_VALIDITY_TIME)) {
-            console.log('Carregando dados do localStorage...');
-            const clients = JSON.parse(cachedClients);
-            renderClients(clients);
-            populateProductDropdown(clients);
-        } else {
-            console.log('Carregando dados do Firestore...');
-            await loadClientsFromFirestore();
-        }
-    }
-
-    // Função para carregar clientes do Firestore e atualizar o localStorage
+    // Function to load clients from Firestore
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
@@ -80,10 +53,6 @@ const firebaseConfig = {
                 ...docSnapshot.data()
             }));
 
-            // Atualiza o localStorage com os dados carregados do Firestore
-            localStorage.setItem('clientsData', JSON.stringify(clients));
-            localStorage.setItem('cacheTimestamp', Date.now());
-
             renderClients(clients);
             populateProductDropdown(clients);
         } catch (error) {
@@ -91,7 +60,7 @@ const firebaseConfig = {
         }
     }
 
-    // Função para popular o dropdown de produtos
+    // Function to populate the product filter dropdown
     function populateProductDropdown(clients) {
         const productFilterDropdown = document.getElementById('productFilter');
         productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
@@ -107,15 +76,12 @@ const firebaseConfig = {
         });
     }
 
-    // Função para filtrar e exibir clientes
+    // Function to filter and display clients
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
-        const clientsData = localStorage.getItem('clientsData');
-        if (clientsData) {
-            const clients = JSON.parse(clientsData);
-
+        loadClientsFromFirestore().then(clients => {
             const filteredClients = clients.filter(client => {
                 const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
                 const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
@@ -123,10 +89,10 @@ const firebaseConfig = {
             });
 
             renderClients(filteredClients);
-        }
+        });
     }
 
-    // Função para renderizar os clientes na tabela
+    // Function to render clients in the table
     function renderClients(clients) {
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; 
@@ -169,7 +135,7 @@ const firebaseConfig = {
         document.getElementById('totalSaldo').textContent = totalSaldo;
     }
 
-    // Função para lidar com clique na tabela
+    // Function to handle table button clicks
     async function handleTableClick(event) {
         const button = event.target;
 
@@ -187,19 +153,19 @@ const firebaseConfig = {
         }
     }
 
-    // Função para deletar um cliente
+    // Function to delete a client
     async function deleteClient(clientId) {
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore(); // Atualiza o localStorage após exclusão
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
             alert('Erro ao excluir cliente.');
         }
     }
 
-    // Função para editar uma linha de cliente
+    // Function to edit a client row
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
@@ -226,7 +192,7 @@ const firebaseConfig = {
         }
     }
 
-    // Função para salvar as alterações feitas na linha do cliente
+    // Function to save edited client data
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const updatedClient = {
@@ -241,7 +207,7 @@ const firebaseConfig = {
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore(); // Atualiza o localStorage após edição
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');
@@ -303,6 +269,7 @@ const firebaseConfig = {
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
