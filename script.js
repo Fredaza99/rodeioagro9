@@ -4,7 +4,7 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-// Variável para armazenar clientes globalmente
+// Variável para armazenar os clientes
 let clients = [];
 
 // Função para adicionar um cliente ao Firestore
@@ -12,25 +12,28 @@ async function addClientToFirestore(client) {
     try {
         const docRef = await addDoc(collection(db, 'clients'), client);
         console.log('Cliente salvo no Firestore com ID:', docRef.id);
-
-        // Recarrega os clientes após adicionar
+        
+        // Recarrega clientes e atualiza a interface após a adição
         await loadClientsFromFirestore();
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
 }
 
-// Função para carregar e exibir clientes do Firestore
+// Função para carregar clientes do Firestore
 async function loadClientsFromFirestore() {
     try {
+        console.log('Carregando clientes do Firestore...');
         const clientsCollection = collection(db, 'clients');
         const querySnapshot = await getDocs(clientsCollection);
 
+        // Mapeia os dados dos documentos para o array de clientes
         clients = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
 
+        // Ordena os clientes por nome e data
         clients.sort((a, b) => {
             const nameComparison = a.clientName.localeCompare(b.clientName);
             if (nameComparison === 0) {
@@ -39,9 +42,10 @@ async function loadClientsFromFirestore() {
             return nameComparison;
         });
 
+        // Atualiza a tabela com os clientes
         renderClients(clients);
     } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
+        console.error('Erro ao carregar clientes do Firestore:', error);
     }
 }
 
@@ -75,7 +79,22 @@ function renderClients(clients) {
         clientHistoryTableBody.appendChild(row);
     });
 
-    filterTable(); // Aplica o filtro após carregar os clientes
+    // Atualiza os valores totais de entradas e saldo após renderizar
+    updateTotals(clients);
+}
+
+// Função para atualizar os totais de entradas e saldo
+function updateTotals(clients) {
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    clients.forEach(client => {
+        totalEntradas += client.entryQuantity || 0;
+        totalSaldo += client.saldo || 0;
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
 }
 
 // Função para definir o tipo de transação e destacar o botão ativo
@@ -155,29 +174,13 @@ function editClientRow(row, clientId) {
 function filterTable() {
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
-    const tableRows = document.querySelectorAll('#clientHistoryTable tbody tr');
-
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
-    tableRows.forEach(row => {
-        const clientName = row.cells[1].textContent.trim().toUpperCase();
-        const productName = row.cells[2].textContent.trim().toUpperCase();
-
-        const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
-        const matchesProduct = productFilter === "" || productName.includes(productFilter);
-
-        if (matchesClient && matchesProduct) {
-            row.style.display = '';
-            totalEntradas += parseFloat(row.cells[4].textContent) || 0;
-            totalSaldo += parseFloat(row.cells[6].textContent) || 0;
-        } else {
-            row.style.display = 'none';
-        }
+    const filteredClients = clients.filter(client => {
+        const clientNameMatches = client.clientName.toUpperCase().includes(clientFilter);
+        const productNameMatches = productFilter === "" || client.productName.toUpperCase().includes(productFilter);
+        return clientNameMatches && productNameMatches;
     });
 
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
+    renderClients(filteredClients);
 }
 
 // Carrega os clientes ao carregar o DOM
