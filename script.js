@@ -74,6 +74,7 @@ async function calculateTotalEntriesAndSaldo() {
             totalSaldo += client.saldo || 0;
         });
 
+        // Garantir que os elementos existem antes de atribuir valores
         const totalEntradasElem = document.getElementById('totalEntradas');
         const totalSaldoElem = document.getElementById('totalSaldo');
 
@@ -186,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextPageButton.addEventListener('click', loadClientsPage);
     }
 
+    // Espera que o DOM esteja pronto antes de chamar essas funções
     calculateTotalEntriesAndSaldo(); // Calcula totais ao carregar a página
     loadClientsPage(); // Carrega a primeira página dos clientes
 });
