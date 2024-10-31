@@ -16,13 +16,13 @@
 
     // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-      authDomain: "rodeioagro-fee43.firebaseapp.com",
-      projectId: "rodeioagro-fee43",
-      storageBucket: "rodeioagro-fee43.appspot.com",
-      messagingSenderId: "981787707311",
-      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-      measurementId: "G-FM9TP3QF6N"
+        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+        authDomain: "rodeioagro-fee43.firebaseapp.com",
+        projectId: "rodeioagro-fee43",
+        storageBucket: "rodeioagro-fee43.appspot.com",
+        messagingSenderId: "981787707311",
+        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+        measurementId: "G-FM9TP3QF6N"
     };
 
     // Initialize Firebase
@@ -36,26 +36,29 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Verifica se há dados armazenados no localStorage
-        const clientsData = localStorage.getItem('clientsData');
-        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
-        const CACHE_VALIDITY_TIME = 10 * 60 * 1000; // 10 minutos de validade
+        document.getElementById('productFilter').addEventListener('change', filterClients);
+        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        
+        loadClientsFromCacheOrFirestore();
+    });
 
-        if (clientsData && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_VALIDITY_TIME) {
-            // Carrega dados do localStorage se estiverem válidos
-            const clients = JSON.parse(clientsData);
+    // Função para carregar clientes do cache ou do Firestore
+    async function loadClientsFromCacheOrFirestore() {
+        const cachedClients = localStorage.getItem('clientsData');
+        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+        const CACHE_VALIDITY_TIME = 10 * 60 * 1000; // 10 minutos
+
+        if (cachedClients && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_VALIDITY_TIME)) {
+            console.log('Carregando dados do localStorage...');
+            const clients = JSON.parse(cachedClients);
             renderClients(clients);
             populateProductDropdown(clients);
         } else {
-            // Carrega do Firestore se o cache não for válido
-            loadClientsFromFirestore();
+            console.log('Carregando dados do Firestore...');
+            await loadClientsFromFirestore();
         }
-
-        // Eventos para filtro
-        document.getElementById('productFilter').addEventListener('change', filterTable);
-        document.getElementById('clientSearchInput').addEventListener('input', filterTable);
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-    });
+    }
 
     // Função para carregar clientes do Firestore e atualizar o localStorage
     async function loadClientsFromFirestore() {
@@ -68,7 +71,7 @@
                 ...docSnapshot.data()
             }));
 
-            // Atualiza localStorage com os dados carregados do Firestore
+            // Atualiza o localStorage com os dados carregados do Firestore
             localStorage.setItem('clientsData', JSON.stringify(clients));
             localStorage.setItem('cacheTimestamp', Date.now());
 
@@ -96,7 +99,7 @@
     }
 
     // Função para filtrar e exibir clientes
-    function filterTable() {
+    function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
@@ -180,7 +183,7 @@
         try {
             await deleteDoc(doc(db, 'clients', clientId));
             alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
+            loadClientsFromFirestore(); // Atualiza o localStorage após exclusão
         } catch (error) {
             console.error('Erro ao excluir cliente:', error);
             alert('Erro ao excluir cliente.');
@@ -229,7 +232,7 @@
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore();
+            loadClientsFromFirestore(); // Atualiza o localStorage após edição
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');
