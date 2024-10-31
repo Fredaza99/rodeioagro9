@@ -41,10 +41,28 @@
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        loadClientsFromFirestore();
+        loadClientsFromLocalStorageOrFirestore();
     });
 
-    // Função para carregar clientes do Firestore
+    // Função para carregar clientes do localStorage ou do Firestore
+    async function loadClientsFromLocalStorageOrFirestore() {
+        const cachedClients = JSON.parse(localStorage.getItem('cachedClients'));
+        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+
+        const now = new Date().getTime();
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        // Se o cache existir e for recente (menos de um dia), use-o
+        if (cachedClients && cacheTimestamp && (now - cacheTimestamp < oneDay)) {
+            allClients = cachedClients;
+            renderClients(allClients);
+            populateProductDropdown(allClients);
+        } else {
+            await loadClientsFromFirestore();
+        }
+    }
+
+    // Função para carregar clientes do Firestore e salvar no localStorage
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
@@ -54,6 +72,10 @@
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
+
+            // Salva dados no localStorage
+            localStorage.setItem('cachedClients', JSON.stringify(allClients));
+            localStorage.setItem('cacheTimestamp', new Date().getTime());
 
             renderClients(allClients);
             populateProductDropdown(allClients);
@@ -269,6 +291,7 @@
 <script type="module"></script>
 </body>
 </html>
+
 
 
 
