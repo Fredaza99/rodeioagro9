@@ -4,21 +4,17 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } 
 // Inicializa Firestore
 const db = getFirestore();
 
-// Define o tempo máximo de validade do cache (em milissegundos)
-const CACHE_VALIDITY_TIME = 10 * 60 * 1000; // 10 minutos
-
-// Função para adicionar um cliente ao Firestore e atualizar o localStorage
+// Função para adicionar um cliente ao Firestore
 async function addClientToFirestore(client) {
     try {
         await addDoc(collection(db, 'clients'), client);
         console.log('Cliente salvo no Firestore');
-        await updateLocalStorageWithFirestore(); // Atualiza o cache após adicionar
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
     }
 }
 
-// Função para carregar e exibir clientes do Firestore e atualizar o cache
+// Função para carregar e exibir clientes
 async function loadClientsFromFirestore() {
     try {
         const clientsCollection = collection(db, 'clients');
@@ -38,81 +34,32 @@ async function loadClientsFromFirestore() {
             return nameComparison;
         });
 
-        // Salva os dados no localStorage e atualiza o timestamp do cache
-        localStorage.setItem('clientsData', JSON.stringify(clients));
-        localStorage.setItem('cacheTimestamp', Date.now());
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
 
-        renderClients(clients); // Renderiza os clientes
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
     } catch (error) {
         console.error('Erro ao carregar clientes:', error);
     }
 }
-
-// Função para atualizar o localStorage com os dados mais recentes do Firestore
-async function updateLocalStorageWithFirestore() {
-    try {
-        const clientsCollection = collection(db, 'clients');
-        const querySnapshot = await getDocs(clientsCollection);
-        
-        const clients = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        // Atualiza o localStorage com os clientes do Firestore
-        localStorage.setItem('clientsData', JSON.stringify(clients));
-        localStorage.setItem('cacheTimestamp', Date.now());
-
-        // Recarrega a tabela para refletir as atualizações
-        renderClients(clients);
-    } catch (error) {
-        console.error('Erro ao atualizar localStorage com dados do Firestore:', error);
-    }
-}
-
-// Função para carregar clientes do localStorage ou do Firestore
-function loadClientsFromLocalStorage() {
-    const clientsData = localStorage.getItem('clientsData');
-    const cacheTimestamp = localStorage.getItem('cacheTimestamp');
-
-    if (clientsData && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_VALIDITY_TIME) {
-        // Se o cache for válido, use-o
-        const clients = JSON.parse(clientsData);
-        renderClients(clients);
-    } else {
-        // Caso contrário, carregue do Firestore e atualize o cache
-        loadClientsFromFirestore();
-    }
-}
-
-// Função para renderizar os clientes na tabela
-function renderClients(clients) {
-    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-    clientHistoryTableBody.innerHTML = ''; // Limpa o conteúdo da tabela
-
-    clients.forEach(client => {
-        const row = document.createElement('tr');
-        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-        row.innerHTML = `
-            <td>${action}</td>
-            <td>${client.clientName || ''}</td>
-            <td>${client.productName || ''}</td>
-            <td>${client.date || ''}</td>
-            <td>${client.entryQuantity || 0}</td>
-            <td>${client.exitQuantity || 0}</td>
-            <td>${client.saldo || 0}</td>
-            <td>
-                <button class="edit-client" data-id="${client.id}">Editar</button>
-                <button class="delete-btn" data-id="${client.id}">Excluir</button>
-            </td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-    });
-}
-
-// Evento de carregamento do DOM
-document.addEventListener('DOMContentLoaded', loadClientsFromLocalStorage);
 
 // Função para definir o tipo de transação e destacar o botão ativo
 let transactionType = "Entrada";
@@ -181,14 +128,14 @@ function editClientRow(row, clientId) {
 
         try {
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            await updateLocalStorageWithFirestore(); // Atualiza o localStorage
+            loadClientsFromFirestore();
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
         }
     });
 }
 
-// Função de Filtragem
+// Função de Filtragem (somente a lógica original)
 function filterTable() {
     const clientFilter = document.getElementById('clientSearchInput').value.trim().toUpperCase();
     const productFilter = document.getElementById('productFilter').value.trim().toUpperCase();
@@ -216,6 +163,9 @@ function filterTable() {
     document.getElementById('totalEntradas').textContent = totalEntradas;
     document.getElementById('totalSaldo').textContent = totalSaldo;
 }
+
+// Carrega os clientes ao carregar o DOM
+document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
