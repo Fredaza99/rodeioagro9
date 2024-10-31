@@ -261,8 +261,8 @@ table tbody tr:hover {
 /* Footer */
 footer {
     text-align: center;
-    padding: 0;
-    background-color: transparent;
+    padding: 20px;
+    background-color: #202122;
     color: white;
     position: static;
     width: 100%;
