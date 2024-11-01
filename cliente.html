@@ -37,12 +37,12 @@
 
     let allClients = [];
 
-    document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        
-        loadClientsFromFirestore();
+        // Removendo a chamada para evitar o carregamento automático
+        // loadClientsFromFirestore();
     });
 
    // Função para carregar clientes do Firestore com base nos filtros
