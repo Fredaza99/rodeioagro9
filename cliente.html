@@ -30,61 +30,20 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Redireciona para login se o usuário não estiver autenticado
-    if (!sessionStorage.getItem('loggedIn')) {
-      window.location.href = 'login.html';
-    }
-
     let allClients = [];
     let currentPage = 1;
     const itemsPerPage = 10;
-    let transactionType = "Entrada";
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // Eventos dos botões de Entrada e Saída
-      document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-      document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
-
-      function setTransactionType(type) {
-        transactionType = type;
-        document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-        document.getElementById("exitButton").classList.toggle("active", type === "Saída");
-      }
-
-      // Função para enviar o formulário
-      document.getElementById('clientForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const clientName = document.getElementById('clientName').value;
-        const productName = document.getElementById('productName').value;
-        const date = document.getElementById('date').value;
-        const quantity = parseInt(document.getElementById('quantity').value);
-
-        const client = {
-          clientName,
-          productName,
-          date,
-          entryQuantity: transactionType === "Entrada" ? quantity : 0,
-          exitQuantity: transactionType === "Saída" ? quantity : 0,
-          saldo: transactionType === "Entrada" ? quantity : -quantity
-        };
-
-        try {
-          await addDoc(collection(db, 'clients'), client);
-          alert('Cliente adicionado com sucesso!');
-          loadClientsFromFirestore();
-        } catch (error) {
-          console.error("Erro ao adicionar cliente: ", error);
-          alert('Erro ao adicionar cliente. Tente novamente.');
-        }
-      });
-
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('productFilter').addEventListener('change', filterClients);
+      document.getElementById('clientSearchInput').addEventListener('input', filterClients);
       document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
       document.getElementById('nextPage').addEventListener('click', () => changePage(1));
 
       loadClientsFromFirestore();
     });
 
-    // Função para carregar clientes do Firestore
+    // Carrega clientes do Firestore
     async function loadClientsFromFirestore() {
       try {
         const clientsCollection = collection(db, 'clients');
@@ -96,9 +55,42 @@
         }));
 
         renderClients(allClients);
+        populateProductDropdown(allClients);
+        calculateTotalSaldoAndEntradas(allClients);
       } catch (error) {
         console.error('Erro ao carregar clientes do Firestore:', error);
       }
+    }
+
+    // Popula o dropdown de produtos
+    function populateProductDropdown(clients) {
+      const productFilterDropdown = document.getElementById('productFilter');
+      productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+      const products = new Set(clients.map(client => client.productName));
+      products.forEach(product => {
+        if (product) {
+          const option = document.createElement('option');
+          option.value = product.toLowerCase();
+          option.textContent = product;
+          productFilterDropdown.appendChild(option);
+        }
+      });
+    }
+
+    // Filtra e exibe clientes
+    function filterClients() {
+      const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+      const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+
+      const filteredClients = allClients.filter(client => {
+        const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+        const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+        return clientNameMatches && productMatches;
+      });
+
+      currentPage = 1; // Reinicia a paginação
+      renderClients(filteredClients);
     }
 
     // Renderiza clientes na tabela com paginação
@@ -145,6 +137,20 @@
       currentPage += direction;
       renderClients(allClients);
     }
+
+    // Calcula o saldo total e as entradas de todos os clientes
+    function calculateTotalSaldoAndEntradas(clients) {
+      let totalEntradas = 0;
+      let totalSaldo = 0;
+
+      clients.forEach(client => {
+        totalEntradas += client.entryQuantity || 0;
+        totalSaldo += client.saldo || 0;
+      });
+
+      document.getElementById('totalEntradas').textContent = totalEntradas;
+      document.getElementById('totalSaldo').textContent = totalSaldo;
+    }
   </script>
 
   <nav>
@@ -155,38 +161,29 @@
     </ul>
   </nav>
 
-  <header>
-    <div class="row">
-      <div class="logo-row">
-        <img class="logo" src="img/Sem título(1).png" alt="logo-rodeio"> 
-      </div>
+  <!-- Cartões de resumo -->
+  <div class="totals-cards">
+    <div class="card">
+      <span class="material-icons">arrow_upward</span>
+      <p>Total de Entradas</p>
+      <h2 id="totalEntradas">0</h2>
     </div>
-  </header>
-
-  <!-- Formulário de cadastro -->
-  <form id="clientForm">
-    <label for="clientName">Nome do Cliente:</label>
-    <input type="text" id="clientName" required>
-
-    <label for="productName">Nome do Produto:</label>
-    <input type="text" id="productName" required>
-
-    <label for="date">Data:</label>
-    <input type="date" id="date" required>
-
-    <label for="quantity">Quantidade:</label>
-    <input type="number" id="quantity" required>
-
-    <div id="transactionButtons">
-      <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
-      <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+    <div class="card">
+      <span class="material-icons">paid</span>
+      <p>Total de Saldo</p>
+      <h2 id="totalSaldo">0</h2>
     </div>
+  </div>
 
-    <button type="submit">Enviar</button>
-  </form>
+  <!-- Campo de pesquisa e filtro -->
+  <h1>Pesquisar Clientes</h1>
+  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+  <select id="productFilter">
+    <option value="">Todos os Produtos</option>
+  </select>
 
-  <!-- Tabela para exibir histórico -->
-  <h2>Histórico de Clientes</h2>
+  <!-- Tabela Detalhada -->
+  <h2>Tabela Detalhada</h2>
   <table id="clientHistoryTable">
     <thead>
       <tr>
@@ -195,7 +192,7 @@
         <th>Produto</th>
         <th>Data</th>
         <th>Quantidade Entrada</th>
-        <th>Quantidade Saída</th>
+        <th>Quantidade Retirada</th>
         <th>Saldo</th>
         <th>Ações</th>
       </tr>
@@ -209,9 +206,8 @@
     <button id="nextPage" class="pagination-btn">Próxima</button>
   </div>
 
-  <!-- Footer -->
   <footer>
-    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
   </footer>
 <script type="module"></script>
 </body>
