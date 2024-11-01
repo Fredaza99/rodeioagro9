@@ -33,17 +33,24 @@ nav {
     list-style: none;
     padding: 0;
     display: flex;
-    gap: 5px;
+    gap: 20px; /* Espaçamento entre os itens da navbar */
     justify-content: center;
 }
 
 .navbar a {
-    padding: 10px 15px;
+    display: flex; /* Flex para alinhar o ícone com o texto */
+    align-items: center; /* Centraliza verticalmente o texto e o ícone */
+    gap: 8px; /* Espaço entre o ícone e o texto */
+    padding: 10px 20px;
     color: white;
     font-size: 18px;
     font-weight: bold;
     text-decoration: none;
     transition: color 0.3s;
+}
+
+.navbar a span.material-icons {
+    font-size: 24px; /* Define um tamanho adequado para o ícone */
 }
 
 .navbar a:hover {
