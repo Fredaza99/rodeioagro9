@@ -25,42 +25,46 @@
         measurementId: "G-FM9TP3QF6N"
     };
 
- // Initialize Firebase
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Redirect to login if the user is not logged in
+    // Redireciona para login se o usuário não estiver autenticado
     if (!sessionStorage.getItem('loggedIn')) {
         window.location.href = 'login.html';
     }
+
+    let allClients = [];
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('productFilter').addEventListener('change', filterClients);
         document.getElementById('clientSearchInput').addEventListener('input', filterClients);
         document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        
         loadClientsFromFirestore();
     });
 
-    // Function to load clients from Firestore
+    // Função para carregar clientes do Firestore
     async function loadClientsFromFirestore() {
         try {
             const clientsCollection = collection(db, 'clients');
             const querySnapshot = await getDocs(clientsCollection);
 
-            const clients = querySnapshot.docs.map(docSnapshot => ({
+            allClients = querySnapshot.docs.map(docSnapshot => ({
                 id: docSnapshot.id,
                 ...docSnapshot.data()
             }));
 
-            renderClients(clients);
-            populateProductDropdown(clients);
+            renderClients(allClients);
+            populateProductDropdown(allClients);
+            calculateTotalSaldoAndEntradas(allClients);
         } catch (error) {
             console.error('Erro ao carregar clientes do Firestore:', error);
         }
     }
 
-    // Function to populate the product filter dropdown
+    // Popula o dropdown de produtos
     function populateProductDropdown(clients) {
         const productFilterDropdown = document.getElementById('productFilter');
         productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
@@ -76,23 +80,21 @@
         });
     }
 
-    // Function to filter and display clients
+    // Filtra e exibe clientes
     function filterClients() {
         const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
         const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
-        loadClientsFromFirestore().then(clients => {
-            const filteredClients = clients.filter(client => {
-                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-                return clientNameMatches && productMatches;
-            });
-
-            renderClients(filteredClients);
+        const filteredClients = allClients.filter(client => {
+            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+            return clientNameMatches && productMatches;
         });
+
+        renderClients(filteredClients);
     }
 
-    // Function to render clients in the table
+    // Renderiza clientes na tabela
     function renderClients(clients) {
         const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
         clientHistoryTableBody.innerHTML = ''; 
@@ -135,7 +137,21 @@
         document.getElementById('totalSaldo').textContent = totalSaldo;
     }
 
-    // Function to handle table button clicks
+    // Calcula o saldo total e a quantidade total de entradas de todos os clientes
+    function calculateTotalSaldoAndEntradas(clients) {
+        let totalEntradas = 0;
+        let totalSaldo = 0;
+
+        clients.forEach(client => {
+            totalEntradas += client.entryQuantity || 0;
+            totalSaldo += client.saldo || 0;
+        });
+
+        document.getElementById('totalEntradas').textContent = totalEntradas;
+        document.getElementById('totalSaldo').textContent = totalSaldo;
+    }
+
+    // Lida com cliques nos botões da tabela
     async function handleTableClick(event) {
         const button = event.target;
 
@@ -153,7 +169,7 @@
         }
     }
 
-    // Function to delete a client
+    // Função para excluir um cliente
     async function deleteClient(clientId) {
         try {
             await deleteDoc(doc(db, 'clients', clientId));
@@ -165,7 +181,7 @@
         }
     }
 
-    // Function to edit a client row
+    // Função para iniciar a edição de uma linha de cliente
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const originalValues = [...cells].map(cell => cell.textContent);
@@ -192,7 +208,7 @@
         }
     }
 
-    // Function to save edited client data
+    // Função para salvar os dados editados de um cliente
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
         const updatedClient = {
