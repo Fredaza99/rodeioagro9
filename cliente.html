@@ -25,7 +25,7 @@
         measurementId: "G-FM9TP3QF6N"
     };
 
-   // Initialize Firebase
+    // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const db = getFirestore(app);
@@ -54,6 +54,7 @@
 
       renderClients(allClients);
       populateProductDropdown(allClients);
+      calculateTotalSaldoAndEntradas(allClients);
     } catch (error) {
       console.error('Erro ao carregar clientes do Firestore:', error);
     }
@@ -99,15 +100,9 @@
     const endIndex = startIndex + itemsPerPage;
     const clientsToDisplay = clients.slice(startIndex, endIndex);
 
-    let totalEntradas = 0;
-    let totalSaldo = 0;
-
     clientsToDisplay.forEach(client => {
       const row = document.createElement('tr');
       const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-      totalEntradas += client.entryQuantity || 0;
-      totalSaldo += client.saldo || 0;
 
       row.innerHTML = `
         <td>${action}</td>
@@ -124,9 +119,6 @@
       `;
       clientHistoryTableBody.appendChild(row);
     });
-
-    document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
 
     renderPagination(clients.length);
   }
@@ -147,10 +139,24 @@
       }
       button.addEventListener('click', () => {
         currentPage = i;
-        filterClients(); // Atualiza a tabela
+        renderClients(allClients); // Atualiza a tabela
       });
       paginationContainer.appendChild(button);
     }
+  }
+
+  // Calcula o saldo total e a quantidade total de entradas de todos os clientes
+  function calculateTotalSaldoAndEntradas(clients) {
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    clients.forEach(client => {
+      totalEntradas += client.entryQuantity || 0;
+      totalSaldo += client.saldo || 0;
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
   }
 </script>
 
