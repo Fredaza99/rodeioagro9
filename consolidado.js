@@ -51,18 +51,20 @@ function renderConsolidatedTable(aggregatedData) {
 
     Object.values(aggregatedData).forEach(data => {
         const newRow = document.createElement('tr');
-        const saldoClass = data.saldo >= 0 ? 'positive-balance' : 'negative-balance';
+        const saldoClass = data.saldo >= 0 ? 'positive-row' : 'negative-row';
 
+        newRow.classList.add(saldoClass);
         newRow.innerHTML = `
             <td>${data.clientName}</td>
             <td>${data.productName}</td>
             <td>${data.entryQuantity}</td>
             <td>${data.exitQuantity}</td>
-            <td class="${saldoClass}">${data.saldo}</td>
+            <td>${data.saldo}</td>
         `;
         consolidatedTableBody.appendChild(newRow);
     });
 }
+
 
 
 
