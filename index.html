@@ -14,7 +14,7 @@
     // Import the functions from the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     // Firebase configuration
     const firebaseConfig = {
@@ -89,6 +89,25 @@
           alert('Erro ao adicionar cliente. Tente novamente.');
         }
       });
+
+      // Load existing clients from Firestore to localStorage
+      loadClientsFromFirestore();
+
+      async function loadClientsFromFirestore() {
+        try {
+          const querySnapshot = await getDocs(collection(db, 'clients'));
+          const clientsData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          localStorage.setItem('clientsData', JSON.stringify(clientsData));
+          renderClients(clientsData);
+        } catch (error) {
+          console.error("Erro ao carregar clientes do Firestore: ", error);
+          alert('Erro ao carregar dados dos clientes. Verifique a conexão e tente novamente.');
+        }
+      }
 
       // Function to render clients in the table
       function renderClients(clients) {
@@ -182,6 +201,7 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
 
