@@ -108,33 +108,6 @@
           alert('Erro ao carregar dados dos clientes. Verifique a conexão e tente novamente.');
         }
       }
-
-      // Function to render clients in the table
-      function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Clear existing rows
-
-        clients.forEach(client => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
-            <td>${client.date}</td>
-            <td>${client.entryQuantity}</td>
-            <td>${client.exitQuantity}</td>
-            <td>${client.saldo}</td>
-          `;
-          clientHistoryTableBody.appendChild(row);
-        });
-      }
-
-      // Ensure the table and necessary elements are available
-      const clientHistoryTable = document.getElementById('clientHistoryTable');
-      if (!clientHistoryTable) {
-        console.error('Elemento da tabela não encontrado.');
-        return;
-      }
-    });
   </script>
 
   <nav>
