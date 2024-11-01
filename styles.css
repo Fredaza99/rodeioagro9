@@ -261,13 +261,13 @@ table tbody tr:hover {
 /* Footer */
 footer {
     text-align: center;
-    padding: 20px;
+    padding: 15px;
     background-color: #202122;
     color: white;
     position: static;
     width: 100%;
     bottom: 0;
-    font-size: 13px;
+    font-size: 10px;
 }
 
 /* Responsive Design */
@@ -325,29 +325,6 @@ footer {
     text-decoration: none;
     cursor: pointer;
 }
-
- .pagination-container {
-    text-align: center;
-    margin-top: 20px;
-  }
-
-  .pagination-btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    margin: 2px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .pagination-btn.active {
-    background-color: #0056b3;
-  }
-
-  .pagination-btn:hover {
-    background-color: #0056b3;
-  }
 
 
 
