@@ -68,34 +68,37 @@
             const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
             let clientsQuery = collection(db, 'clients');
-            const filters = [];
 
-            // Aplicar filtros de acordo com o valor inserido
-            if (clientSearchInput) {
-                filters.push(where('clientName', '>=', clientSearchInput));
-                filters.push(where('clientName', '<=', clientSearchInput + '\uf8ff'));
+            // Construindo a consulta Firestore com filtros
+            if (clientSearchInput && productFilterValue) {
+                clientsQuery = query(
+                    clientsQuery,
+                    where('clientName', '>=', clientSearchInput),
+                    where('clientName', '<=', clientSearchInput + '\uf8ff'),
+                    where('productName', '==', productFilterValue)
+                );
+            } else if (clientSearchInput) {
+                clientsQuery = query(
+                    clientsQuery,
+                    where('clientName', '>=', clientSearchInput),
+                    where('clientName', '<=', clientSearchInput + '\uf8ff')
+                );
+            } else if (productFilterValue) {
+                clientsQuery = query(clientsQuery, where('productName', '==', productFilterValue));
             }
 
-            if (productFilterValue) {
-                filters.push(where('productName', '==', productFilterValue));
+            // Somente buscar no Firestore se houver um filtro
+            if (clientSearchInput || productFilterValue) {
+                const querySnapshot = await getDocs(clientsQuery);
+
+                const filteredClients = querySnapshot.docs.map(docSnapshot => ({
+                    id: docSnapshot.id,
+                    ...docSnapshot.data()
+                }));
+
+                renderClients(filteredClients);
+                calculateTotalSaldoAndEntradas(filteredClients);
             }
-
-            if (filters.length > 0) {
-                clientsQuery = query(clientsQuery, ...filters);
-            }
-
-            const querySnapshot = await getDocs(clientsQuery);
-
-            const filteredClients = querySnapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            }));
-
-            renderClients(filteredClients);
-            if (!clientSearchInput && !productFilterValue) {
-                populateProductDropdown(filteredClients);
-            }
-            calculateTotalSaldoAndEntradas(filteredClients);
         } catch (error) {
             console.error('Erro ao filtrar clientes do Firestore:', error);
         }
