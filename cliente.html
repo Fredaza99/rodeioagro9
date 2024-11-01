@@ -25,195 +25,137 @@
         measurementId: "G-FM9TP3QF6N"
     };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+   // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
 
-    // Redirect to login if the user is not logged in
-    if (!sessionStorage.getItem('loggedIn')) {
-        window.location.href = 'login.html';
+  let allClients = []; // Array para armazenar todos os clientes
+  let currentPage = 1;
+  const itemsPerPage = 10;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('productFilter').addEventListener('change', filterClients);
+    document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+
+    loadClientsFromFirestore();
+  });
+
+  // Carrega clientes do Firestore
+  async function loadClientsFromFirestore() {
+    try {
+      const clientsCollection = collection(db, 'clients');
+      const querySnapshot = await getDocs(clientsCollection);
+
+      allClients = querySnapshot.docs.map(docSnapshot => ({
+        id: docSnapshot.id,
+        ...docSnapshot.data()
+      }));
+
+      renderClients(allClients);
+      populateProductDropdown(allClients);
+    } catch (error) {
+      console.error('Erro ao carregar clientes do Firestore:', error);
     }
+  }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('productFilter').addEventListener('change', filterClients);
-        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        loadClientsFromFirestore();
+  // Popula o dropdown de produtos
+  function populateProductDropdown(clients) {
+    const productFilterDropdown = document.getElementById('productFilter');
+    productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+    const products = new Set(clients.map(client => client.productName));
+    products.forEach(product => {
+      if (product) {
+        const option = document.createElement('option');
+        option.value = product.toLowerCase();
+        option.textContent = product;
+        productFilterDropdown.appendChild(option);
+      }
+    });
+  }
+
+  // Filtra e exibe clientes
+  function filterClients() {
+    const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+    const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+
+    const filteredClients = allClients.filter(client => {
+      const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+      const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+      return clientNameMatches && productMatches;
     });
 
-    // Function to load clients from Firestore
-    async function loadClientsFromFirestore() {
-        try {
-            const clientsCollection = collection(db, 'clients');
-            const querySnapshot = await getDocs(clientsCollection);
+    currentPage = 1; // Reinicia a paginação
+    renderClients(filteredClients);
+  }
 
-            const clients = querySnapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            }));
+  // Renderiza clientes na tabela com paginação
+  function renderClients(clients) {
+    const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+    clientHistoryTableBody.innerHTML = ''; 
 
-            renderClients(clients);
-            populateProductDropdown(clients);
-        } catch (error) {
-            console.error('Erro ao carregar clientes do Firestore:', error);
-        }
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const clientsToDisplay = clients.slice(startIndex, endIndex);
+
+    let totalEntradas = 0;
+    let totalSaldo = 0;
+
+    clientsToDisplay.forEach(client => {
+      const row = document.createElement('tr');
+      const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+      totalEntradas += client.entryQuantity || 0;
+      totalSaldo += client.saldo || 0;
+
+      row.innerHTML = `
+        <td>${action}</td>
+        <td>${client.clientName || ''}</td>
+        <td>${client.productName || ''}</td>
+        <td>${client.date || ''}</td>
+        <td>${client.entryQuantity || 0}</td>
+        <td>${client.exitQuantity || 0}</td>
+        <td>${client.saldo || 0}</td>
+        <td>
+          <button class="edit-client" data-id="${client.id}">Editar</button>
+          <button class="delete-btn" data-id="${client.id}">Excluir</button>
+        </td>
+      `;
+      clientHistoryTableBody.appendChild(row);
+    });
+
+    document.getElementById('totalEntradas').textContent = totalEntradas;
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+
+    renderPagination(clients.length);
+  }
+
+  // Renderiza a paginação
+  function renderPagination(totalItems) {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = ''; // Limpa a paginação
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    for (let i = 1; i <= totalPages; i++) {
+      const button = document.createElement('button');
+      button.textContent = i;
+      button.classList.add('pagination-btn');
+      if (i === currentPage) {
+        button.classList.add('active');
+      }
+      button.addEventListener('click', () => {
+        currentPage = i;
+        filterClients(); // Atualiza a tabela
+      });
+      paginationContainer.appendChild(button);
     }
-
-    // Function to populate the product filter dropdown
-    function populateProductDropdown(clients) {
-        const productFilterDropdown = document.getElementById('productFilter');
-        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-
-        const products = new Set(clients.map(client => client.productName));
-        products.forEach(product => {
-            if (product) {
-                const option = document.createElement('option');
-                option.value = product.toLowerCase();
-                option.textContent = product;
-                productFilterDropdown.appendChild(option);
-            }
-        });
-    }
-
-    // Function to filter and display clients
-    function filterClients() {
-        const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
-        const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
-
-        loadClientsFromFirestore().then(clients => {
-            const filteredClients = clients.filter(client => {
-                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-                return clientNameMatches && productMatches;
-            });
-
-            renderClients(filteredClients);
-        });
-    }
-
-    // Function to render clients in the table
-    function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; 
-
-        clients.sort((a, b) => {
-            const nameComparison = a.clientName.localeCompare(b.clientName);
-            if (nameComparison === 0) {
-                return new Date(b.date) - new Date(a.date);
-            }
-            return nameComparison;
-        });
-
-        let totalEntradas = 0;
-        let totalSaldo = 0;
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
-
-            totalEntradas += client.entryQuantity || 0;
-            totalSaldo += client.saldo || 0;
-
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
-            clientHistoryTableBody.appendChild(row);
-        });
-
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
-    }
-
-    // Function to handle table button clicks
-    async function handleTableClick(event) {
-        const button = event.target;
-
-        if (button.classList.contains('delete-btn')) {
-            const clientId = button.getAttribute('data-id');
-            await deleteClient(clientId);
-        } else if (button.classList.contains('edit-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            startEditingRow(row, clientId);
-        } else if (button.classList.contains('save-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            await saveEditedRow(row, clientId);
-        }
-    }
-
-    // Function to delete a client
-    async function deleteClient(clientId) {
-        try {
-            await deleteDoc(doc(db, 'clients', clientId));
-            alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao excluir cliente:', error);
-            alert('Erro ao excluir cliente.');
-        }
-    }
-
-    // Function to edit a client row
-    function startEditingRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
-        const originalValues = [...cells].map(cell => cell.textContent);
-
-        cells.forEach((cell, index) => {
-            if (index > 0 && index < cells.length - 1) { 
-                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
-            }
-        });
-
-        const editButton = row.querySelector('.edit-client');
-        editButton.textContent = 'Salvar';
-        editButton.classList.remove('edit-client');
-        editButton.classList.add('save-client');
-
-        cells[4].querySelector('input').addEventListener('input', updateSaldo);
-        cells[5].querySelector('input').addEventListener('input', updateSaldo);
-
-        function updateSaldo() {
-            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
-            const saida = parseInt(cells[5].querySelector('input').value) || 0;
-            const saldo = entrada - saida;
-            cells[6].textContent = saldo;
-        }
-    }
-
-    // Function to save edited client data
-    async function saveEditedRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
-        const updatedClient = {
-            clientName: cells[1].querySelector('input').value,
-            productName: cells[2].querySelector('input').value,
-            date: cells[3].querySelector('input').value,
-            entryQuantity: parseInt(cells[4].querySelector('input').value),
-            exitQuantity: parseInt(cells[5].querySelector('input').value),
-            saldo: parseInt(cells[6].textContent)
-        };
-
-        try {
-            await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
-            alert('Erro ao atualizar cliente.');
-        }
-    }
+  }
 </script>
+
+<!-- Adicione este elemento para a paginação -->
+<div id="pagination"></div>
 
 <nav>
     <ul class="navbar">
@@ -264,7 +206,7 @@
 </table>
 
 <footer>
-    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
 </footer>
 <script type="module"></script>
 </body>
