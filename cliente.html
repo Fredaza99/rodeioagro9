@@ -1,206 +1,289 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
-  <link rel="manifest" href="/site.webmanifest">
-  <title>Rodeio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisar Clientes - Agronegócio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
 </head>
 <body>
-  <script type="module">
-    // Import the functions from the Firebase SDK
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
     // Firebase configuration
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+        measurementId: "YOUR_MEASUREMENT_ID"
     };
 
-    // Initialize Firebase
+   // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Redirect to login if the user is not authenticated
+    // Redireciona para login se o usuário não estiver autenticado
     if (!sessionStorage.getItem('loggedIn')) {
-      window.location.href = 'login.html';
+        window.location.href = 'login.html';
     }
 
-    // Transaction type (Entry or Exit)
-    let transactionType = "Entrada";
+    let allClients = [];
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // Event listeners for Entry and Exit buttons
-      document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
-      document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('productFilter').addEventListener('change', filterClients);
+        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        
+        loadClientsFromFirestore();
+    });
 
-      function setTransactionType(type) {
-        transactionType = type;
-        document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
-        document.getElementById("exitButton").classList.toggle("active", type === "Saída");
-      }
+    // Função para carregar clientes do Firestore
+    async function loadClientsFromFirestore() {
+        try {
+            const clientsCollection = collection(db, 'clients');
+            const querySnapshot = await getDocs(clientsCollection);
 
-      // Function to submit the form
-      document.getElementById('clientForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
+            allClients = querySnapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            }));
 
-        // Collect form data
-        const clientName = document.getElementById('clientName').value;
-        const productName = document.getElementById('productName').value;
-        const date = document.getElementById('date').value;
-        const quantity = parseInt(document.getElementById('quantity').value);
+            renderClients(allClients);
+            populateProductDropdown(allClients);
+            calculateTotalSaldoAndEntradas(allClients);
+        } catch (error) {
+            console.error('Erro ao carregar clientes do Firestore:', error);
+        }
+    }
 
-        // Define client data based on transaction type
-        const client = {
-          clientName,
-          productName,
-          date,
-          entryQuantity: transactionType === "Entrada" ? quantity : 0,
-          exitQuantity: transactionType === "Saída" ? quantity : 0,
-          saldo: transactionType === "Entrada" ? quantity : -quantity
+    // Popula o dropdown de produtos
+    function populateProductDropdown(clients) {
+        const productFilterDropdown = document.getElementById('productFilter');
+        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+        const products = new Set(clients.map(client => client.productName));
+        products.forEach(product => {
+            if (product) {
+                const option = document.createElement('option');
+                option.value = product.toLowerCase();
+                option.textContent = product;
+                productFilterDropdown.appendChild(option);
+            }
+        });
+    }
+
+    // Filtra e exibe clientes
+    function filterClients() {
+        const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+        const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+
+        const filteredClients = allClients.filter(client => {
+            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+            return clientNameMatches && productMatches;
+        });
+
+        renderClients(filteredClients);
+    }
+
+    // Renderiza clientes na tabela
+    function renderClients(clients) {
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; 
+
+        clients.sort((a, b) => {
+            const nameComparison = a.clientName.localeCompare(b.clientName);
+            if (nameComparison === 0) {
+                return new Date(b.date) - new Date(a.date);
+            }
+            return nameComparison;
+        });
+
+        let totalEntradas = 0;
+        let totalSaldo = 0;
+
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+            totalEntradas += client.entryQuantity || 0;
+            totalSaldo += client.saldo || 0;
+
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
+
+        document.getElementById('totalEntradas').textContent = totalEntradas;
+        document.getElementById('totalSaldo').textContent = totalSaldo;
+    }
+
+    // Calcula o saldo total e a quantidade total de entradas de todos os clientes
+    function calculateTotalSaldoAndEntradas(clients) {
+        let totalEntradas = 0;
+        let totalSaldo = 0;
+
+        clients.forEach(client => {
+            totalEntradas += client.entryQuantity || 0;
+            totalSaldo += client.saldo || 0;
+        });
+
+        document.getElementById('totalEntradas').textContent = totalEntradas;
+        document.getElementById('totalSaldo').textContent = totalSaldo;
+    }
+
+    // Lida com cliques nos botões da tabela
+    async function handleTableClick(event) {
+        const button = event.target;
+
+        if (button.classList.contains('delete-btn')) {
+            const clientId = button.getAttribute('data-id');
+            await deleteClient(clientId);
+        } else if (button.classList.contains('edit-client')) {
+            const row = button.closest('tr');
+            const clientId = button.getAttribute('data-id');
+            startEditingRow(row, clientId);
+        } else if (button.classList.contains('save-client')) {
+            const row = button.closest('tr');
+            const clientId = button.getAttribute('data-id');
+            await saveEditedRow(row, clientId);
+        }
+    }
+
+    // Função para excluir um cliente
+    async function deleteClient(clientId) {
+        try {
+            await deleteDoc(doc(db, 'clients', clientId));
+            alert('Cliente excluído com sucesso!');
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao excluir cliente:', error);
+            alert('Erro ao excluir cliente.');
+        }
+    }
+
+    // Função para iniciar a edição de uma linha de cliente
+    function startEditingRow(row, clientId) {
+        const cells = row.querySelectorAll('td');
+        const originalValues = [...cells].map(cell => cell.textContent);
+
+        cells.forEach((cell, index) => {
+            if (index > 0 && index < cells.length - 1) { 
+                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            }
+        });
+
+        const editButton = row.querySelector('.edit-client');
+        editButton.textContent = 'Salvar';
+        editButton.classList.remove('edit-client');
+        editButton.classList.add('save-client');
+
+        cells[4].querySelector('input').addEventListener('input', updateSaldo);
+        cells[5].querySelector('input').addEventListener('input', updateSaldo);
+
+        function updateSaldo() {
+            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
+            const saida = parseInt(cells[5].querySelector('input').value) || 0;
+            const saldo = entrada - saida;
+            cells[6].textContent = saldo;
+        }
+    }
+
+    // Função para salvar os dados editados de um cliente
+    async function saveEditedRow(row, clientId) {
+        const cells = row.querySelectorAll('td');
+        const updatedClient = {
+            clientName: cells[1].querySelector('input').value,
+            productName: cells[2].querySelector('input').value,
+            date: cells[3].querySelector('input').value,
+            entryQuantity: parseInt(cells[4].querySelector('input').value),
+            exitQuantity: parseInt(cells[5].querySelector('input').value),
+            saldo: parseInt(cells[6].textContent)
         };
 
         try {
-          // Add client to Firestore
-          const docRef = await addDoc(collection(db, 'clients'), client);
-          console.log("Cliente salvo no Firestore com ID: ", docRef.id);
-          alert('Cliente adicionado com sucesso!');
-
-          // Update localStorage with new client
-          const clientsData = JSON.parse(localStorage.getItem('clientsData')) || [];
-          clientsData.push({ id: docRef.id, ...client });
-          localStorage.setItem('clientsData', JSON.stringify(clientsData));
-
-          // Call renderClients to update the table
-          renderClients(clientsData);
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
+            alert('Cliente atualizado com sucesso!');
+            loadClientsFromFirestore();
         } catch (error) {
-          console.error("Erro ao adicionar cliente: ", error);
-          alert('Erro ao adicionar cliente. Tente novamente.');
+            console.error('Erro ao atualizar cliente:', error);
+            alert('Erro ao atualizar cliente.');
         }
-      });
-
-      // Load existing clients from Firestore to localStorage
-      loadClientsFromFirestore();
-
-      async function loadClientsFromFirestore() {
-        try {
-          const querySnapshot = await getDocs(collection(db, 'clients'));
-          const clientsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          localStorage.setItem('clientsData', JSON.stringify(clientsData));
-          renderClients(clientsData);
-        } catch (error) {
-          console.error("Erro ao carregar clientes do Firestore: ", error);
-          alert('Erro ao carregar dados dos clientes. Verifique a conexão e tente novamente.');
-        }
-      }
-
-      // Function to render clients in the table
-      function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Clear existing rows
-
-        clients.forEach(client => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
-            <td>${client.date}</td>
-            <td>${client.entryQuantity}</td>
-            <td>${client.exitQuantity}</td>
-            <td>${client.saldo}</td>
-          `;
-          clientHistoryTableBody.appendChild(row);
-        });
-      }
-
-      // Ensure the table and necessary elements are available
-      const clientHistoryTable = document.getElementById('clientHistoryTable');
-      if (!clientHistoryTable) {
-        console.error('Elemento da tabela não encontrado.');
-        return;
-      }
-    });
-  </script>
-
-  <nav>
+    }
+</script>
+<nav>
     <ul class="navbar">
-      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-      <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+        <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
     </ul>
-  </nav>
+</nav>
 
-  <header>
-    <div class="row">
-      <div class="logo-row">
-        <img class="logo" src="img/Sem título(1).png" alt="logo-rodeio"> 
-      </div>
+<!-- Cartões de resumo -->
+<div class="totals-cards">
+    <div class="card">
+        <span class="material-icons">arrow_upward</span>
+        <p>Total de Entradas</p>
+        <h2 id="totalEntradas">0</h2>
     </div>
-  </header>
-
-  <!-- Form to register new client -->
-  <form id="clientForm">
-    <label for="clientName">Nome do Cliente:</label>
-    <input type="text" id="clientName" required>
-
-    <label for="productName">Nome do Produto:</label>
-    <input type="text" id="productName" required>
-
-    <label for="date">Data:</label>
-    <input type="date" id="date" required>
-
-    <label for="quantity">Quantidade:</label>
-    <input type="number" id="quantity" required>
-
-    <!-- Buttons to select Entry or Exit -->
-    <div id="transactionButtons">
-      <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
-      <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+    <div class="card">
+        <span class="material-icons">paid</span>
+        <p>Total de Saldo</p>
+        <h2 id="totalSaldo">0</h2>
     </div>
+</div>
 
-    <button type="submit">Enviar</button>
-  </form>
+<!-- Campo de pesquisa e filtro -->
+<h1>Pesquisar Clientes</h1>
+<input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
 
-  <!-- Table to display client history -->
-  <h2>Histórico de Clientes</h2>
-  <table id="clientHistoryTable">
+<select id="productFilter">
+    <option value="">Todos os Produtos</option>
+</select>
+
+<!-- Tabela Detalhada -->
+<h2>Tabela Detalhada</h2>
+<table id="clientHistoryTable">
     <thead>
-      <tr>
-        <th>Nome do Cliente</th>
-        <th>Produto</th>
-        <th>Data</th>
-        <th>Quantidade Entrada</th>
-        <th>Quantidade Saída</th>
-        <th>Saldo</th>
-      </tr>
+        <tr>
+            <th>Ação</th>
+            <th>Nome do Cliente</th>
+            <th>Produto</th>
+            <th>Data</th>
+            <th>Quantidade Entrada</th>
+            <th>Quantidade Retirada</th>
+            <th>Saldo</th>
+            <th>Ações</th>
+        </tr>
     </thead>
     <tbody></tbody>
-  </table>
+</table>
 
-  <!-- Footer -->
-  <footer>
-    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
-  </footer>
-
-  <!-- Reference to the main JavaScript file -->
-  <script type="module" src="script.js"></script>
+<footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
+</footer>
 </body>
 </html>
+
 
 
 
