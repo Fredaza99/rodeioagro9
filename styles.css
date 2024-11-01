@@ -227,12 +227,14 @@ table tbody tr:hover {
 
 .card p {
     font-size: 16px;
+    font-family: "Be Vietnam Pro", sans-serif;
     margin: 10px 0;
     color: #f0f0f0;
 }
 
 .card h2 {
     font-size: 24px;
+    font-family: "Be Vietnam Pro", sans-serif;
     margin: 0;
     color: #00c42e;
 }
