@@ -7,24 +7,24 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
-  <title>Rodeio</title>
+  <title>Rodeio Agronegócio</title>
 </head>
 <body>
   <script type="module">
     // Import the functions from the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-  // Firebase configuration
+    // Firebase configuration
     const firebaseConfig = {
-        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-        authDomain: "rodeioagro-fee43.firebaseapp.com",
-        projectId: "rodeioagro-fee43",
-        storageBucket: "rodeioagro-fee43.appspot.com",
-        messagingSenderId: "981787707311",
-        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-        measurementId: "G-FM9TP3QF6N"
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
     };
 
     // Initialize Firebase
@@ -82,73 +82,19 @@
           clientsData.push({ id: docRef.id, ...client });
           localStorage.setItem('clientsData', JSON.stringify(clientsData));
 
-          // Call renderClients to update the table
-          renderClients(clientsData);
+          // Re-render the table with the updated data
+          // Check if renderClients function exists and call it
+          if (typeof renderClients === 'function') {
+            renderClients(clientsData);
+          } else {
+            console.warn('A função renderClients não está definida.');
+          }
         } catch (error) {
           console.error("Erro ao adicionar cliente: ", error);
           alert('Erro ao adicionar cliente. Tente novamente.');
         }
       });
 
-      // Load existing clients from Firestore to localStorage
-      loadClientsFromFirestore();
-
-      async function loadClientsFromFirestore() {
-        try {
-          const querySnapshot = await getDocs(collection(db, 'clients'));
-          const clientsData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          localStorage.setItem('clientsData', JSON.stringify(clientsData));
-          renderClients(clientsData);
-        } catch (error) {
-          console.error("Erro ao carregar clientes do Firestore: ", error);
-          alert('Erro ao carregar dados dos clientes. Verifique a conexão e tente novamente.');
-        }
-      }
-            // Function to render clients in the table
-      function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Clear existing rows
-        clients.forEach(client => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
-            <td>${client.date}</td>
-            <td>${client.entryQuantity}</td>
-            <td>${client.exitQuantity}</td>
-            <td>${client.saldo}</td>
-          `;
-          clientHistoryTableBody.appendChild(row);
-        });
-      }
-      // Ensure the table and necessary elements are available
-      const clientHistoryTable = document.getElementById('clientHistoryTable');
-      if (!clientHistoryTable) {
-        console.error('Elemento da tabela não encontrado.');
-        return;
-      }
-    });
-          // Function to render clients in the table
-      function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; // Clear existing rows
-        clients.forEach(client => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${client.clientName}</td>
-            <td>${client.productName}</td>
-            <td>${client.date}</td>
-            <td>${client.entryQuantity}</td>
-            <td>${client.exitQuantity}</td>
-            <td>${client.saldo}</td>
-          `;
-          clientHistoryTableBody.appendChild(row);
-        });
-      }
       // Ensure the table and necessary elements are available
       const clientHistoryTable = document.getElementById('clientHistoryTable');
       if (!clientHistoryTable) {
@@ -173,6 +119,39 @@
       </div>
     </div>
   </header>
+
+  <!-- Form to register new client -->
+  <form id="clientForm">
+    <label for="clientName">Nome do Cliente:</label>
+    <input type="text" id="clientName" required>
+
+    <label for="productName">Nome do Produto:</label>
+    <input type="text" id="productName" required>
+
+    <label for="date">Data:</label>
+    <input type="date" id="date" required>
+
+    <label for="quantity">Quantidade:</label>
+    <input type="number" id="quantity" required>
+
+    <!-- Buttons to select Entry or Exit -->
+    <div id="transactionButtons">
+      <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
+      <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+    </div>
+
+    <button type="submit">Enviar</button>
+  </form>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <!-- Reference to the main JavaScript file -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
 
   <!-- Form to register new client -->
   <form id="clientForm">
