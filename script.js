@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', loadClientsFromFirestore);
 // Eventos para filtrar enquanto digita
 document.getElementById('clientSearchInput').addEventListener('input', filterTable);
 document.getElementById('productFilter').addEventListener('input', filterTable);
+}
 
 
 
