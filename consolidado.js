@@ -50,7 +50,10 @@ function renderConsolidatedTable(aggregatedData) {
     const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
     consolidatedTableBody.innerHTML = '';
 
-    Object.values(aggregatedData).forEach(data => {
+    // Ordenar os dados pelo nome do cliente em ordem alfabética
+    const sortedData = Object.values(aggregatedData).sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+    sortedData.forEach(data => {
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
             <td>${data.clientName}</td>
@@ -62,6 +65,7 @@ function renderConsolidatedTable(aggregatedData) {
         consolidatedTableBody.appendChild(newRow);
     });
 }
+
 
 // Função para atualizar os totais de entradas e saldo
 function updateTotals(aggregatedData) {
