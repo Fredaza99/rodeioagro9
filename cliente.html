@@ -25,7 +25,7 @@
         measurementId: "G-FM9TP3QF6N"
     };
 
-    // Initialize Firebase
+ // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const db = getFirestore(app);
@@ -37,6 +37,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('productFilter').addEventListener('change', filterClients);
     document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+    document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+    document.getElementById('nextPage').addEventListener('click', () => changePage(1));
 
     loadClientsFromFirestore();
   });
@@ -120,29 +122,20 @@
       clientHistoryTableBody.appendChild(row);
     });
 
-    renderPagination(clients.length);
+    updatePaginationButtons(clients.length);
   }
 
-  // Renderiza a paginação
-  function renderPagination(totalItems) {
-    const paginationContainer = document.getElementById('pagination');
-    paginationContainer.innerHTML = ''; // Limpa a paginação
-
+  // Atualiza os botões de paginação
+  function updatePaginationButtons(totalItems) {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+  }
 
-    for (let i = 1; i <= totalPages; i++) {
-      const button = document.createElement('button');
-      button.textContent = i;
-      button.classList.add('pagination-btn');
-      if (i === currentPage) {
-        button.classList.add('active');
-      }
-      button.addEventListener('click', () => {
-        currentPage = i;
-        renderClients(allClients); // Atualiza a tabela
-      });
-      paginationContainer.appendChild(button);
-    }
+  // Muda a página
+  function changePage(direction) {
+    currentPage += direction;
+    filterClients(); // Atualiza a tabela com a nova página
   }
 
   // Calcula o saldo total e a quantidade total de entradas de todos os clientes
