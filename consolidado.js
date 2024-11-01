@@ -49,7 +49,10 @@ function renderConsolidatedTable(aggregatedData) {
     const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
     consolidatedTableBody.innerHTML = '';
 
-    Object.values(aggregatedData).forEach(data => {
+    // Ordenar os dados por clientName em ordem alfabética
+    const sortedData = Object.values(aggregatedData).sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+    sortedData.forEach(data => {
         const newRow = document.createElement('tr');
 
         newRow.innerHTML = `
@@ -70,6 +73,7 @@ function renderConsolidatedTable(aggregatedData) {
         consolidatedTableBody.appendChild(newRow);
     });
 }
+
 
 
 
