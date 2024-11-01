@@ -55,7 +55,7 @@ nav {
 
 .navbar a:hover {
     color: #00ADB5;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 /* Form Styles */
