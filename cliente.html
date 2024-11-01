@@ -45,24 +45,38 @@
         loadClientsFromFirestore();
     });
 
-    // Função para carregar clientes do Firestore
-    async function loadClientsFromFirestore() {
-        try {
-            const clientsCollection = collection(db, 'clients');
-            const querySnapshot = await getDocs(clientsCollection);
+   // Função para carregar clientes do Firestore com base nos filtros
+async function loadClientsFromFirestore() {
+    try {
+        const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+        const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
-            allClients = querySnapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            }));
+        let clientsQuery = collection(db, 'clients');
 
-            renderClients(allClients);
-            populateProductDropdown(allClients);
-            calculateTotalSaldoAndEntradas(allClients);
-        } catch (error) {
-            console.error('Erro ao carregar clientes do Firestore:', error);
+        // Aplicar filtros somente se houver entrada nos campos
+        if (clientSearchInput) {
+            clientsQuery = query(clientsQuery, where('clientName', '>=', clientSearchInput), where('clientName', '<=', clientSearchInput + '\uf8ff'));
         }
+
+        if (productFilterValue) {
+            clientsQuery = query(clientsQuery, where('productName', '==', productFilterValue));
+        }
+
+        const querySnapshot = await getDocs(clientsQuery);
+
+        allClients = querySnapshot.docs.map(docSnapshot => ({
+            id: docSnapshot.id,
+            ...docSnapshot.data()
+        }));
+
+        renderClients(allClients);
+        populateProductDropdown(allClients);
+        calculateTotalSaldoAndEntradas(allClients);
+    } catch (error) {
+        console.error('Erro ao carregar clientes do Firestore:', error);
     }
+}
+
 
     // Popula o dropdown de produtos
     function populateProductDropdown(clients) {
