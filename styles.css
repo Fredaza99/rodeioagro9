@@ -326,35 +326,28 @@ footer {
     cursor: pointer;
 }
 
-/* Estilo dos Botões de Paginação */
-.pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 0;
-    gap: 10px;
-}
+ .pagination-container {
+    text-align: center;
+    margin-top: 20px;
+  }
 
-.pagination-btn {
-    padding: 10px 20px;
-    font-size: 16px;
+  .pagination-btn {
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 5px;
+    padding: 8px 12px;
+    margin: 2px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-}
+    border-radius: 4px;
+  }
 
-.pagination-btn:hover {
+  .pagination-btn.active {
     background-color: #0056b3;
-    transform: scale(1.05);
-}
+  }
 
-.pagination-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
+  .pagination-btn:hover {
+    background-color: #0056b3;
+  }
 
 
 
