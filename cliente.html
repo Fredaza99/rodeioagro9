@@ -30,189 +30,245 @@
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    let allClients = [];
-    let currentPage = 1;
-    const itemsPerPage = 10;
+    // Redirect to login if the user is not logged in
+    if (!sessionStorage.getItem('loggedIn')) {
+        window.location.href = 'login.html';
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('productFilter').addEventListener('change', filterClients);
-      document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-      document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
-      document.getElementById('nextPage').addEventListener('click', () => changePage(1));
-
-      loadClientsFromFirestore();
+        document.getElementById('productFilter').addEventListener('change', filterClients);
+        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
+        loadClientsFromFirestore();
     });
 
-    // Carrega clientes do Firestore
+    // Function to load clients from Firestore
     async function loadClientsFromFirestore() {
-      try {
-        const clientsCollection = collection(db, 'clients');
-        const querySnapshot = await getDocs(clientsCollection);
+        try {
+            const clientsCollection = collection(db, 'clients');
+            const querySnapshot = await getDocs(clientsCollection);
 
-        allClients = querySnapshot.docs.map(docSnapshot => ({
-          id: docSnapshot.id,
-          ...docSnapshot.data()
-        }));
+            const clients = querySnapshot.docs.map(docSnapshot => ({
+                id: docSnapshot.id,
+                ...docSnapshot.data()
+            }));
 
-        renderClients(allClients);
-        populateProductDropdown(allClients);
-        calculateTotalSaldoAndEntradas(allClients);
-      } catch (error) {
-        console.error('Erro ao carregar clientes do Firestore:', error);
-      }
-    }
-
-    // Popula o dropdown de produtos
-    function populateProductDropdown(clients) {
-      const productFilterDropdown = document.getElementById('productFilter');
-      productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-
-      const products = new Set(clients.map(client => client.productName));
-      products.forEach(product => {
-        if (product) {
-          const option = document.createElement('option');
-          option.value = product.toLowerCase();
-          option.textContent = product;
-          productFilterDropdown.appendChild(option);
+            renderClients(clients);
+            populateProductDropdown(clients);
+        } catch (error) {
+            console.error('Erro ao carregar clientes do Firestore:', error);
         }
-      });
     }
 
-    // Filtra e exibe clientes
+    // Function to populate the product filter dropdown
+    function populateProductDropdown(clients) {
+        const productFilterDropdown = document.getElementById('productFilter');
+        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+        const products = new Set(clients.map(client => client.productName));
+        products.forEach(product => {
+            if (product) {
+                const option = document.createElement('option');
+                option.value = product.toLowerCase();
+                option.textContent = product;
+                productFilterDropdown.appendChild(option);
+            }
+        });
+    }
+
+    // Function to filter and display clients
     function filterClients() {
-      const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
-      const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+        const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+        const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
 
-      const filteredClients = allClients.filter(client => {
-        const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-        const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-        return clientNameMatches && productMatches;
-      });
+        loadClientsFromFirestore().then(clients => {
+            const filteredClients = clients.filter(client => {
+                const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
+                const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
+                return clientNameMatches && productMatches;
+            });
 
-      currentPage = 1; // Reinicia a paginação
-      renderClients(filteredClients);
+            renderClients(filteredClients);
+        });
     }
 
-    // Renderiza clientes na tabela com paginação
+    // Function to render clients in the table
     function renderClients(clients) {
-      const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-      clientHistoryTableBody.innerHTML = ''; 
+        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+        clientHistoryTableBody.innerHTML = ''; 
 
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const clientsToDisplay = clients.slice(startIndex, endIndex);
+        clients.sort((a, b) => {
+            const nameComparison = a.clientName.localeCompare(b.clientName);
+            if (nameComparison === 0) {
+                return new Date(b.date) - new Date(a.date);
+            }
+            return nameComparison;
+        });
 
-      clientsToDisplay.forEach(client => {
-        const row = document.createElement('tr');
-        const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+        let totalEntradas = 0;
+        let totalSaldo = 0;
 
-        row.innerHTML = `
-          <td>${action}</td>
-          <td>${client.clientName || ''}</td>
-          <td>${client.productName || ''}</td>
-          <td>${client.date || ''}</td>
-          <td>${client.entryQuantity || 0}</td>
-          <td>${client.exitQuantity || 0}</td>
-          <td>${client.saldo || 0}</td>
-          <td>
-            <button class="edit-client" data-id="${client.id}">Editar</button>
-            <button class="delete-btn" data-id="${client.id}">Excluir</button>
-          </td>
-        `;
-        clientHistoryTableBody.appendChild(row);
-      });
+        clients.forEach(client => {
+            const row = document.createElement('tr');
+            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
-      updatePaginationButtons(clients.length);
+            totalEntradas += client.entryQuantity || 0;
+            totalSaldo += client.saldo || 0;
+
+            row.innerHTML = `
+                <td>${action}</td>
+                <td>${client.clientName || ''}</td>
+                <td>${client.productName || ''}</td>
+                <td>${client.date || ''}</td>
+                <td>${client.entryQuantity || 0}</td>
+                <td>${client.exitQuantity || 0}</td>
+                <td>${client.saldo || 0}</td>
+                <td>
+                    <button class="edit-client" data-id="${client.id}">Editar</button>
+                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
+                </td>
+            `;
+            clientHistoryTableBody.appendChild(row);
+        });
+
+        document.getElementById('totalEntradas').textContent = totalEntradas;
+        document.getElementById('totalSaldo').textContent = totalSaldo;
     }
 
-    // Atualiza os botões de paginação
-    function updatePaginationButtons(totalItems) {
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      document.getElementById('prevPage').disabled = currentPage === 1;
-      document.getElementById('nextPage').disabled = currentPage === totalPages;
+    // Function to handle table button clicks
+    async function handleTableClick(event) {
+        const button = event.target;
+
+        if (button.classList.contains('delete-btn')) {
+            const clientId = button.getAttribute('data-id');
+            await deleteClient(clientId);
+        } else if (button.classList.contains('edit-client')) {
+            const row = button.closest('tr');
+            const clientId = button.getAttribute('data-id');
+            startEditingRow(row, clientId);
+        } else if (button.classList.contains('save-client')) {
+            const row = button.closest('tr');
+            const clientId = button.getAttribute('data-id');
+            await saveEditedRow(row, clientId);
+        }
     }
 
-    // Muda a página
-    function changePage(direction) {
-      currentPage += direction;
-      renderClients(allClients);
+    // Function to delete a client
+    async function deleteClient(clientId) {
+        try {
+            await deleteDoc(doc(db, 'clients', clientId));
+            alert('Cliente excluído com sucesso!');
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao excluir cliente:', error);
+            alert('Erro ao excluir cliente.');
+        }
     }
 
-    // Calcula o saldo total e as entradas de todos os clientes
-    function calculateTotalSaldoAndEntradas(clients) {
-      let totalEntradas = 0;
-      let totalSaldo = 0;
+    // Function to edit a client row
+    function startEditingRow(row, clientId) {
+        const cells = row.querySelectorAll('td');
+        const originalValues = [...cells].map(cell => cell.textContent);
 
-      clients.forEach(client => {
-        totalEntradas += client.entryQuantity || 0;
-        totalSaldo += client.saldo || 0;
-      });
+        cells.forEach((cell, index) => {
+            if (index > 0 && index < cells.length - 1) { 
+                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            }
+        });
 
-      document.getElementById('totalEntradas').textContent = totalEntradas;
-      document.getElementById('totalSaldo').textContent = totalSaldo;
+        const editButton = row.querySelector('.edit-client');
+        editButton.textContent = 'Salvar';
+        editButton.classList.remove('edit-client');
+        editButton.classList.add('save-client');
+
+        cells[4].querySelector('input').addEventListener('input', updateSaldo);
+        cells[5].querySelector('input').addEventListener('input', updateSaldo);
+
+        function updateSaldo() {
+            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
+            const saida = parseInt(cells[5].querySelector('input').value) || 0;
+            const saldo = entrada - saida;
+            cells[6].textContent = saldo;
+        }
     }
-  </script>
 
-  <nav>
+    // Function to save edited client data
+    async function saveEditedRow(row, clientId) {
+        const cells = row.querySelectorAll('td');
+        const updatedClient = {
+            clientName: cells[1].querySelector('input').value,
+            productName: cells[2].querySelector('input').value,
+            date: cells[3].querySelector('input').value,
+            entryQuantity: parseInt(cells[4].querySelector('input').value),
+            exitQuantity: parseInt(cells[5].querySelector('input').value),
+            saldo: parseInt(cells[6].textContent)
+        };
+
+        try {
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
+            alert('Cliente atualizado com sucesso!');
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao atualizar cliente:', error);
+            alert('Erro ao atualizar cliente.');
+        }
+    }
+</script>
+
+<nav>
     <ul class="navbar">
-      <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
-      <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
-      <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+        <li><a href="index.html"><span class="material-icons">home</span> Página Principal</a></li>
+        <li><a href="cliente.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+        <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
     </ul>
-  </nav>
+</nav>
 
-  <!-- Cartões de resumo -->
-  <div class="totals-cards">
+<!-- Cartões de resumo -->
+<div class="totals-cards">
     <div class="card">
-      <span class="material-icons">arrow_upward</span>
-      <p>Total de Entradas</p>
-      <h2 id="totalEntradas">0</h2>
+        <span class="material-icons">arrow_upward</span>
+        <p>Total de Entradas</p>
+        <h2 id="totalEntradas">0</h2>
     </div>
     <div class="card">
-      <span class="material-icons">paid</span>
-      <p>Total de Saldo</p>
-      <h2 id="totalSaldo">0</h2>
+        <span class="material-icons">paid</span>
+        <p>Total de Saldo</p>
+        <h2 id="totalSaldo">0</h2>
     </div>
-  </div>
+</div>
 
-  <!-- Campo de pesquisa e filtro -->
-  <h1>Pesquisar Clientes</h1>
-  <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
-  <select id="productFilter">
+<!-- Campo de pesquisa e filtro -->
+<h1>Pesquisar Clientes</h1>
+<input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+
+<select id="productFilter">
     <option value="">Todos os Produtos</option>
-  </select>
+</select>
 
-  <!-- Tabela Detalhada -->
-  <h2>Tabela Detalhada</h2>
-  <table id="clientHistoryTable">
+<!-- Tabela Detalhada -->
+<h2>Tabela Detalhada</h2>
+<table id="clientHistoryTable">
     <thead>
-      <tr>
-        <th>Ação</th>
-        <th>Nome do Cliente</th>
-        <th>Produto</th>
-        <th>Data</th>
-        <th>Quantidade Entrada</th>
-        <th>Quantidade Retirada</th>
-        <th>Saldo</th>
-        <th>Ações</th>
-      </tr>
+        <tr>
+            <th>Ação</th>
+            <th>Nome do Cliente</th>
+            <th>Produto</th>
+            <th>Data</th>
+            <th>Quantidade Entrada</th>
+            <th>Quantidade Retirada</th>
+            <th>Saldo</th>
+            <th>Ações</th>
+        </tr>
     </thead>
     <tbody></tbody>
-  </table>
+</table>
 
-  <!-- Contêiner de Paginação -->
-  <div id="pagination" class="pagination-container">
-    <button id="prevPage" class="pagination-btn">Anterior</button>
-    <button id="nextPage" class="pagination-btn">Próxima</button>
-  </div>
-
-  <footer>
+<footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
-  </footer>
+</footer>
 <script type="module"></script>
 </body>
 </html>
-
 
 
 
