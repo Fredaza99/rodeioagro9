@@ -45,26 +45,25 @@ async function loadConsolidatedClients() {
     }
 }
 
-// Função para preencher a tabela consolidada
 function renderConsolidatedTable(aggregatedData) {
     const consolidatedTableBody = document.querySelector('#consolidatedTable tbody');
     consolidatedTableBody.innerHTML = '';
 
-    // Ordenar os dados pelo nome do cliente em ordem alfabética
-    const sortedData = Object.values(aggregatedData).sort((a, b) => a.clientName.localeCompare(b.clientName));
-
-    sortedData.forEach(data => {
+    Object.values(aggregatedData).forEach(data => {
         const newRow = document.createElement('tr');
+        const saldoClass = data.saldo >= 0 ? 'positive-balance' : 'negative-balance';
+
         newRow.innerHTML = `
             <td>${data.clientName}</td>
             <td>${data.productName}</td>
             <td>${data.entryQuantity}</td>
             <td>${data.exitQuantity}</td>
-            <td>${data.saldo}</td>
+            <td class="${saldoClass}">${data.saldo}</td>
         `;
         consolidatedTableBody.appendChild(newRow);
     });
 }
+
 
 
 // Função para atualizar os totais de entradas e saldo
