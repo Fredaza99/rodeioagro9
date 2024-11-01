@@ -51,9 +51,7 @@ function renderConsolidatedTable(aggregatedData) {
 
     Object.values(aggregatedData).forEach(data => {
         const newRow = document.createElement('tr');
-        const saldoClass = data.saldo >= 0 ? 'positive-row' : 'negative-row';
 
-        newRow.classList.add(saldoClass);
         newRow.innerHTML = `
             <td>${data.clientName}</td>
             <td>${data.productName}</td>
@@ -61,9 +59,18 @@ function renderConsolidatedTable(aggregatedData) {
             <td>${data.exitQuantity}</td>
             <td>${data.saldo}</td>
         `;
+
+        // Aplicar cor ao texto da linha baseada no saldo
+        if (data.saldo >= 0) {
+            newRow.style.color = 'green';
+        } else {
+            newRow.style.color = 'red';
+        }
+
         consolidatedTableBody.appendChild(newRow);
     });
 }
+
 
 
 
