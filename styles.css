@@ -25,7 +25,7 @@ h1, h2 {
 
 nav {
     background-color: #202122;
-    padding: 10px;
+    padding: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -40,7 +40,7 @@ nav {
 .navbar a {
     padding: 10px 15px;
     color: white;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: bold;
     text-decoration: none;
     transition: color 0.3s;
