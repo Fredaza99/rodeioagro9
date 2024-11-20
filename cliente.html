@@ -254,11 +254,26 @@
 
 <!-- Campo de pesquisa e filtro -->
 <h1>Pesquisar Clientes</h1>
-<input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
 
-<select id="productFilter">
-    <option value="">Todos os Produtos</option>
-</select>
+<!-- Filtros por Nome, Produto e Data -->
+<div class="filters">
+    <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+
+        <select id="productFilter">
+            <option value="">Todos os Produtos</option>
+        </select>
+
+    <!-- Filtro por Data -->
+    <div class="filter-date">
+        <label for="startDate">Data de Início:</label>
+        <input type="date" id="startDate">
+
+        <label for="endDate">Data de Fim:</label>
+        <input type="date" id="endDate">
+
+        <button id="filterByDate">Filtrar</button>
+    </div>
+</div>
 
 <!-- Tabela Detalhada -->
 <h2>Tabela Detalhada</h2>
@@ -283,6 +298,20 @@
 </footer>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
