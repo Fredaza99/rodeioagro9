@@ -336,6 +336,109 @@ footer {
 }
 
 
+/* Estilo para o container de filtros */
+/* Container de Filtros */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Alinha os elementos ao centro */
+    align-items: center; /* Alinha verticalmente os itens */
+    gap: 15px; /* Espaçamento horizontal entre os filtros */
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #2e2e34;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 85%;
+    color: white;
+}
+
+/* Estilo para a seção de filtros de data */
+.filter-date {
+    display: flex;
+    flex-direction:initial; /* Organiza os elementos na vertical */
+    align-items: center; /* Alinha os elementos à esquerda */
+    gap: 10px; /* Espaçamento entre os itens */
+    margin-left: 20px; /* Espaçamento em relação aos outros filtros */
+}
+
+/* Inputs de data */
+.filters input[type="date"] {
+    padding: 8px;
+    margin: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    background-color: #F3F8FF;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: auto; /* Deixa o tamanho ajustável */
+    min-width: 160px; /* Define uma largura mínima */
+}
+
+.filters input[type="date"]:focus {
+    border-color: #18bc9c;
+    outline: none;
+    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+}
+
+/* Botão de filtro */
+.filters button {
+    padding: 10px 16px;
+    background-color: #00ADB5;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 10px;
+}
+
+.filters button:hover {
+    background-color: #16a085;
+    transform: scale(1.05);
+}
+
+/* Ajustes para responsividade */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+    }
+
+    .filters input[type="date"] {
+        width: 80%;
+    }
+
+    .filters button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+  
+
+
+
 
 
 
