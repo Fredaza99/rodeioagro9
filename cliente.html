@@ -38,12 +38,16 @@
     let allClients = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('productFilter').addEventListener('change', filterClients);
-        document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-        document.querySelector('#clientHistoryTable tbody').addEventListener('click', handleTableClick);
-        
-        loadClientsFromFirestore();
-    });
+    document.getElementById('productFilter').addEventListener('change', filterClients);
+    document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+    document.getElementById('startDate').addEventListener('input', filterClients);
+    document.getElementById('endDate').addEventListener('input', filterClients);
+
+    // Adiciona o evento para o botão de limpar datas
+    document.getElementById('clearDates').addEventListener('click', clearDates);
+
+    loadClientsFromFirestore();
+});
 
     // Função para carregar clientes do Firestore
     async function loadClientsFromFirestore() {
@@ -80,19 +84,46 @@
         });
     }
 
-    // Filtra e exibe clientes
-    function filterClients() {
-        const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
-        const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+  // Filtro de data
+function filterClients() {
+    const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+    const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+    const startDateInput = document.getElementById('startDate').value;
+    const endDateInput = document.getElementById('endDate').value;
 
-        const filteredClients = allClients.filter(client => {
-            const clientNameMatches = client.clientName.toLowerCase().includes(clientSearchInput);
-            const productMatches = productFilterValue === "" || client.productName.toLowerCase() === productFilterValue;
-            return clientNameMatches && productMatches;
-        });
+    // Converter datas para timestamps
+    const startDate = startDateInput ? new Date(startDateInput).getTime() : null;
+    const endDate = endDateInput ? new Date(endDateInput).getTime() : null;
 
-        renderClients(filteredClients);
-    }
+    const filteredClients = allClients.filter(client => {
+        // Filtro de cliente
+        const clientNameMatches = !clientSearchInput || client.clientName.toLowerCase().includes(clientSearchInput);
+
+        // Filtro de produto
+        const productMatches = !productFilterValue || client.productName.toLowerCase() === productFilterValue;
+
+        // Filtro de data
+        const clientDate = client.date ? new Date(client.date).getTime() : null;
+        const dateMatches = (!startDate && !endDate) || // Sem filtro de datas
+            (startDate && !endDate && clientDate >= startDate) || // Apenas data de início
+            (!startDate && endDate && clientDate <= endDate) || // Apenas data de fim
+            (startDate && endDate && clientDate >= startDate && clientDate <= endDate); // Intervalo de datas
+
+        // Retornar true somente se TODOS os filtros forem atendidos
+        return clientNameMatches && productMatches && dateMatches;
+    });
+
+    renderClients(filteredClients); // Atualiza a tabela com os clientes filtrados
+}
+
+// Função para limpar datas
+function clearDates() {
+    document.getElementById('startDate').value = ''; // Limpa a data de início
+    document.getElementById('endDate').value = ''; // Limpa a data de fim
+    filterClients(); // Atualiza a tabela sem filtro de datas
+}
+
+
 
     // Renderiza clientes na tabela
     function renderClients(clients) {
@@ -100,12 +131,10 @@
         clientHistoryTableBody.innerHTML = ''; 
 
         clients.sort((a, b) => {
-            const nameComparison = a.clientName.localeCompare(b.clientName);
-            if (nameComparison === 0) {
-                return new Date(b.date) - new Date(a.date);
-            }
-            return nameComparison;
-        });
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Decrescente (mais recentes no topo)
+    });
 
         let totalEntradas = 0;
         let totalSaldo = 0;
@@ -264,15 +293,16 @@
         </select>
 
     <!-- Filtro por Data -->
-    <div class="filter-date">
+    <div>
         <label for="startDate">Data de Início:</label>
         <input type="date" id="startDate">
-
+    
         <label for="endDate">Data de Fim:</label>
         <input type="date" id="endDate">
-
-        <button id="filterByDate">Filtrar</button>
+    
+        <button id="clearDates">Limpar</button>
     </div>
+    
 </div>
 
 <!-- Tabela Detalhada -->
@@ -298,20 +328,6 @@
 </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
