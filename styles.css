@@ -404,38 +404,44 @@ footer {
 /* Ajustes para responsividade */
 @media (max-width: 768px) {
     .filters {
-        flex-direction: column;
-        align-items: center;
-        padding: 15px;
+        flex-direction: column; /* Alinha os filtros em coluna */
+        gap: 10px; /* Reduz o espaçamento */
+        width: 100%; /* Ajusta largura para preencher o espaço */
     }
 
-    .filters input[type="date"] {
-        width: 80%;
+    .filters input[type="date"], .filters button {
+        width: 100%; /* Os inputs e botões ocupam toda a largura */
+    }
+    table {
+        font-size: 8px; /* Reduz o tamanho do texto */
+        min-width: 600px; /* Garante largura mínima */
+        gap:2px;
     }
 
-    .filters button {
-        width: 100%;
-        text-align: center;
+    #clientHistoryTable td, #clientHistoryTable th {
+        padding: 2px 4px; /* Espaçamento ainda menor em telas menores */
+        font-size: 10px; /* Texto ainda menor */
     }
+    .delete-btn, .edit-client, .save-client {
+        font-size: 10px; /* Reduz o tamanho do texto */
+        padding: 4px 8px; /* Ajusta o padding */
+    }
+
+    .totals-cards {
+        flex-direction: column; /* Coloca os cartões em coluna */
+        align-items: stretch; /* Estica os cartões para preencher o espaço */
+    }
+
+    .card {
+        margin-bottom: 10px; /* Adiciona espaço entre os cartões */
+    }
+
 }
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-  
+.table-wrapper {
+    overflow-x: auto; /* Permite o scroll horizontal */
+    margin: 0 auto; /* Centraliza a tabela */
+}
 
 
 
