@@ -163,8 +163,11 @@ function clearDates() {
         });
 
         document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
-    }
+    document.getElementById('totalSaldo').textContent = totalSaldo;
+
+    // Adiciona evento de clique nos botões após renderizar a tabela
+    clientHistoryTableBody.addEventListener('click', handleTableClick);
+}
 
     // Calcula o saldo total e a quantidade total de entradas de todos os clientes
     function calculateTotalSaldoAndEntradas(clients) {
