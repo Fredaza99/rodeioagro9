@@ -72,10 +72,20 @@
         };
 
         try {
-          // Add client to Firestore
+
+
+
+          
           const docRef = await addDoc(collection(db, 'clients'), client);
           console.log("Cliente salvo no Firestore com ID: ", docRef.id);
-          alert('Cliente adicionado com sucesso!');
+          showCustomAlert('Cliente adicionado com sucesso!');
+
+          
+
+          document.getElementById('quantity').value = ''; // Limpa a quantidade
+        document.getElementById('entryButton').classList.remove('active'); // Reseta botão "Entrada"
+        document.getElementById('exitButton').classList.remove('active'); // Reseta botão "Saída"
+        transactionType = "Entrada"; // Define valor padrão
 
           // Update localStorage with new client
           const clientsData = JSON.parse(localStorage.getItem('clientsData')) || [];
@@ -91,9 +101,26 @@
           }
         } catch (error) {
           console.error("Erro ao adicionar cliente: ", error);
-          alert('Erro ao adicionar cliente. Tente novamente.');
+          showCustomAlert('Erro ao adicionar cliente. Tente novamente.');
         }
       });
+
+      function showCustomAlert(message) {
+    const alertContainer = document.getElementById('customAlert');
+    const alertMessage = document.getElementById('alertMessage');
+
+    alertMessage.textContent = message;
+    alertContainer.style.display = 'flex'; // Mostra o alerta
+
+    const closeAlertButton = document.getElementById('closeAlert');
+    closeAlertButton.onclick = function () {
+        alertContainer.style.display = 'none'; // Esconde o alerta
+
+        
+    };
+}
+
+
 
       // Ensure the table and necessary elements are available
       const clientHistoryTable = document.getElementById('clientHistoryTable');
@@ -143,6 +170,13 @@
     <button type="submit">Enviar</button>
   </form>
 
+  <div id="customAlert" class="alert-container" style="display: none;">
+    <div class="alert-box">
+        <p id="alertMessage"></p>
+        <button id="closeAlert" class="alert-button">OK</button>
+    </div>
+</div>
+
   <!-- Footer -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
@@ -152,7 +186,6 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
-
 
 
 
