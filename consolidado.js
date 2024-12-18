@@ -16,7 +16,7 @@ async function loadConsolidatedClients() {
 
         querySnapshot.forEach(docSnapshot => {
             const client = docSnapshot.data();
-            const key = `${client.clientName.toUpperCase()} | ${client.productName.toUpperCase()}`;
+            const key = `${client.clientName} | ${client.productName}`; // Retire .toUpperCase()
 
             if (!aggregatedData[key]) {
                 aggregatedData[key] = {
@@ -120,7 +120,7 @@ function filterTable() {
         const productName = row.cells[1].textContent.trim().toUpperCase();
 
         const matchesClient = clientFilter === "" || clientName.includes(clientFilter);
-        const matchesProduct = productFilter === "" || productName.includes(productFilter);
+        const matchesProduct = productFilter === "" || productName === productFilter;
 
         if (matchesClient && matchesProduct) {
             row.style.display = '';
@@ -141,7 +141,6 @@ document.addEventListener('DOMContentLoaded', loadConsolidatedClients);
 // Eventos para filtrar enquanto digita
 document.getElementById('clientFilter').addEventListener('input', filterTable);
 document.getElementById('productFilter').addEventListener('change', filterTable);
-
 
 
 
