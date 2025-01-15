@@ -60,6 +60,8 @@
         const productName = document.getElementById('productName').value;
         const date = document.getElementById('date').value;
         const quantity = parseInt(document.getElementById('quantity').value);
+        const buyerName = document.getElementById('buyerName').value || ''; // Nome do comprador, se preenchido
+
 
         // Define client data based on transaction type
         const client = {
@@ -68,7 +70,8 @@
           date,
           entryQuantity: transactionType === "Entrada" ? quantity : 0,
           exitQuantity: transactionType === "Saída" ? quantity : 0,
-          saldo: transactionType === "Entrada" ? quantity : -quantity
+          saldo: transactionType === "Entrada" ? quantity : -quantity,
+          soldTo: buyerName
         };
 
         try {
@@ -81,8 +84,9 @@
           showCustomAlert('Cliente adicionado com sucesso!');
 
           
-
-          document.getElementById('quantity').value = ''; // Limpa a quantidade
+        document.getElementById('buyerName').value = ''; // Reseta o campo comprador
+        document.getElementById('buyerNameWrapper').style.display = 'none'; // Oculta novamente  
+        document.getElementById('quantity').value = ''; // Limpa a quantidade
         document.getElementById('entryButton').classList.remove('active'); // Reseta botão "Entrada"
         document.getElementById('exitButton').classList.remove('active'); // Reseta botão "Saída"
         transactionType = "Entrada"; // Define valor padrão
@@ -129,6 +133,12 @@
         return;
       }
     });
+
+        document.getElementById('toggleBuyerField').addEventListener('click', () => {
+            const buyerWrapper = document.getElementById('buyerNameWrapper');
+            buyerWrapper.style.display = buyerWrapper.style.display === 'none' ? 'block' : 'none';
+          });
+
   </script>
 
   <nav>
@@ -151,6 +161,17 @@
   <form id="clientForm">
     <label for="clientName">Nome do Cliente:</label>
     <input type="text" id="clientName" required>
+    <div id="buyerNameWrapper" style="display: none;">
+      <label for="buyerName">Nome do Comprador:</label>
+      <input type="text" id="buyerName" placeholder="Digite o nome do comprador">
+    </div>
+    <div class="checkbox-wrapper">
+      <input id="toggleBuyerField" type="checkbox">
+      <span>Adicionar Comprador</span>
+    </div>
+
+    
+
 
     <label for="productName">Nome do Produto:</label>
     <input type="text" id="productName" required>

@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 </head>
 <body>
 <script type="module">
@@ -143,22 +145,35 @@ function clearDates() {
             const row = document.createElement('tr');
             const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
 
+
             totalEntradas += client.entryQuantity || 0;
             totalSaldo += client.saldo || 0;
 
-            row.innerHTML = `
-                <td>${action}</td>
-                <td>${client.clientName || ''}</td>
-                <td>${client.productName || ''}</td>
-                <td>${client.date || ''}</td>
-                <td>${client.entryQuantity || 0}</td>
-                <td>${client.exitQuantity || 0}</td>
-                <td>${client.saldo || 0}</td>
-                <td>
-                    <button class="edit-client" data-id="${client.id}">Editar</button>
-                    <button class="delete-btn" data-id="${client.id}">Excluir</button>
-                </td>
-            `;
+           row.innerHTML = `
+    <td>${action}</td>
+    <td>
+        <div class="tooltip-wrapper">
+            ${client.soldTo ? `
+                <span class="tooltip-container">
+                    <span class="tooltip-icon">$</span>
+                    <span class="tooltip-text">Vendido para: ${client.soldTo}</span>
+                </span>
+            ` : ''}
+            <span class="client-name">${client.clientName || ''}</span>
+        </div>
+    </td>
+    <td>${client.productName || ''}</td>
+    <td>${client.date || ''}</td>
+    <td>${client.entryQuantity || 0}</td>
+    <td>${client.exitQuantity || 0}</td>
+    <td>${client.saldo || 0}</td>
+    <td>
+        <button class="edit-client" data-id="${client.id}">Editar</button>
+        <button class="delete-btn" data-id="${client.id}">Excluir</button>
+    </td>
+`;
+
+
             clientHistoryTableBody.appendChild(row);
         });
 
@@ -213,21 +228,46 @@ function clearDates() {
         }
     }
 
-    // Função para iniciar a edição de uma linha de cliente
     function startEditingRow(row, clientId) {
         const cells = row.querySelectorAll('td');
-        const originalValues = [...cells].map(cell => cell.textContent);
+        const originalValues = [...cells].map(cell => cell.textContent.trim());
 
         cells.forEach((cell, index) => {
-            if (index > 0 && index < cells.length - 1) { 
-                cell.innerHTML = `<input type="text" value="${originalValues[index]}" />`;
+            // Permitir edição do nome do cliente
+            if (index === 1) { // Segunda célula (Nome do Cliente)
+                const clientNameSpan = cell.querySelector('.client-name');
+                if (clientNameSpan) {
+                    const clientName = clientNameSpan.textContent.trim();
+                    clientNameSpan.innerHTML = `<input type="text" value="${clientName}" />`;
+                }
+            }
+            // Permitir edição das células de entrada e saída
+            else if (index === 4 || index === 5) { // Células de entrada e saída
+                const value = cell.textContent.trim();
+                cell.innerHTML = `<input type="number" value="${value}" />`;
+
+                // Adiciona eventos para recalcular o saldo dinamicamente
+                cell.querySelector('input').addEventListener('input', () => {
+                    const entryValue = parseInt(cells[4].querySelector('input').value) || 0;
+                    const exitValue = parseInt(cells[5].querySelector('input').value) || 0;
+                    cells[6].textContent = entryValue - exitValue; // Atualiza o saldo
+                });
+            }
+            // Outras células editáveis
+            else if (index > 0 && index < cells.length - 1) {
+                const value = cell.textContent.trim();
+                cell.innerHTML = `<input type="text" value="${value}" />`;
             }
         });
 
+        // Ajusta o botão para salvar
         const editButton = row.querySelector('.edit-client');
         editButton.textContent = 'Salvar';
         editButton.classList.remove('edit-client');
         editButton.classList.add('save-client');
+    }
+
+
 
         cells[4].querySelector('input').addEventListener('input', updateSaldo);
         cells[5].querySelector('input').addEventListener('input', updateSaldo);
@@ -238,7 +278,8 @@ function clearDates() {
             const saldo = entrada - saida;
             cells[6].textContent = saldo;
         }
-    }
+
+    
 
     // Função para salvar os dados editados de um cliente
     async function saveEditedRow(row, clientId) {
@@ -261,6 +302,7 @@ function clearDates() {
             alert('Erro ao atualizar cliente.');
         }
     }
+
 </script>
   <nav>
     <ul class="navbar">
@@ -333,7 +375,6 @@ function clearDates() {
 </footer>
 </body>
 </html>
-
 
 
 
