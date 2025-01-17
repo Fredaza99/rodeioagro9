@@ -284,24 +284,30 @@ function clearDates() {
     // Função para salvar os dados editados de um cliente
     async function saveEditedRow(row, clientId) {
         const cells = row.querySelectorAll('td');
+
+        // Obter os valores editados
         const updatedClient = {
-            clientName: cells[1].querySelector('input').value,
-            productName: cells[2].querySelector('input').value,
-            date: cells[3].querySelector('input').value,
-            entryQuantity: parseInt(cells[4].querySelector('input').value),
-            exitQuantity: parseInt(cells[5].querySelector('input').value),
-            saldo: parseInt(cells[6].textContent)
+            clientName: cells[1].querySelector('input').value.trim(),
+            productName: cells[2].querySelector('input').value.trim(),
+            date: cells[3].querySelector('input').value.trim(),
+            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0, // Garantir valor numérico
+            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0, // Garantir valor numérico
         };
 
+        // Recalcular o saldo com base nos valores de entrada e saída
+        updatedClient.saldo = updatedClient.entryQuantity - updatedClient.exitQuantity;
+
         try {
+            // Atualizar o documento no Firestore
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore();
+            loadClientsFromFirestore(); // Recarregar a tabela
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
-            alert('Erro ao atualizar cliente.');
+            alert('Erro ao atualizar cliente. Tente novamente.');
         }
     }
+
 
 </script>
   <nav>

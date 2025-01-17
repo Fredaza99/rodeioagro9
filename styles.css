@@ -6,6 +6,7 @@ body {
     background: #3D3B40;
     margin: 0;
     padding: 0;
+    overflow-x:hidden;
 }
 
 h1, h2 {
@@ -16,21 +17,23 @@ h1, h2 {
 
 .logo-row {
     text-align: center;
+    margin-top:1%;
 }
 .logo {
-    width: 180px;
+    width: 170px;
     height: 110px;
     text-align: center;
 }
 
 nav {
     background-color: #202122;
-    padding: 1px;
+    padding: 1px 0 0 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .navbar {
     list-style: none;
+    margin: none;
     padding: 0;
     display: flex;
     gap: 20px; /* Espaçamento entre os itens da navbar */
@@ -41,7 +44,7 @@ nav {
     display: flex; /* Flex para alinhar o ícone com o texto */
     align-items: center; /* Centraliza verticalmente o texto e o ícone */
     gap: 8px; /* Espaço entre o ícone e o texto */
-    padding: 10px 20px;
+    padding: 5px 5px;
     color: white;
     font-size: 18px;
     font-weight: bold;
@@ -270,13 +273,13 @@ table tbody tr:hover {
 /* Footer */
 footer {
     text-align: center;
-    padding: 2px;
+    padding: 1px;
     background-color: #202122;
     color: white;
     position: static;
     width: 100%;
     bottom: 0;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 /* Responsive Design */
