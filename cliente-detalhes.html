@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Cliente</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #121212;
+    color: #fff;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: linear-gradient(45deg, #4CAF50, #2E7D32);
+    border-radius: 8px;
+}
+
+header h1 {
+    font-size: 24px;
+}
+
+.btn-voltar {
+    text-decoration: none;
+    background-color: #FF5722;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-voltar:hover {
+    background-color: #E64A19;
+}
+
+/* Seções */
+main {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+    margin-bottom: 10px;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+}
+
+/* Informações do Cliente */
+.cliente-info p {
+    margin: 5px 0;
+}
+
+/* Alertas */
+.alerta {
+    background-color: #ffcc00;
+    color: #333;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: none;
+}
+
+.alerta.oculto {
+    display: none;
+}
+
+/* Tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #555;
+}
+
+table th {
+    background-color: #4CAF50;
+}
+
+table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botões */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #388E3C;
+}
+
+/* Seção de estoque */
+.estoque-cliente ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.estoque-cliente li {
+    background: #2E7D32;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+/* Ações rápidas */
+.acoes-rapidas button {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Estilização da seção de movimentações */
+.movimentacoes {
+    background-color: #1e1e1e; /* Fundo escuro para contraste */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+}
+
+/* Estilização da tabela */
+.movimentacoes table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #252525; /* Cor de fundo da tabela */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Cabeçalho da tabela */
+.movimentacoes thead {
+    background-color: #303030;
+    color: #ffffff;
+    text-align: left;
+    font-weight: bold;
+}
+
+/* Linhas da tabela */
+.movimentacoes tbody tr {
+    border-bottom: 1px solid #3a3a3a;
+    transition: background 0.2s ease-in-out;
+}
+
+.movimentacoes tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+/* Células da tabela */
+.movimentacoes th, 
+.movimentacoes td {
+    padding: 12px;
+    text-align: left;
+    color: #f0f0f0;
+}
+
+/* Ajuste para a última linha sem borda inferior */
+.movimentacoes tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Melhorando a visibilidade dos valores */
+.movimentacoes td:nth-child(3) { /* Coluna de entrada/saída */
+    font-weight: bold;
+    color: #ffcc00;
+}
+
+.movimentacoes td:nth-child(4) { /* Coluna de quantidade */
+    font-weight: bold;
+    color: #00ff99;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .movimentacoes th, 
+    .movimentacoes td {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .movimentacoes {
+        padding: 15px;
+    }
+}
+
+
+/* Responsividade */
+@media (max-width: 600px) {
+    main {
+        padding: 15px;
+    }
+
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn-voltar {
+        margin-top: 10px;
+    }
+
+    .acoes-rapidas button {
+        font-size: 14px;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+    <script type="module">
+            // Importando Firebase
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+                import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+                // Configuração do Firebase (Já definida no seu projeto)
+               const firebaseConfig = {
+                    apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+                    authDomain: "rodeioagro-fee43.firebaseapp.com",
+                    projectId: "rodeioagro-fee43",
+                    storageBucket: "rodeioagro-fee43.appspot.com",
+                    messagingSenderId: "981787707311",
+                    appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+                    measurementId: "G-FM9TP3QF6N"
+                };
+
+                // Inicializa Firebase
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+
+                // Obtém o ID do cliente da URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const clientId = urlParams.get("id");
+
+                if (!clientId) {
+                    alert("Cliente não encontrado.");
+                    window.location.href = "cliente.html"; // Redireciona de volta se não houver ID
+                }
+
+                // Função para carregar dados do cliente
+                async function loadClientDetails() {
+                    try {
+                        // Obtém os dados do cliente
+                        const clientDocRef = doc(db, "clients", clientId);
+                        const clientDocSnap = await getDoc(clientDocRef);
+
+                        if (!clientDocSnap.exists()) {
+                            alert("Cliente não encontrado.");
+                            window.location.href = "cliente.html";
+                            return;
+                        }
+
+                        const clientData = clientDocSnap.data();
+
+                        // Atualiza a página com os dados do cliente
+                        document.getElementById("clientName").textContent = clientData.clientName || "Nome não disponível";
+                        document.getElementById("clientBalance").textContent = clientData.saldo !== undefined ? clientData.saldo : "N/A";
+
+                        // Verifica inatividade (> 3 meses sem movimentação)
+                        if (clientData.date) {
+                            const lastTransactionDate = new Date(clientData.date);
+                            const threeMonthsAgo = new Date();
+                            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+                            if (lastTransactionDate < threeMonthsAgo) {
+                                document.getElementById("alerta-inatividade").classList.remove("oculto");
+                            }
+                        }
+
+                        // Verifica pendência financeira (Saldo negativo)
+                        if (clientData.saldo < 0) {
+                            document.getElementById("alerta-pendencia").classList.remove("oculto");
+                        }
+
+                        // Carrega histórico de movimentação do cliente
+                        await loadClientMovements(clientData.clientName);
+
+                        // Carrega produtos em estoque
+                        await loadClientStock(clientData.clientName);
+
+                    } catch (error) {
+                        console.error("Erro ao carregar detalhes do cliente:", error);
+                    }
+                }
+
+                // Função para carregar histórico de movimentações do cliente
+                async function loadClientMovements(clientName) {
+                        const movementsTableBody = document.querySelector("#clientHistoryTable tbody");
+                        movementsTableBody.innerHTML = "";
+
+                        try {
+                            const movementsQuery = query(
+                                collection(db, "clients"),
+                                where("clientName", "==", clientName)
+                            );
+
+                            const querySnapshot = await getDocs(movementsQuery);
+
+                            // Convertendo os documentos para um array e ordenando por data decrescente
+                            const movements = querySnapshot.docs.map(doc => doc.data()).sort((a, b) => {
+                                return new Date(b.date) - new Date(a.date);
+                            });
+
+                            // Renderizando os dados ordenados
+                            movements.forEach((movement) => {
+                                const row = document.createElement("tr");
+
+                                row.innerHTML = `
+                <td>${movement.date || "N/A"}</td>
+                <td>${movement.productName || "N/A"}</td>
+                <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
+                <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
+            `;
+
+                                movementsTableBody.appendChild(row);
+                            });
+
+                        } catch (error) {
+                            console.error("Erro ao carregar histórico de movimentações:", error);
+                        }
+                    }
+
+
+               async function loadClientStock(clientName) {
+                    const saldoList = document.getElementById("listaSaldo");
+                    saldoList.innerHTML = "";
+
+                    try {
+                        const stockQuery = query(collection(db, "clients"), where("clientName", "==", clientName));
+                        const querySnapshot = await getDocs(stockQuery);
+
+                        const saldo = {};
+
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const productName = data.productName;
+
+                            if (!saldo[productName]) {
+                                saldo[productName] = { entry: 0, exit: 0 };
+                            }
+
+                            saldo[productName].entry += data.entryQuantity || 0;
+                            saldo[productName].exit += data.exitQuantity || 0;
+                        });
+
+                        // Renderiza os produtos com saldo correto (positivos e negativos)
+                        Object.entries(saldo).forEach(([product, values]) => {
+                            const saldoFinal = values.entry - values.exit; // 🟢 Calculando saldo corretamente
+                            const listItem = document.createElement("li");
+
+                            if (saldoFinal >= 0) {
+                                listItem.textContent = `${product}: ${saldoFinal} unidades`;
+                                listItem.style.color = "#00ff99"; // 🟢 Verde para saldo positivo
+                            } else {
+                                listItem.textContent = `${product}: ${saldoFinal} unidades (DÍVIDA)`;
+                                listItem.style.color = "#ff4d4d"; // 🔴 Vermelho para saldo negativo
+                                listItem.style.fontWeight = "bold";
+                            }
+
+                            saldoList.appendChild(listItem);
+                        });
+
+                        // Se nenhum produto foi encontrado
+                        if (Object.keys(saldo).length === 0) {
+                            saldoList.innerHTML = "<li>Nenhum saldo registrado.</li>";
+                        }
+
+                    } catch (error) {
+                        console.error("Erro ao carregar saldo do cliente:", error);
+                    }
+                }
+
+
+
+                // Evento de exportação para PDF
+                document.getElementById("exportPdf").addEventListener("click", () => {
+                    alert("Função de exportação para PDF será implementada!");
+                });
+
+                // Evento para adicionar movimentação
+                document.getElementById("novaMovimentacao").addEventListener("click", () => {
+                    alert("Função para adicionar movimentação será implementada!");
+                });
+
+                // Evento para editar cliente
+                document.getElementById("editarCliente").addEventListener("click", () => {
+                    alert("Função para editar cliente será implementada!");
+                });
+
+                // Evento para gerar relatório
+                document.getElementById("gerarRelatorio").addEventListener("click", () => {
+                    alert("Função para gerar relatório será implementada!");
+                });
+
+                // Inicia o carregamento dos detalhes do cliente
+                loadClientDetails();
+
+
+    </script>
+    <nav>
+        <ul class="navbar">
+            <li><a href="index.html">Cadastro</a></li>
+            <li><a href="cliente.html">Pesquisar Clientes</a></li>
+            <li><a href="consolidado.html">Relatório</a></li>
+        </ul>
+    </nav>
+
+    
+        
+        <div id="clientInfo">
+        <h2 id="clientName">Carregando...</h2>
+            <p><strong>Telefone:</strong> <span id="clientPhone">N/A</span></p>
+            <p><strong>Última Movimentação:</strong> <span id="lastMovement">N/A</span></p>
+            <p><strong></strong> <span id="clientBalance"></span></p>
+            <button id="exportPdf">Exportar Histórico</button>
+            <div id="alerta-inatividade" class="alerta oculto">⚠ Cliente inativo há mais de 3 meses!</div>
+            <div id="alerta-pendencia" class="alerta oculto">❗ Pendência financeira detectada!</div>
+            </div>
+        
+
+        <!-- Tabela de Movimentações -->
+        <section class="movimentacoes">
+            <h2>Histórico de Movimentações</h2>
+            <table id="clientHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Os dados serão carregados aqui via JavaScript -->
+                </tbody>
+            </table>
+            </section>
+        
+
+        
+        <section class="estoque-cliente">
+            <h2>Produtos em Estoque</h2>
+            <ul id="listaSaldo">
+            </ul>
+        </section>
+
+        <!-- Ações Rápidas -->
+        <section class="acoes-rapidas">
+            <h2>Ações</h2>
+            <button id="novaMovimentacao">➕ Adicionar Movimentação</button>
+            <button id="editarCliente">✏ Editar Cliente</button>
+            <button id="gerarRelatorio">📄 Gerar Relatório</button>
+        </section>
+    </main>
+
+    <script src="clienteDetalhes.js"></script>
+        <footer>
+            <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+        </footer>
+</body>
+
+</html>

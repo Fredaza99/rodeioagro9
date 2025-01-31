@@ -140,6 +140,25 @@ table tbody tr:hover {
     transition: background-color 0.3s;
 }
 
+.client-link {
+    text-decoration: none;
+    /* Remove sublinhado padrão */
+    font-weight: bolder;
+    /* Peso médio para não ficar exagerado */
+    color: #333;
+    /* Azul sutil */
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    border-bottom: 2px solid transparent;
+    /* Cria um efeito de sublinhado ao passar o mouse */
+}
+
+.client-link:hover {
+    color: #2c81ba;
+    /* Azul um pouco mais escuro no hover */
+    border-bottom: 2px solid #2c81ba;
+    /* Aparece um sublinhado no hover */
+}
+
 /* Button Styles */
 .delete-btn, .edit-client, .save-client {
     color: white;

@@ -152,6 +152,7 @@ function clearDates() {
            row.innerHTML = `
     <td>${action}</td>
     <td>
+     
         <div class="tooltip-wrapper">
             ${client.soldTo ? `
                 <span class="tooltip-container">
@@ -159,8 +160,9 @@ function clearDates() {
                     <span class="tooltip-text">Vendido para: ${client.soldTo}</span>
                 </span>
             ` : ''}
-            <span class="client-name">${client.clientName || ''}</span>
-        </div>
+ <a href="cliente-detalhes.html?id=${client.id}" class="client-link">
+        ${client.clientName}
+    </a>        </div>
     </td>
     <td>${client.productName || ''}</td>
     <td>${client.date || ''}</td>
