@@ -6,7 +6,7 @@ document.getElementById("gerarRelatorio").addEventListener("click", async () => 
 
 
     // ✅ Carregar logo da empresa (Substitua por uma URL válida ou Base64)
-    const logoUrl = "img/logo-png.png";
+    const logoUrl = "img/logo-png.PNG";
     const img = new Image();
     img.src = logoUrl;
 
