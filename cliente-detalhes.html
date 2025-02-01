@@ -2,12 +2,22 @@
 <html lang="pt-BR">
 
 <head>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes do Cliente</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css'>
+    <link rel="manifest" href="/site.webmanifest">
+    <title>Rodeio Agronegócio</title>
+</head>
     <style>
-        /* Reset básico */
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -16,7 +26,7 @@
 }
 
 body {
-    background-color: #121212;
+    background-color: #1E1E1E;
     color: #fff;
     padding: 20px;
 }
@@ -30,9 +40,32 @@ header {
     background: linear-gradient(45deg, #4CAF50, #2E7D32);
     border-radius: 8px;
 }
+#clientBalance{
+    display: none;
+}
+
+#exportPdf{
+    display: none;
+}
 
 header h1 {
-    font-size: 24px;
+    font-size: 35px;
+    font-weight: bolder;
+}
+#clientName {
+    font-family: 'Playfair Display', sans-serif;
+    font-size: 33px;
+    padding-bottom: 20px;
+    padding-top:10px;
+    font-weight: bolder;
+    color: #ffffff;
+    animation: fadeInScale 1.2s ease-out;
+
+}
+
+@keyframes fadeInScale {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 .btn-voltar {
@@ -59,13 +92,15 @@ main {
 }
 
 h2 {
+    font-family: 'Montserrat',sans-serif;
     margin-bottom: 10px;
-    border-bottom: 2px solid #4CAF50;
+    border-bottom: 2px solid #b2dbf6;
     padding-bottom: 5px;
 }
 
 /* Informações do Cliente */
 .cliente-info p {
+    font-family: 'Montserrat',sans-serif;
     margin: 5px 0;
 }
 
@@ -98,7 +133,7 @@ table th, table td {
 }
 
 table th {
-    background-color: #4CAF50;
+    background-color: #045757;
 }
 
 table tbody tr:hover {
@@ -107,7 +142,7 @@ table tbody tr:hover {
 
 /* Botões */
 button {
-    background-color: #4CAF50;
+    background-color: #044343;
     color: white;
     padding: 10px;
     border: none;
@@ -118,7 +153,7 @@ button {
 }
 
 button:hover {
-    background-color: #388E3C;
+    background-color: #0f5685e4;
 }
 
 /* Seção de estoque */
@@ -128,7 +163,7 @@ button:hover {
 }
 
 .estoque-cliente li {
-    background: #2E7D32;
+    background: #252525;
     padding: 8px;
     margin: 5px 0;
     border-radius: 5px;
@@ -416,13 +451,15 @@ button:hover {
 
                 // Evento para editar cliente
                 document.getElementById("editarCliente").addEventListener("click", () => {
-                    alert("Função para editar cliente será implementada!");
+                    
                 });
 
-                // Evento para gerar relatório
-                document.getElementById("gerarRelatorio").addEventListener("click", () => {
-                    alert("Função para gerar relatório será implementada!");
-                });
+
+             
+
+                 
+
+               
 
                 // Inicia o carregamento dos detalhes do cliente
                 loadClientDetails();
@@ -431,9 +468,10 @@ button:hover {
     </script>
     <nav>
         <ul class="navbar">
-            <li><a href="index.html">Cadastro</a></li>
-            <li><a href="cliente.html">Pesquisar Clientes</a></li>
-            <li><a href="consolidado.html">Relatório</a></li>
+            <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+            <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+            <li><a href="cliente-detalhes.html"><span class="material-icons">person_search</span> Pesquisar Clientes</a></li>
+            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
         </ul>
     </nav>
 
@@ -444,7 +482,6 @@ button:hover {
             <p><strong>Telefone:</strong> <span id="clientPhone">N/A</span></p>
             <p><strong>Última Movimentação:</strong> <span id="lastMovement">N/A</span></p>
             <p><strong></strong> <span id="clientBalance"></span></p>
-            <button id="exportPdf">Exportar Histórico</button>
             <div id="alerta-inatividade" class="alerta oculto">⚠ Cliente inativo há mais de 3 meses!</div>
             <div id="alerta-pendencia" class="alerta oculto">❗ Pendência financeira detectada!</div>
             </div>
@@ -452,6 +489,7 @@ button:hover {
 
         <!-- Tabela de Movimentações -->
         <section class="movimentacoes">
+            <button id="gerarRelatorio">📄 Gerar Relatório</button>
             <h2>Histórico de Movimentações</h2>
             <table id="clientHistoryTable">
                 <thead>
@@ -463,10 +501,11 @@ button:hover {
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Os dados serão carregados aqui via JavaScript -->
+                    
                 </tbody>
             </table>
             </section>
+            <button id="exportPdf"></button>
         
 
         
@@ -475,20 +514,22 @@ button:hover {
             <ul id="listaSaldo">
             </ul>
         </section>
+        
 
         <!-- Ações Rápidas -->
         <section class="acoes-rapidas">
             <h2>Ações</h2>
             <button id="novaMovimentacao">➕ Adicionar Movimentação</button>
             <button id="editarCliente">✏ Editar Cliente</button>
-            <button id="gerarRelatorio">📄 Gerar Relatório</button>
         </section>
     </main>
 
-    <script src="clienteDetalhes.js"></script>
+    
         <footer>
             <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
         </footer>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="cliente-detalhes.js"></script>
 </body>
 
 </html>
