@@ -304,6 +304,11 @@ button:hover {
                     window.location.href = "cliente.html"; // Redireciona de volta se não houver ID
                 }
 
+                // Redirect to login if the user is not authenticated
+                    if (!sessionStorage.getItem('loggedIn')) {
+                        window.location.href = 'login.html';
+                    }
+
                 // Função para carregar dados do cliente
                 async function loadClientDetails() {
                     try {
