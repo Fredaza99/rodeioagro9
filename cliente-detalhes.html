@@ -421,10 +421,10 @@ button:hover {
                             const listItem = document.createElement("li");
 
                             if (saldoFinal >= 0) {
-                                listItem.textContent = `${product}: ${saldoFinal} unidades`;
+                                listItem.textContent = `${product}: ${saldoFinal} unidade(s)`;
                                 listItem.style.color = "#00ff99"; // 🟢 Verde para saldo positivo
                             } else {
-                                listItem.textContent = `${product}: ${saldoFinal} unidades (DÍVIDA)`;
+                                listItem.textContent = `${product}: ${saldoFinal} unidade(s) (DÍVIDA)`;
                                 listItem.style.color = "#ff4d4d"; // 🔴 Vermelho para saldo negativo
                                 listItem.style.fontWeight = "bold";
                             }

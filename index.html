@@ -57,8 +57,8 @@
         event.preventDefault();
 
         // Collect form data
-        const clientName = document.getElementById('clientName').value;
-        const productName = document.getElementById('productName').value;
+        const clientName = document.getElementById("clientName").value.trim().toUpperCase();
+        const productName = document.getElementById("productName").value.trim().toUpperCase();
         const date = document.getElementById('date').value;
         const quantity = parseInt(document.getElementById('quantity').value);
         const buyerName = document.getElementById('buyerName').value || ''; // Nome do comprador, se preenchido

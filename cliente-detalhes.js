@@ -12,20 +12,17 @@ document.getElementById("gerarRelatorio").addEventListener("click", async () => 
 
     img.onload = function () {
         // Adiciona a logo no topo
-        doc.addImage(img, "PNG", 80, 10, 40, 15);
+        doc.addImage(img, "PNG", 80, 3, 40, 25);
 
         // Obtém o nome do cliente
         const clientName = document.getElementById("clientName").textContent.trim();
 
 
-        // Obtém a data atual
         const dateNow = new Date().toLocaleString("pt-BR");
 
-        // 📌 Título do PDF
-        doc.setFontSize(18);
-        doc.text("HISTÓRICO DO CLIENTE", 65, 35);
+        doc.setFontSize(16);
+        doc.text("RELATÓRIO DO CLIENTE", 20, 35);
 
-        // 📌 Informações do Cliente
         doc.setFontSize(12);
         doc.text(`Nome: ${clientName}`, 20, 45);
 
@@ -37,14 +34,17 @@ document.getElementById("gerarRelatorio").addEventListener("click", async () => 
         doc.text(`Última Movimentação: ${lastMovement}`, 20, 53);
         doc.line(20, 55, 190, 55);
 
-        // 📌 Histórico de Movimentações - Entradas
-        doc.setFontSize(14);
-        doc.text("HISTÓRICO DE ENTRADAS", 20, 63);
-        doc.setFontSize(10);
-        doc.text("Data       | Produto    | Quantidade", 20, 70);
-        doc.line(20, 72, 190, 72);
+        let y = 63;
 
-        let y = 78;
+        // **Histórico de Entradas**
+        doc.setFontSize(14);
+        doc.text("HISTÓRICO DE ENTRADAS", 20, y);
+        y += 7;
+        doc.setFontSize(10);
+        doc.text("Data       | Produto    | Entrada   | Quantidade", 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 8;
+
         rowsHistory.forEach(row => {
             const data = row.children[0].textContent;
             const produto = row.children[1].textContent;
@@ -52,20 +52,23 @@ document.getElementById("gerarRelatorio").addEventListener("click", async () => 
             const quantidade = row.children[3].textContent;
 
             if (tipo === "Entrada") {
-                doc.text(`${data} | ${produto} | Entrada: ${quantidade}`, 20, y);
+                doc.text(`${data} | ${produto} | Entrada | ${quantidade}`, 20, y);
                 y += 6;
+                y = verificarNovaPagina(doc, y);
             }
         });
 
-        
+        // **Histórico de Saídas**
         doc.setFontSize(14);
-        doc.line(20, y + 3, 190, y + 3); // Linha antes do título
-        doc.text("HISTÓRICO DE SAÍDAS", 20, y + 10);
+        y += 10;
+        doc.line(20, y - 5, 190, y - 5);
+        doc.text("HISTÓRICO DE SAÍDAS", 20, y);
+        y += 7;
         doc.setFontSize(10);
-        doc.text("Data       | Produto    | Quantidade", 20, y + 18);
-        doc.line(20, y + 20, 190, y + 20);
+        doc.text("Data       | Produto    | Saída   | Quantidade", 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 8;
 
-        let ySaida = y + 25;
         rowsHistory.forEach(row => {
             const data = row.children[0].textContent;
             const produto = row.children[1].textContent;
@@ -73,32 +76,97 @@ document.getElementById("gerarRelatorio").addEventListener("click", async () => 
             const quantidade = row.children[3].textContent;
 
             if (tipo === "Saída") {
-                doc.text(`${data} | ${produto} | Saída: ${quantidade}`, 20, ySaida);
-                ySaida += 6;
+                doc.text(`${data} | ${produto} | Saída | ${quantidade}`, 20, y);
+                y += 6;
+                y = verificarNovaPagina(doc, y);
             }
         });
 
-        // 📌 Saldo de Produtos
+        // **Saldo de Produtos**
         doc.setFontSize(14);
-        doc.line(20, ySaida + 3, 190, ySaida + 3); // Linha antes do título
-        doc.text("SALDO DE PRODUTOS", 20, ySaida + 10);
+        y += 10;
+        doc.line(20, y - 5, 190, y - 5);
+        doc.text("SALDO DE PRODUTOS", 20, y);
+        y += 7;
         doc.setFontSize(10);
-        doc.text("Produto   | Quantidade", 20, ySaida + 18);
-        doc.line(20, ySaida + 20, 190, ySaida + 20);
+        doc.text("Produto   | Quantidade", 20, y);
+        doc.line(20, y + 2, 190, y + 2);
+        y += 8;
 
-        let ySaldo = ySaida + 25;
         const rowsSaldo = document.querySelectorAll("#listaSaldo li");
         rowsSaldo.forEach(row => {
-            doc.text(row.textContent, 20, ySaldo);
-            ySaldo += 6;
+            doc.text(row.textContent, 20, y);
+            y += 6;
+            y = verificarNovaPagina(doc, y);
         });
 
-        // 📌 Rodapé
+        // **Rodapé**
         doc.setFontSize(10);
-        doc.text(`Gerado em: ${dateNow}`, 20, ySaldo + 10);
-        doc.text("Rodeio Agronegócio", 20, ySaldo + 16);
+        y += 10;
+        doc.text(`Gerado em: ${dateNow}`, 20, y);
+        doc.text("Rodeio Agronegócio - Todos os direitos reservados", 20, y + 6);
 
-        // 📌 Salva o PDF
         doc.save(`relatorio_${clientName}.pdf`);
-    };
+    }
+    
 });
+
+function adicionarTabelaHistorico(doc, titulo, rows, tipo) {
+    y += 10;
+    if (y > 270) criarNovaPagina(doc);
+
+    doc.setFontSize(14);
+    doc.text(titulo, margemEsquerda, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text("Data       | Produto    | Tipo   | Quantidade", margemEsquerda, y);
+    doc.line(margemEsquerda, y + 2, 190, y + 2);
+    y += 6;
+
+    rows.forEach(row => {
+        const data = row.children[0].textContent;
+        const produto = row.children[1].textContent;
+        const tipoMov = row.children[2].textContent;
+        const quantidade = row.children[3].textContent;
+
+        if (tipoMov === tipo) {
+            if (y > 270) criarNovaPagina(doc);
+            doc.text(`${data} | ${produto} | ${tipoMov} | ${quantidade}`, margemEsquerda, y);
+            y += 6;
+        }
+    });
+}
+
+function adicionarSaldoProdutos(doc) {
+    y += 10;
+    if (y > 270) criarNovaPagina(doc);
+
+    doc.setFontSize(14);
+    doc.text("SALDO DE PRODUTOS", margemEsquerda, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text("Produto   | Quantidade", margemEsquerda, y);
+    doc.line(margemEsquerda, y + 2, 190, y + 2);
+    y += 6;
+
+    const rowsSaldo = document.querySelectorAll("#listaSaldo li");
+    rowsSaldo.forEach(row => {
+        if (y > 270) criarNovaPagina(doc);
+        doc.text(row.textContent, margemEsquerda, y);
+        y += 6;
+    });
+}
+
+function criarNovaPagina(doc) {
+    doc.addPage();
+    y = 20; // Reinicia a posição na nova página
+}
+
+function verificarNovaPagina(doc, y) {
+    const pageHeight = doc.internal.pageSize.height;
+    if (y >= pageHeight - 20) {  // Se ultrapassar o limite da página
+        doc.addPage();
+        return 20; // Retorna a nova posição para continuar a escrita
+    }
+    return y; // Retorna a posição original se ainda houver espaço
+}

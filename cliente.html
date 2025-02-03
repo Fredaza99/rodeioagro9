@@ -233,84 +233,75 @@ function clearDates() {
     }
 
     function startEditingRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
-        const originalValues = [...cells].map(cell => cell.textContent.trim());
+            const cells = row.querySelectorAll('td');
 
-        cells.forEach((cell, index) => {
-            // Permitir edição do nome do cliente
-            if (index === 1) { // Segunda célula (Nome do Cliente)
-                const clientNameSpan = cell.querySelector('.client-name');
-                if (clientNameSpan) {
-                    const clientName = clientNameSpan.textContent.trim();
-                    clientNameSpan.innerHTML = `<input type="text" value="${clientName}" />`;
+            // Se já estiver em modo de edição, não faz nada
+            if (row.classList.contains("editing")) return;
+
+            row.classList.add("editing");
+
+            // Editar células específicas
+            cells.forEach((cell, index) => {
+                if (index === 1) { // Nome do Cliente
+                    const clientLink = cell.querySelector(".client-link");
+                    if (clientLink) {
+                        const clientName = clientLink.textContent.trim();
+                        cell.innerHTML = `<input type="text" value="${clientName}" />`;
+                    }
+                } else if (index === 4 || index === 5) { // Entrada e Saída
+                    const value = cell.textContent.trim();
+                    cell.innerHTML = `<input type="number" value="${value}" />`;
+                    cell.querySelector("input").addEventListener("input", updateSaldo);
+                } else if (index > 0 && index < cells.length - 1) { // Outras células editáveis
+                    const value = cell.textContent.trim();
+                    cell.innerHTML = `<input type="text" value="${value}" />`;
                 }
-            }
-            // Permitir edição das células de entrada e saída
-            else if (index === 4 || index === 5) { // Células de entrada e saída
-                const value = cell.textContent.trim();
-                cell.innerHTML = `<input type="number" value="${value}" />`;
+            });
 
-                // Adiciona eventos para recalcular o saldo dinamicamente
-                cell.querySelector('input').addEventListener('input', () => {
-                    const entryValue = parseInt(cells[4].querySelector('input').value) || 0;
-                    const exitValue = parseInt(cells[5].querySelector('input').value) || 0;
-                    cells[6].textContent = entryValue - exitValue; // Atualiza o saldo
-                });
-            }
-            // Outras células editáveis
-            else if (index > 0 && index < cells.length - 1) {
-                const value = cell.textContent.trim();
-                cell.innerHTML = `<input type="text" value="${value}" />`;
-            }
-        });
-
-        // Ajusta o botão para salvar
-        const editButton = row.querySelector('.edit-client');
-        editButton.textContent = 'Salvar';
-        editButton.classList.remove('edit-client');
-        editButton.classList.add('save-client');
-    }
-
-
-
-        cells[4].querySelector('input').addEventListener('input', updateSaldo);
-        cells[5].querySelector('input').addEventListener('input', updateSaldo);
+            // Trocar botão de edição para salvar
+            const editButton = row.querySelector(".edit-client");
+            editButton.textContent = "Salvar";
+            editButton.classList.remove("edit-client");
+            editButton.classList.add("save-client");
+        }
 
         function updateSaldo() {
-            const entrada = parseInt(cells[4].querySelector('input').value) || 0;
-            const saida = parseInt(cells[5].querySelector('input').value) || 0;
-            const saldo = entrada - saida;
-            cells[6].textContent = saldo;
+            const row = this.closest("tr");
+            const cells = row.querySelectorAll("td");
+            const entrada = parseInt(cells[4].querySelector("input").value) || 0;
+            const saida = parseInt(cells[5].querySelector("input").value) || 0;
+            cells[6].textContent = entrada - saida;
         }
+
 
     
 
     // Função para salvar os dados editados de um cliente
     async function saveEditedRow(row, clientId) {
-        const cells = row.querySelectorAll('td');
+            const cells = row.querySelectorAll("td");
 
-        // Obter os valores editados
-        const updatedClient = {
-            clientName: cells[1].querySelector('input').value.trim(),
-            productName: cells[2].querySelector('input').value.trim(),
-            date: cells[3].querySelector('input').value.trim(),
-            entryQuantity: parseInt(cells[4].querySelector('input').value) || 0, // Garantir valor numérico
-            exitQuantity: parseInt(cells[5].querySelector('input').value) || 0, // Garantir valor numérico
-        };
+            // Criar objeto atualizado
+            const updatedClient = {
+                clientName: cells[1].querySelector("input").value.trim(),
+                productName: cells[2].querySelector("input").value.trim(),
+                date: cells[3].querySelector("input").value.trim(),
+                entryQuantity: parseInt(cells[4].querySelector("input").value) || 0,
+                exitQuantity: parseInt(cells[5].querySelector("input").value) || 0,
+            };
 
-        // Recalcular o saldo com base nos valores de entrada e saída
-        updatedClient.saldo = updatedClient.entryQuantity - updatedClient.exitQuantity;
+            // Atualizar saldo corretamente
+            updatedClient.saldo = updatedClient.entryQuantity - updatedClient.exitQuantity;
 
-        try {
-            // Atualizar o documento no Firestore
-            await updateDoc(doc(db, 'clients', clientId), updatedClient);
-            alert('Cliente atualizado com sucesso!');
-            loadClientsFromFirestore(); // Recarregar a tabela
-        } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
-            alert('Erro ao atualizar cliente. Tente novamente.');
+            try {
+                await updateDoc(doc(db, "clients", clientId), updatedClient);
+                alert("Cliente atualizado com sucesso!");
+                loadClientsFromFirestore();
+            } catch (error) {
+                console.error("Erro ao atualizar cliente:", error);
+                alert("Erro ao atualizar cliente.");
+            }
         }
-    }
+
 
 
 </script>
