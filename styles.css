@@ -112,12 +112,21 @@ form button:hover {
 
 /* Table Styles */
 table {
-    width: 78%;
+    max-width: 78%;
     margin: 20px auto;
     border-collapse: collapse;
     background-color: #F3F8FF;
     font-size: 14px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+}
+
+table input {
+    width: 100px;
+    /* Defina um tamanho fixo */
+    max-width: 100%;
+    /* Evita que o input ultrapasse a célula */
+    padding: 4px;
 }
 
 table th, table td {
