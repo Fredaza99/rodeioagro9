@@ -378,7 +378,7 @@ button:hover {
                                 const row = document.createElement("tr");
 
                                 row.innerHTML = `
-                <td>${movement.date || "N/A"}</td>
+                 <td>${movement.date ? new Date(movement.date).toLocaleDateString('pt-BR') : "N/A"}</td>
                 <td>${movement.productName || "N/A"}</td>
                 <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
                 <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
