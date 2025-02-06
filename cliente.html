@@ -167,7 +167,7 @@ function clearDates() {
     </a>        </div>
     </td>
     <td>${client.productName || ''}</td>
-    <td>${client.date || ''}</td>
+    <td>${client.date ? new Date(client.date).toLocaleDateString('pt-BR') : ''}</td>
     <td>${client.entryQuantity || 0}</td>
     <td>${client.exitQuantity || 0}</td>
     <td>${client.saldo || 0}</td>
