@@ -239,31 +239,23 @@
           }
         } catch (error) {
           console.error("Erro ao adicionar cliente: ", error);
-          showCustomAlert('Erro ao adicionar cliente. Tente novamente.');
         }
       });
 
-  function showCustomAlert(message, isExit = false, client = "", date = "") {
+ function showCustomAlert(message) {
         const alertContainer = document.getElementById('customAlert');
         const alertMessage = document.getElementById('alertMessage');
-        const generateReceiptBtn = document.getElementById('generateReceipt');
+        const closeAlertBtn = document.getElementById('closeAlert');
 
         alertMessage.textContent = message;
         alertContainer.style.display = 'flex';
 
-        if (isExit) {
-          generateReceiptBtn.style.display = "block";
-          generateReceiptBtn.onclick = () => {
-            gerarComprovanteSaida(client, date);
-          };
-        } else {
-          generateReceiptBtn.style.display = "none";
-        }
-
-        document.getElementById('closeAlert').onclick = function () {
+        // ⬇️🔹 MELHORANDO O FECHAMENTO DO ALERTA 🔹⬇️
+        closeAlertBtn.onclick = function () {
           alertContainer.style.display = 'none';
         };
       }
+      
 
 
 
