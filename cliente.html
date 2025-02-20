@@ -1,157 +1,164 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pesquisar Clientes - Agronegócio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css'>
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css'>
 
     <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 </head>
+
 <body>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-   // Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
-        authDomain: "rodeioagro-fee43.firebaseapp.com",
-        projectId: "rodeioagro-fee43",
-        storageBucket: "rodeioagro-fee43.appspot.com",
-        messagingSenderId: "981787707311",
-        appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
-        measurementId: "G-FM9TP3QF6N"
-    };
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+            authDomain: "rodeioagro-fee43.firebaseapp.com",
+            projectId: "rodeioagro-fee43",
+            storageBucket: "rodeioagro-fee43.appspot.com",
+            messagingSenderId: "981787707311",
+            appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+            measurementId: "G-FM9TP3QF6N"
+        };
 
-   // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
 
-    // Redireciona para login se o usuário não estiver autenticado
-    if (!sessionStorage.getItem('loggedIn')) {
-        window.location.href = 'login.html';
-    }
-
-    let allClients = [];
-
-    document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('productFilter').addEventListener('change', filterClients);
-    document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-    document.getElementById('startDate').addEventListener('input', filterClients);
-    document.getElementById('endDate').addEventListener('input', filterClients);
-
-    // Adiciona o evento para o botão de limpar datas
-    document.getElementById('clearDates').addEventListener('click', clearDates);
-
-    loadClientsFromFirestore();
-});
-
-    // Função para carregar clientes do Firestore
-    async function loadClientsFromFirestore() {
-        try {
-            const clientsCollection = collection(db, 'clients');
-            const querySnapshot = await getDocs(clientsCollection);
-
-            allClients = querySnapshot.docs.map(docSnapshot => ({
-                id: docSnapshot.id,
-                ...docSnapshot.data()
-            }));
-
-            renderClients(allClients);
-            populateProductDropdown(allClients);
-            calculateTotalSaldoAndEntradas(allClients);
-        } catch (error) {
-            console.error('Erro ao carregar clientes do Firestore:', error);
+        // Redireciona para login se o usuário não estiver autenticado
+        if (!sessionStorage.getItem('loggedIn')) {
+            window.location.href = 'login.html';
         }
-    }
 
-    // Popula o dropdown de produtos
-    function populateProductDropdown(clients) {
-        const productFilterDropdown = document.getElementById('productFilter');
-        productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+        let allClients = [];
 
-        const products = new Set(clients.map(client => client.productName));
-        products.forEach(product => {
-            if (product) {
-                const option = document.createElement('option');
-                option.value = product.toLowerCase();
-                option.textContent = product;
-                productFilterDropdown.appendChild(option);
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('productFilter').addEventListener('change', filterClients);
+            document.getElementById('clientSearchInput').addEventListener('input', filterClients);
+            document.getElementById('startDate').addEventListener('input', filterClients);
+            document.getElementById('endDate').addEventListener('input', filterClients);
+
+            // Adiciona o evento para o botão de limpar datas
+            document.getElementById('clearDates').addEventListener('click', clearDates);
+
+            loadClientsFromFirestore();
         });
-    }
 
-  // Filtro de data
-function filterClients() {
-    const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
-    const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
-    const startDateInput = document.getElementById('startDate').value;
-    const endDateInput = document.getElementById('endDate').value;
+        // Função para carregar clientes do Firestore
+        async function loadClientsFromFirestore() {
+            try {
+                const clientsCollection = collection(db, 'clients');
+                const querySnapshot = await getDocs(clientsCollection);
+                const saidasCollection = collection(db, 'saidas');
+                const querySnapshotSaidas = await getDocs(saidasCollection);
 
-    // Converter datas para timestamps
-    const startDate = startDateInput ? new Date(startDateInput).getTime() : null;
-    const endDate = endDateInput ? new Date(endDateInput).getTime() : null;
 
-    const filteredClients = allClients.filter(client => {
-        // Filtro de cliente
-        const clientNameMatches = !clientSearchInput || client.clientName.toLowerCase().includes(clientSearchInput);
+                allClients = querySnapshot.docs.map(docSnapshot => ({
+                    id: docSnapshot.id,
+                    ...docSnapshot.data()
+                }));
 
-        // Filtro de produto
-        const productMatches = !productFilterValue || client.productName.toLowerCase() === productFilterValue;
+                renderClients(allClients);
+                populateProductDropdown(allClients);
+                calculateTotalSaldoAndEntradas(allClients);
+            } catch (error) {
+                console.error('Erro ao carregar clientes do Firestore:', error);
+            }
+        }
+        
+
+        // Popula o dropdown de produtos
+        function populateProductDropdown(clients) {
+            const productFilterDropdown = document.getElementById('productFilter');
+            productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
+
+            const products = new Set(clients.map(client => client.productName));
+            products.forEach(product => {
+                if (product) {
+                    const option = document.createElement('option');
+                    option.value = product.toLowerCase();
+                    option.textContent = product;
+                    productFilterDropdown.appendChild(option);
+                }
+            });
+        }
 
         // Filtro de data
-        const clientDate = client.date ? new Date(client.date).getTime() : null;
-        const dateMatches = (!startDate && !endDate) || // Sem filtro de datas
-            (startDate && !endDate && clientDate >= startDate) || // Apenas data de início
-            (!startDate && endDate && clientDate <= endDate) || // Apenas data de fim
-            (startDate && endDate && clientDate >= startDate && clientDate <= endDate); // Intervalo de datas
+        function filterClients() {
+            const clientSearchInput = document.getElementById('clientSearchInput').value.toLowerCase().trim();
+            const productFilterValue = document.getElementById('productFilter').value.toLowerCase().trim();
+            const startDateInput = document.getElementById('startDate').value;
+            const endDateInput = document.getElementById('endDate').value;
 
-        // Retornar true somente se TODOS os filtros forem atendidos
-        return clientNameMatches && productMatches && dateMatches;
-    });
+            // Converter datas para timestamps
+            const startDate = startDateInput ? new Date(startDateInput).getTime() : null;
+            const endDate = endDateInput ? new Date(endDateInput).getTime() : null;
 
-    renderClients(filteredClients); // Atualiza a tabela com os clientes filtrados
-}
+            const filteredClients = allClients.filter(client => {
+                // Filtro de cliente
+                const clientNameMatches = !clientSearchInput || client.clientName.toLowerCase().includes(clientSearchInput);
 
-// Função para limpar datas
-function clearDates() {
-    document.getElementById('startDate').value = ''; // Limpa a data de início
-    document.getElementById('endDate').value = ''; // Limpa a data de fim
-    filterClients(); // Atualiza a tabela sem filtro de datas
-}
+                // Filtro de produto
+                const productMatches = !productFilterValue || client.productName.toLowerCase() === productFilterValue;
 
+                // Filtro de data
+                const clientDate = client.date ? new Date(client.date).getTime() : null;
+                const dateMatches = (!startDate && !endDate) || // Sem filtro de datas
+                    (startDate && !endDate && clientDate >= startDate) || // Apenas data de início
+                    (!startDate && endDate && clientDate <= endDate) || // Apenas data de fim
+                    (startDate && endDate && clientDate >= startDate && clientDate <= endDate); // Intervalo de datas
 
+                // Retornar true somente se TODOS os filtros forem atendidos
+                return clientNameMatches && productMatches && dateMatches;
+            });
 
-    // Renderiza clientes na tabela
-    function renderClients(clients) {
-        const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-        clientHistoryTableBody.innerHTML = ''; 
+            renderClients(filteredClients); // Atualiza a tabela com os clientes filtrados
+        }
 
-        clients.sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return dateB - dateA; // Decrescente (mais recentes no topo)
-    });
-
-        let totalEntradas = 0;
-        let totalSaldo = 0;
-
-        clients.forEach(client => {
-            const row = document.createElement('tr');
-            const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+        // Função para limpar datas
+        function clearDates() {
+            document.getElementById('startDate').value = ''; // Limpa a data de início
+            document.getElementById('endDate').value = ''; // Limpa a data de fim
+            filterClients(); // Atualiza a tabela sem filtro de datas
+        }
 
 
-            totalEntradas += client.entryQuantity || 0;
-            totalSaldo += client.saldo || 0;
 
-           row.innerHTML = `
+        // Renderiza clientes na tabela
+        function renderClients(clients) {
+            const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
+            clientHistoryTableBody.innerHTML = '';
+
+            clients.sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                return dateB - dateA; // Decrescente (mais recentes no topo)
+            });
+
+            let totalEntradas = 0;
+            let totalSaldo = 0;
+
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
+
+
+                totalEntradas += client.entryQuantity || 0;
+                totalSaldo += client.saldo || 0;
+
+                row.innerHTML = `
     <td>${action}</td>
     <td>
      
@@ -178,61 +185,61 @@ function clearDates() {
 `;
 
 
-            clientHistoryTableBody.appendChild(row);
-        });
+                clientHistoryTableBody.appendChild(row);
+            });
 
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-    document.getElementById('totalSaldo').textContent = totalSaldo;
+            document.getElementById('totalEntradas').textContent = totalEntradas;
+            document.getElementById('totalSaldo').textContent = totalSaldo;
 
-    // Adiciona evento de clique nos botões após renderizar a tabela
-    clientHistoryTableBody.addEventListener('click', handleTableClick);
-}
-
-    // Calcula o saldo total e a quantidade total de entradas de todos os clientes
-    function calculateTotalSaldoAndEntradas(clients) {
-        let totalEntradas = 0;
-        let totalSaldo = 0;
-
-        clients.forEach(client => {
-            totalEntradas += client.entryQuantity || 0;
-            totalSaldo += client.saldo || 0;
-        });
-
-        document.getElementById('totalEntradas').textContent = totalEntradas;
-        document.getElementById('totalSaldo').textContent = totalSaldo;
-    }
-
-    // Lida com cliques nos botões da tabela
-    async function handleTableClick(event) {
-        const button = event.target;
-
-        if (button.classList.contains('delete-btn')) {
-            const clientId = button.getAttribute('data-id');
-            await deleteClient(clientId);
-        } else if (button.classList.contains('edit-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            startEditingRow(row, clientId);
-        } else if (button.classList.contains('save-client')) {
-            const row = button.closest('tr');
-            const clientId = button.getAttribute('data-id');
-            await saveEditedRow(row, clientId);
+            // Adiciona evento de clique nos botões após renderizar a tabela
+            clientHistoryTableBody.addEventListener('click', handleTableClick);
         }
-    }
 
-    // Função para excluir um cliente
-    async function deleteClient(clientId) {
-        try {
-            await deleteDoc(doc(db, 'clients', clientId));
-            alert('Cliente excluído com sucesso!');
-            loadClientsFromFirestore();
-        } catch (error) {
-            console.error('Erro ao excluir cliente:', error);
-            alert('Erro ao excluir cliente.');
+        // Calcula o saldo total e a quantidade total de entradas de todos os clientes
+        function calculateTotalSaldoAndEntradas(clients) {
+            let totalEntradas = 0;
+            let totalSaldo = 0;
+
+            clients.forEach(client => {
+                totalEntradas += client.entryQuantity || 0;
+                totalSaldo += client.saldo || 0;
+            });
+
+            document.getElementById('totalEntradas').textContent = totalEntradas;
+            document.getElementById('totalSaldo').textContent = totalSaldo;
         }
-    }
 
-    function startEditingRow(row, clientId) {
+        // Lida com cliques nos botões da tabela
+        async function handleTableClick(event) {
+            const button = event.target;
+
+            if (button.classList.contains('delete-btn')) {
+                const clientId = button.getAttribute('data-id');
+                await deleteClient(clientId);
+            } else if (button.classList.contains('edit-client')) {
+                const row = button.closest('tr');
+                const clientId = button.getAttribute('data-id');
+                startEditingRow(row, clientId);
+            } else if (button.classList.contains('save-client')) {
+                const row = button.closest('tr');
+                const clientId = button.getAttribute('data-id');
+                await saveEditedRow(row, clientId);
+            }
+        }
+
+        // Função para excluir um cliente
+        async function deleteClient(clientId) {
+            try {
+                await deleteDoc(doc(db, 'clients', clientId));
+                alert('Cliente excluído com sucesso!');
+                loadClientsFromFirestore();
+            } catch (error) {
+                console.error('Erro ao excluir cliente:', error);
+                alert('Erro ao excluir cliente.');
+            }
+        }
+
+        function startEditingRow(row, clientId) {
             const cells = row.querySelectorAll('td');
 
             // Se já estiver em modo de edição, não faz nada
@@ -274,10 +281,10 @@ function clearDates() {
         }
 
 
-    
 
-    // Função para salvar os dados editados de um cliente
-    async function saveEditedRow(row, clientId) {
+
+        // Função para salvar os dados editados de um cliente
+        async function saveEditedRow(row, clientId) {
             const cells = row.querySelectorAll("td");
 
             // Criar objeto atualizado
@@ -304,87 +311,76 @@ function clearDates() {
 
 
 
-</script>
-<nav>
-    <ul class="navbar">
-        <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
-        <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
-        <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
-    </ul>
-</nav>
+    </script>
+    <nav>
+        <ul class="navbar">
+            <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+            <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+        </ul>
+    </nav>
 
-<!-- Cartões de resumo -->
-<div class="totals-cards">
-    <div class="card">
-        <span class="material-icons">arrow_upward</span>
-        <p>Total de Entradas</p>
-        <h2 id="totalEntradas">0</h2>
+    <!-- Cartões de resumo -->
+    <div class="totals-cards">
+        <div class="card">
+            <span class="material-icons">arrow_upward</span>
+            <p>Total de Entradas</p>
+            <h2 id="totalEntradas">0</h2>
+        </div>
+        <div class="card">
+            <span class="material-icons">paid</span>
+            <p>Total de Saldo</p>
+            <h2 id="totalSaldo">0</h2>
+        </div>
     </div>
-    <div class="card">
-        <span class="material-icons">paid</span>
-        <p>Total de Saldo</p>
-        <h2 id="totalSaldo">0</h2>
-    </div>
-</div>
 
-<!-- Campo de pesquisa e filtro -->
-<h1>Pesquisar Clientes</h1>
+    <!-- Campo de pesquisa e filtro -->
+    <h1>Pesquisar Clientes</h1>
 
-<!-- Filtros por Nome, Produto e Data -->
-<div class="filters">
-    <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
+    <!-- Filtros por Nome, Produto e Data -->
+    <div class="filters">
+        <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
 
         <select id="productFilter">
             <option value="">Todos os Produtos</option>
         </select>
 
-    <!-- Filtro por Data -->
-    <div>
-        <label for="startDate">Data de Início:</label>
-        <input type="date" id="startDate">
-    
-        <label for="endDate">Data de Fim:</label>
-        <input type="date" id="endDate">
-    
-        <button id="clearDates">Limpar</button>
+        <!-- Filtro por Data -->
+        <div>
+            <label for="startDate">Data de Início:</label>
+            <input type="date" id="startDate">
+
+            <label for="endDate">Data de Fim:</label>
+            <input type="date" id="endDate">
+
+            <button id="clearDates">Limpar</button>
+        </div>
+
     </div>
-    
-</div>
 
-<!-- Tabela Detalhada -->
-<h2>Tabela Detalhada</h2>
-<div class="table-wrapper">
-<table id="clientHistoryTable">
-    <thead>
-        <tr>
-            <th>Ação</th>
-            <th>Nome do Cliente</th>
-            <th>Produto</th>
-            <th>Data</th>
-            <th>Quantidade Entrada</th>
-            <th>Quantidade Retirada</th>
-            <th>Saldo</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
-</div>
+    <!-- Tabela Detalhada -->
+    <h2>Tabela Detalhada</h2>
+    <div class="table-wrapper">
+        <table id="clientHistoryTable">
+            <thead>
+                <tr>
+                    <th>Ação</th>
+                    <th>Nome do Cliente</th>
+                    <th>Produto</th>
+                    <th>Data</th>
+                    <th>Quantidade Entrada</th>
+                    <th>Quantidade Retirada</th>
+                    <th>Saldo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-<footer>
-    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
-</footer>
+    <footer>
+        <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
+    </footer>
 </body>
+
 </html>
-
-
-
-
-
-
-
-
-
-
-
-

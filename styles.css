@@ -110,6 +110,21 @@ form button:hover {
     background-color: #16a085;
 }
 
+.button-container {
+    display: flex;
+    gap: 10px;
+    /* Espaçamento entre os botões */
+}
+
+.button-container button {
+    flex: 1;
+    padding: 10px 15px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Table Styles */
 table {
     max-width: 82%;
@@ -585,6 +600,49 @@ footer {
     /* Faz o checkbox clicável */
 }
 
+
+#listaCarrinho {
+    list-style: none;
+    /* Remove os pontos da lista */
+    padding: 0;
+    max-width: 400px;
+    /* Define uma largura máxima */
+}
+
+.carrinho-item {
+    display: flex;
+    justify-content: space-between;
+    /* Alinha o nome à esquerda e o botão à direita */
+    align-items: center;
+    background-color: #f8f8f8;
+    /* Fundo mais suave */
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.carrinho-produto {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-remover {
+    background-color: #e74c3c;
+    /* Vermelho */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.2s;
+}
+
+.btn-remover:hover {
+    background-color: #c0392b;
+    /* Tom mais escuro no hover */
+}
 
 
 

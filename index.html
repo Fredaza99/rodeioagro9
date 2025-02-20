@@ -16,6 +16,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    
 
     // Firebase configuration
     const firebaseConfig = {
@@ -40,6 +41,130 @@
 
     // Transaction type (Entry or Exit)
     let transactionType = "Entrada";
+    let carrinhoSaida = [];
+      
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Página carregada, adicionando eventos...");
+
+        // ✅ 2. Criar a função no escopo global
+        function adicionarProdutoAoCarrinho() {
+          console.log("Função adicionarProdutoAoCarrinho() foi chamada!");
+
+          const produto = document.getElementById("productName").value.trim();
+          const quantidade = parseInt(document.getElementById("quantity").value);
+
+          if (!produto || isNaN(quantidade) || quantidade <= 0) {
+            alert("Preencha corretamente o nome do produto e a quantidade.");
+            return;
+          }
+
+          carrinhoSaida.push({ produto, quantidade });
+
+          console.log("Carrinho atualizado:", carrinhoSaida);
+
+          atualizarCarrinho();
+
+          document.getElementById("productName").value = "";
+          document.getElementById("quantity").value = "";
+        }
+
+        // ✅ 3. Agora a função está acessível globalmente
+        window.adicionarProdutoAoCarrinho = adicionarProdutoAoCarrinho;
+
+        // ✅ 4. Adicionar evento de clique ao botão
+        const botaoCarrinho = document.getElementById("adicionarAoCarrinho");
+        if (botaoCarrinho) {
+          console.log("Botão encontrado, adicionando evento...");
+          botaoCarrinho.addEventListener("click", adicionarProdutoAoCarrinho);
+        } else {
+          console.log("Erro: Botão 'adicionarAoCarrinho' não encontrado.");
+        }
+
+        // ✅ 5. Atualizar a interface do carrinho
+       function atualizarCarrinho() {
+          console.log("Atualizando carrinho...");
+
+          const carrinhoLista = document.getElementById("listaCarrinho");
+          carrinhoLista.innerHTML = ""; // Limpa a lista antes de atualizar
+
+          carrinhoSaida.forEach((item, index) => {
+            console.log("Adicionando ao carrinho:", item.produto, item.quantidade);
+
+            // Criando o <li> para cada item do carrinho
+            const li = document.createElement("li");
+            li.classList.add("carrinho-item");
+
+            // Criando o nome do produto
+            const produtoInfo = document.createElement("span");
+            produtoInfo.classList.add("carrinho-produto");
+            produtoInfo.textContent = `${item.produto} - ${item.quantidade} unidades`;
+
+            // Criando o botão de remover
+            const btnRemover = document.createElement("button");
+            btnRemover.classList.add("btn-remover");
+            btnRemover.textContent = "❌";
+            btnRemover.onclick = () => removerItemDoCarrinho(index);
+
+            // Adicionando os elementos dentro da <li>
+            li.appendChild(produtoInfo);
+            li.appendChild(btnRemover);
+
+            // Adicionando a <li> na <ul>
+            carrinhoLista.appendChild(li);
+          });
+
+          console.log("Carrinho atualizado na tela!");
+        }
+
+
+        // ✅ 6. Criar a função para remover itens do carrinho
+        function removerItemDoCarrinho(index) {
+          carrinhoSaida.splice(index, 1); // Remove o item do array
+          atualizarCarrinho(); // Atualiza a interface
+        }
+
+        window.atualizarCarrinho = atualizarCarrinho;
+        window.removerItemDoCarrinho = removerItemDoCarrinho;
+      });
+
+     async function registrarSaidaNoBanco(cliente) {
+        const db = getFirestore();
+        const clientsRef = collection(db, "clients"); // Agora salvando em "clients"
+
+        try {
+          const date = new Date().toISOString().split('T')[0]; // Formata a data para YYYY-MM-DD
+
+          // Percorre o array de produtos no carrinho e salva cada um individualmente na coleção "clients"
+          for (const item of carrinhoSaida) {
+            const saida = {
+              clientName: cliente, // Nome do cliente
+              productName: item.produto.toUpperCase(), // Nome do produto
+              date: date, // Data da transação
+              entryQuantity: 0, // Sempre 0 para saídas
+              exitQuantity: item.quantidade, // Quantidade retirada
+              saldo: -Math.abs(item.quantidade), // Saldo sempre negativo
+              soldTo: "" // Pode ser preenchido se necessário
+            };
+
+            // Adiciona a saída na coleção "clients"
+            await addDoc(clientsRef, saida);
+          }
+
+          // Exibe mensagem de sucesso e limpa o carrinho
+          alert("Saída registrada com sucesso!");
+          carrinhoSaida = []; // Limpa o carrinho após salvar
+          atualizarCarrinho(); // Atualiza a interface do carrinho
+          loadClientsFromFirestore(); // Atualiza a tabela automaticamente
+
+        } catch (error) {
+          console.error("Erro ao registrar saída no banco:", error);
+        }
+      }
+        
+
+
+
 
     document.addEventListener("DOMContentLoaded", () => {
       // Event listeners for Entry and Exit buttons
@@ -63,15 +188,16 @@
         const quantity = parseInt(document.getElementById('quantity').value);
         const buyerName = document.getElementById('buyerName').value || ''; // Nome do comprador, se preenchido
 
+            const isExit = transactionType === "Saída"; // Verifica se é uma saída
 
         // Define client data based on transaction type
         const client = {
           clientName,
           productName,
           date,
-          entryQuantity: transactionType === "Entrada" ? quantity : 0,
-          exitQuantity: transactionType === "Saída" ? quantity : 0,
-          saldo: transactionType === "Entrada" ? quantity : -quantity,
+          entryQuantity: isExit ? 0 : quantity,
+          exitQuantity: isExit ? quantity : 0,
+          saldo: isExit ? -quantity : quantity,
           soldTo: buyerName
         };
 
@@ -82,7 +208,14 @@
           
           const docRef = await addDoc(collection(db, 'clients'), client);
           console.log("Cliente salvo no Firestore com ID: ", docRef.id);
-          showCustomAlert('Cliente adicionado com sucesso!');
+              showCustomAlert(
+            'Cadastro realizado com sucesso!',
+            isExit,
+            clientName,
+            productName,
+            quantity,
+            date
+          );
 
           
         document.getElementById('buyerName').value = ''; // Reseta o campo comprador
@@ -110,20 +243,45 @@
         }
       });
 
-      function showCustomAlert(message) {
-    const alertContainer = document.getElementById('customAlert');
-    const alertMessage = document.getElementById('alertMessage');
+  function showCustomAlert(message, isExit = false, client = "", date = "") {
+        const alertContainer = document.getElementById('customAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        const generateReceiptBtn = document.getElementById('generateReceipt');
 
-    alertMessage.textContent = message;
-    alertContainer.style.display = 'flex'; // Mostra o alerta
+        alertMessage.textContent = message;
+        alertContainer.style.display = 'flex';
 
-    const closeAlertButton = document.getElementById('closeAlert');
-    closeAlertButton.onclick = function () {
-        alertContainer.style.display = 'none'; // Esconde o alerta
+        if (isExit) {
+          generateReceiptBtn.style.display = "block";
+          generateReceiptBtn.onclick = () => {
+            gerarComprovanteSaida(client, date);
+          };
+        } else {
+          generateReceiptBtn.style.display = "none";
+        }
+
+        document.getElementById('closeAlert').onclick = function () {
+          alertContainer.style.display = 'none';
+        };
+      }
+
+
+
 
         
-    };
-}
+
+
+
+
+      const botaoCarrinho = document.getElementById("adicionarAoCarrinho");
+          if (botaoCarrinho) {
+            console.log("Botão encontrado, adicionando evento...");
+            botaoCarrinho.addEventListener("click", adicionarProdutoAoCarrinho);
+          } else {
+            console.log("Erro: Botão 'adicionarAoCarrinho' não encontrado.");
+          }
+
+
 
 
 
@@ -139,6 +297,92 @@
             const buyerWrapper = document.getElementById('buyerNameWrapper');
             buyerWrapper.style.display = buyerWrapper.style.display === 'none' ? 'block' : 'none';
           });
+
+
+       function gerarComprovanteSaida(cliente, data) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Configurações gerais do documento
+          const pageWidth = doc.internal.pageSize.width;
+
+          // **1️⃣ Logotipo da Empresa**
+          const logoUrl = "img/logo-png.PNG"; // Substitua pelo caminho correto do logo
+          doc.addImage(logoUrl, "PNG", 10, 10, 30, 30);
+
+          // **2️⃣ Cabeçalho com Informações da Empresa**
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.text("Rodeio Agronegócio", 50, 15);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text("Endereço: Rua Osvaldo Cruz, 321 - Rio Verde de Mato Grosso/MS", 50, 22);
+          doc.text("Telefone: (67) 99971-5452 | Email: rodeioagronegocio@terra.com.br", 50, 28);
+          doc.text("CNPJ: 12.345.678/0001-90", 50, 34);
+
+          // **3️⃣ Título do Documento**
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(16);
+          doc.text("COMPROVANTE DE SAÍDA DE PRODUTOS", pageWidth / 2, 50, { align: "center" });
+
+          // **4️⃣ Informações do Cliente**
+          doc.setFontSize(12);
+          doc.setFont("helvetica", "normal");
+          doc.text(`Cliente: ${cliente}`, 10, 65);
+          doc.text(`Data: ${data}`, pageWidth - 50, 65);
+
+          // **5️⃣ Tabela com os Produtos**
+          const produtosTabela = carrinhoSaida.map(item => [item.produto, item.quantidade]);
+
+          doc.autoTable({
+            startY: 75,
+            head: [["Produto", "Quantidade"]],
+            body: produtosTabela,
+            theme: "grid",
+            headStyles: { fillColor: [60, 141, 188] },
+            styles: { fontSize: 12 }
+          });
+
+          // **6️⃣ Assinaturas**
+          doc.line(10, doc.lastAutoTable.finalY + 20, 80, doc.lastAutoTable.finalY + 20);
+          doc.text("Assinatura do Cliente", 10, doc.lastAutoTable.finalY + 25);
+
+          doc.line(pageWidth - 80, doc.lastAutoTable.finalY + 20, pageWidth - 10, doc.lastAutoTable.finalY + 20);
+          doc.text("Assinatura do Responsável", pageWidth - 80, doc.lastAutoTable.finalY + 25);
+
+          // **7️⃣ Salvar o PDF**
+          doc.save(`Comprovante_Saida_${cliente}.pdf`);
+
+          // **8️⃣ Registrar a saída no Firestore**
+          registrarSaidaNoBanco(cliente, data);
+
+          // Limpar carrinho após confirmar saída
+          carrinhoSaida = [];
+          atualizarCarrinho();
+        }
+
+
+          document.getElementById("finalizarSaida").addEventListener("click", () => {
+              const cliente = document.getElementById("clientName").value.trim();
+              const data = new Date().toLocaleDateString("pt-BR");
+
+              if (carrinhoSaida.length === 0) {
+                alert("Adicione ao menos um produto antes de finalizar.");
+                return;
+              }
+
+              gerarComprovanteSaida(cliente, data);
+            });
+
+
+
+            
+
+
+
+
+
+
 
   </script>
 
@@ -182,29 +426,42 @@
 
     <label for="quantity">Quantidade:</label>
     <input type="number" id="quantity" required>
+    
 
     <!-- Buttons to select Entry or Exit -->
     <div id="transactionButtons">
       <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
       <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+
     </div>
 
-    <button type="submit">Enviar</button>
+    <div class="button-container">
+      <button type="submit">Enviar</button>
+      <button type="button" id="adicionarAoCarrinho">Adicionar Retirada</button>
+    </div>
+    
+    <h3>Produtos Retirados ⬇️</h3>
+
+    <ul id="listaCarrinho"></ul>
+    
+    <button type="button" id="finalizarSaida">Gerar Comprovante</button>
   </form>
 
   <div id="customAlert" class="alert-container" style="display: none;">
     <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button id="closeAlert" class="alert-button">OK</button>
+      <p id="alertMessage"></p>
+      <button id="closeAlert" class="alert-button">OK</button>
     </div>
-</div>
+  </div>
+
 
   <!-- Footer -->
   <footer>
     <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
   </footer>
 
-  <!-- Reference to the main JavaScript file -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script type="module" src="script.js"></script>
 </body>
 </html>
