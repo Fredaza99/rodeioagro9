@@ -145,23 +145,31 @@
             const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
             clientHistoryTableBody.innerHTML = '';
 
-            clients.sort((a, b) => {
+           clients.sort((a, b) => {
                 const parseDate = (date) => {
                     if (!date) return 0; // Se não houver data, assume 0 para não sumir da lista
                     try {
-                        let parsedDate = new Date(date);
-                        if (isNaN(parsedDate)) {
-                            parsedDate = new Date(date + "T12:00:00"); // Ajusta fuso horário
+                        let parsedDate;
+                        if (typeof date === "string") {
+                            if (date.includes("T")) {
+                                parsedDate = new Date(date);
+                            } else {
+                                parsedDate = new Date(date + "T12:00:00"); // Ajusta fuso horário
+                            }
+                        } else {
+                            parsedDate = new Date(date);
                         }
-                        return parsedDate.getTime();
+
+                        return isNaN(parsedDate.getTime()) ? 0 : parsedDate.getTime();
                     } catch (error) {
                         console.error(`Erro ao converter data: ${date}`, error);
-                        return 0; // Se der erro, assume 0 para não excluir a transação
+                        return 0; // Se der erro, assume 0 para evitar que a transação desapareça
                     }
                 };
 
                 return parseDate(b.date) - parseDate(a.date);
             });
+
 
 
 
