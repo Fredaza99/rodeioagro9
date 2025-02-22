@@ -114,11 +114,15 @@
                 const productMatches = !productFilterValue || client.productName.toLowerCase() === productFilterValue;
 
                 // Filtro de data
-                const clientDate = client.date ? new Date(client.date).getTime() : null;
-                const dateMatches = (!startDate && !endDate) || // Sem filtro de datas
-                    (startDate && !endDate && clientDate >= startDate) || // Apenas data de início
-                    (!startDate && endDate && clientDate <= endDate) || // Apenas data de fim
-                    (startDate && endDate && clientDate >= startDate && clientDate <= endDate); // Intervalo de datas
+                const clientDate = client.date && !isNaN(Date.parse(client.date))
+                    ? new Date(client.date + "T12:00:00").getTime()
+                    : null;
+
+                const dateMatches = (!startDate && !endDate) ||
+                    (startDate && !endDate && clientDate !== null && clientDate >= startDate) ||
+                    (!startDate && endDate && clientDate !== null && clientDate <= endDate) ||
+                    (startDate && endDate && clientDate !== null && clientDate >= startDate && clientDate <= endDate);
+
 
                 // Retornar true somente se TODOS os filtros forem atendidos
                 return clientNameMatches && productMatches && dateMatches;
