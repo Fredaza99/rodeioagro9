@@ -142,10 +142,23 @@
             clientHistoryTableBody.innerHTML = '';
 
             clients.sort((a, b) => {
-                const dateA = a.date && !isNaN(Date.parse(a.date)) ? new Date(a.date + "T12:00:00").getTime() : 0;
-                const dateB = b.date && !isNaN(Date.parse(b.date)) ? new Date(b.date + "T12:00:00").getTime() : 0;
-                return dateB - dateA;
+                const parseDate = (date) => {
+                    if (!date) return 0; // Se não houver data, assume 0 para não sumir da lista
+                    try {
+                        let parsedDate = new Date(date);
+                        if (isNaN(parsedDate)) {
+                            parsedDate = new Date(date + "T12:00:00"); // Ajusta fuso horário
+                        }
+                        return parsedDate.getTime();
+                    } catch (error) {
+                        console.error(`Erro ao converter data: ${date}`, error);
+                        return 0; // Se der erro, assume 0 para não excluir a transação
+                    }
+                };
+
+                return parseDate(b.date) - parseDate(a.date);
             });
+
 
 
             let totalEntradas = 0;
