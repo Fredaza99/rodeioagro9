@@ -356,7 +356,10 @@
 
           document.getElementById("finalizarSaida").addEventListener("click", () => {
               const cliente = document.getElementById("clientName").value.trim();
-              const data = new Date().toLocaleDateString("pt-BR");
+              const date = new Date();
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // Ajuste do fuso horário
+            const formattedDate = date.toISOString().split('T')[0]; // Salva no formato YYYY-MM-DD
+
 
               if (carrinhoSaida.length === 0) {
                 alert("Adicione ao menos um produto antes de finalizar.");

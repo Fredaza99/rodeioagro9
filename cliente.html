@@ -174,7 +174,7 @@
     </a>        </div>
     </td>
     <td>${client.productName || ''}</td>
-    <td>${client.date ? new Date(client.date).toLocaleDateString('pt-BR') : ''}</td>
+    <td>${client.date ? new Date(client.date + "T12:00:00").toLocaleDateString('pt-BR') : ''}</td>
     <td>${client.entryQuantity || 0}</td>
     <td>${client.exitQuantity || 0}</td>
     <td>${client.saldo || 0}</td>
