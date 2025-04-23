@@ -312,19 +312,21 @@
           doc.text("Telefone: (67) 99971-5452 | Email: rodeioagronegocio@terra.com.br", 50, 28);
           doc.text("CNPJ: 12.345.678/0001-90", 50, 34);
 
-          // **3️⃣ Título do Documento**
+          
           doc.setFont("helvetica", "bold");
           doc.setFontSize(16);
           doc.text("COMPROVANTE DE SAÍDA DE PRODUTOS", pageWidth / 2, 50, { align: "center" });
 
-          // **4️⃣ Informações do Cliente**
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "normal");
-          doc.text(`Cliente: ${cliente}`, 10, 65);
-          doc.text(`Data: ${data}`, pageWidth - 50, 65);
+          
+           const dataObj = new Date(data);
+         const dataPtBr = dataObj.toLocaleDateString('pt-BR');
 
-          // **5️⃣ Tabela com os Produtos**
-          const produtosTabela = carrinhoSaida.map(item => [item.produto, item.quantidade]);
+         doc.setFontSize(12);
+         doc.setFont("helvetica", "normal");
+         doc.text(`Cliente: ${cliente}`, 10, 65);
+         doc.text(`Data: ${dataPtBr}`, pageWidth - 50, 65);
+
+         const produtosTabela = carrinhoSaida.map(item => [item.produto, item.quantidade]);
 
           doc.autoTable({
             startY: 75,
@@ -335,20 +337,20 @@
             styles: { fontSize: 12 }
           });
 
-          // **6️⃣ Assinaturas**
+          
           doc.line(10, doc.lastAutoTable.finalY + 20, 80, doc.lastAutoTable.finalY + 20);
           doc.text("Assinatura do Cliente", 10, doc.lastAutoTable.finalY + 25);
 
           doc.line(pageWidth - 80, doc.lastAutoTable.finalY + 20, pageWidth - 10, doc.lastAutoTable.finalY + 20);
           doc.text("Assinatura do Responsável", pageWidth - 80, doc.lastAutoTable.finalY + 25);
 
-          // **7️⃣ Salvar o PDF**
+          
           doc.save(`Comprovante_Saida_${cliente}.pdf`);
 
-          // **8️⃣ Registrar a saída no Firestore**
+          
           registrarSaidaNoBanco(cliente, data);
 
-          // Limpar carrinho após confirmar saída
+          
           carrinhoSaida = [];
           atualizarCarrinho();
         }
@@ -366,7 +368,8 @@
                 return;
               }
 
-              gerarComprovanteSaida(cliente, data);
+              gerarComprovanteSaida(cliente, formattedDate);
+
             });
 
 

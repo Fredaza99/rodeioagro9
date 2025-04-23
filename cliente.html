@@ -309,31 +309,36 @@
 
 
 
-        // Função para salvar os dados editados de um cliente
-        async function saveEditedRow(row, clientId) {
-            const cells = row.querySelectorAll("td");
+    // Função para salvar os dados editados de um cliente
+    async function saveEditedRow(row, clientId) {
+        const cells = row.querySelectorAll("td");
 
-            // Criar objeto atualizado
-            const updatedClient = {
-                clientName: cells[1].querySelector("input").value.trim(),
-                productName: cells[2].querySelector("input").value.trim(),
-                date: cells[3].querySelector("input").value.trim(),
-                entryQuantity: parseInt(cells[4].querySelector("input").value) || 0,
-                exitQuantity: parseInt(cells[5].querySelector("input").value) || 0,
-            };
-
-            // Atualizar saldo corretamente
-            updatedClient.saldo = updatedClient.entryQuantity - updatedClient.exitQuantity;
-
-            try {
-                await updateDoc(doc(db, "clients", clientId), updatedClient);
-                alert("Cliente atualizado com sucesso!");
-                loadClientsFromFirestore();
-            } catch (error) {
-                console.error("Erro ao atualizar cliente:", error);
-                alert("Erro ao atualizar cliente.");
-            }
+        // Captura e converte a data (pt-BR → ISO)
+        let dataBr = cells[3].querySelector("input").value.trim();
+        let dataIso = dataBr;
+        if (dataBr.includes('/')) {
+            const [dia, mes, ano] = dataBr.split('/');
+            dataIso = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
         }
+
+        // Criar objeto atualizado
+        const updatedClient = {
+            clientName: cells[1].querySelector("input").value.trim(),
+            productName: cells[2].querySelector("input").value.trim(),
+            date: dataIso,
+            entryQuantity: parseInt(cells[4].querySelector("input").value) || 0,
+            exitQuantity: parseInt(cells[5].querySelector("input").value) || 0,
+        };
+
+        try {
+            await updateDoc(doc(db, 'clients', clientId), updatedClient);
+            console.log('Cliente atualizado com sucesso');
+            loadClientsFromFirestore();
+        } catch (error) {
+            console.error('Erro ao atualizar cliente:', error);
+        }
+    }
+
 
 
 
