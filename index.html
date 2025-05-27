@@ -15,7 +15,7 @@
     // Import the functions from the Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
     
 
     // Firebase configuration
@@ -51,7 +51,7 @@
         function adicionarProdutoAoCarrinho() {
           console.log("Função adicionarProdutoAoCarrinho() foi chamada!");
 
-          const produto = document.getElementById("productName").value.trim();
+          const produto = document.getElementById("productNameDisplay").value.trim();
           const quantidade = parseInt(document.getElementById("quantity").value);
 
           if (!produto || isNaN(quantidade) || quantidade <= 0) {
@@ -65,7 +65,7 @@
 
           atualizarCarrinho();
 
-          document.getElementById("productName").value = "";
+          document.getElementById("productNameDisplay").value = "";
           document.getElementById("quantity").value = "";
         }
 
@@ -79,6 +79,15 @@
           botaoCarrinho.addEventListener("click", adicionarProdutoAoCarrinho);
         } else {
           console.log("Erro: Botão 'adicionarAoCarrinho' não encontrado.");
+        }
+        
+        // Adicionar evento ao botão de gerar comprovante
+        const botaoComprovante = document.getElementById("finalizarSaida");
+        if (botaoComprovante) {
+          console.log("Botão de comprovante encontrado, adicionando evento...");
+          botaoComprovante.addEventListener("click", gerarComprovante);
+        } else {
+          console.log("Erro: Botão 'finalizarSaida' não encontrado.");
         }
 
         // ✅ 5. Atualizar a interface do carrinho
@@ -126,8 +135,117 @@
 
         window.atualizarCarrinho = atualizarCarrinho;
         window.removerItemDoCarrinho = removerItemDoCarrinho;
+        
+        // Função para gerar o comprovante de retirada em PDF
+        function gerarComprovante() {
+          console.log("Gerando comprovante de retirada...");
+          
+          // Verificar se há itens no carrinho
+          if (carrinhoSaida.length === 0) {
+            alert("Adicione pelo menos um produto ao carrinho antes de gerar o comprovante.");
+            return;
+          }
+          
+          // Obter o nome do cliente
+          const clienteNome = document.getElementById("clientNameDisplay").value.trim();
+          if (!clienteNome) {
+            alert("Selecione um cliente antes de gerar o comprovante.");
+            return;
+          }
+          
+          try {
+            // Inicializar o PDF usando jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Adicionar título
+            doc.setFontSize(18);
+            doc.text("Comprovante de Retirada - Rodeio Agronegócio", 105, 20, { align: "center" });
+            
+            // Adicionar informações do cliente
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${clienteNome}`, 20, 40);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 50);
+            
+            // Preparar dados para a tabela
+            const tableColumn = ["Produto", "Quantidade"];
+            const tableRows = [];
+            
+            // Adicionar itens do carrinho à tabela
+            carrinhoSaida.forEach(item => {
+              const itemData = [
+                item.produto,
+                item.quantidade.toString()
+              ];
+              tableRows.push(itemData);
+            });
+            
+            // Gerar a tabela no PDF
+            doc.autoTable({
+              head: [tableColumn],
+              body: tableRows,
+              startY: 60,
+              theme: 'grid',
+              styles: { fontSize: 10 },
+              headStyles: { fillColor: [40, 84, 48] }
+            });
+            
+            // Adicionar assinaturas
+            const finalY = doc.lastAutoTable.finalY + 30;
+            doc.text("_________________________", 40, finalY);
+            doc.text("_________________________", 150, finalY);
+            doc.text("Assinatura do Cliente", 40, finalY + 10);
+            doc.text("Assinatura do Responsável", 150, finalY + 10);
+            
+            // Salvar o PDF
+            doc.save(`Comprovante_${clienteNome}_${new Date().toISOString().slice(0,10)}.pdf`);
+            
+            // Registrar as saídas no banco de dados
+            registrarSaidasNoBanco(clienteNome);
+            
+            // Limpar o carrinho após gerar o comprovante
+            carrinhoSaida = [];
+            atualizarCarrinho();
+            
+            alert("Comprovante gerado com sucesso!");
+          } catch (error) {
+            console.error("Erro ao gerar comprovante:", error);
+            alert("Erro ao gerar comprovante. Verifique o console para mais detalhes.");
+          }
+        }
+        
+        window.gerarComprovante = gerarComprovante;
       });
 
+     // Função para registrar todas as saídas do carrinho no Firebase
+     async function registrarSaidasNoBanco(clienteNome) {
+       try {
+         console.log("Registrando saídas no banco de dados para cliente:", clienteNome);
+         
+         // Obter a data atual em formato ISO
+         const dataAtual = new Date().toISOString().split('T')[0];
+         
+         // Para cada item no carrinho, criar um registro de saída no Firebase
+         for (const item of carrinhoSaida) {
+           await addDoc(collection(db, 'clients'), {
+             clientName: clienteNome,
+             productName: item.produto,
+             date: dataAtual,
+             entryQuantity: 0,
+             exitQuantity: item.quantidade,
+             saldo: -item.quantidade // Saldo negativo para saídas
+           });
+           
+           console.log(`Saída registrada: ${item.quantidade} unidades de ${item.produto} para ${clienteNome}`);
+         }
+         
+         console.log("Todas as saídas foram registradas com sucesso!");
+       } catch (error) {
+         console.error("Erro ao registrar saídas no banco de dados:", error);
+         alert("Erro ao registrar saídas no banco de dados. Verifique o console para mais detalhes.");
+       }
+     }
+     
      async function registrarSaidaNoBanco(cliente) {
         const db = getFirestore();
         const clientsRef = collection(db, "clients"); // Agora salvando em "clients"
@@ -167,9 +285,36 @@
 
 
     document.addEventListener("DOMContentLoaded", () => {
+      // Carregar clientes e produtos existentes
+      loadClientsAndProducts();
+
       // Event listeners for Entry and Exit buttons
       document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
       document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+      
+      // Event listeners para botões de abrir modais
+      document.getElementById("openClientModalBtn").addEventListener("click", openClientModal);
+      document.getElementById("openProductModalBtn").addEventListener("click", openProductModal);
+      
+      // Configurar eventos dos modais
+      document.getElementById("closeClientModal").addEventListener("click", closeClientModal);
+      document.getElementById("closeProductModal").addEventListener("click", closeProductModal);
+      document.getElementById("modalClientSearch").addEventListener("input", filterModalClients);
+      document.getElementById("modalProductSearch").addEventListener("input", filterModalProducts);
+      document.getElementById("addNewClientModal").addEventListener("click", addNewClientFromModal);
+      document.getElementById("addNewProductModal").addEventListener("click", addNewProductFromModal);
+      
+      // Fechar os modais se o usuário clicar fora deles
+      window.addEventListener("click", (event) => {
+        const clientModal = document.getElementById("clientModal");
+        const productModal = document.getElementById("productModal");
+        
+        if (event.target === clientModal) {
+          closeClientModal();
+        } else if (event.target === productModal) {
+          closeProductModal();
+        }
+      });
 
       function setTransactionType(type) {
         transactionType = type;
@@ -182,8 +327,10 @@
         event.preventDefault();
 
         // Collect form data
-        const clientName = document.getElementById("clientName").value.trim().toUpperCase();
-        const productName = document.getElementById("productName").value.trim().toUpperCase();
+        const clientName = document.getElementById("clientNameDisplay").value.trim().toUpperCase();
+        
+        const productName = document.getElementById("productNameDisplay").value.trim().toUpperCase();
+        
         const date = document.getElementById('date').value;
         const quantity = parseInt(document.getElementById('quantity').value);
         const buyerName = document.getElementById('buyerName').value || ''; // Nome do comprador, se preenchido
@@ -289,6 +436,204 @@
             const buyerWrapper = document.getElementById('buyerNameWrapper');
             buyerWrapper.style.display = buyerWrapper.style.display === 'none' ? 'block' : 'none';
           });
+          
+        // Função para carregar clientes e produtos existentes
+        async function loadClientsAndProducts() {
+          try {
+            const clientsCollection = collection(db, 'clients');
+            const querySnapshot = await getDocs(clientsCollection);
+            
+            // Extrair nomes de clientes e produtos únicos
+            const clientNames = new Set();
+            const productNames = new Set();
+            
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              if (data.clientName) {
+                clientNames.add(data.clientName);
+              }
+              if (data.productName) {
+                productNames.add(data.productName);
+              }
+            });
+            
+            // Armazenar as listas para uso nos modais
+            window.clientsList = [...clientNames].sort();
+            window.productsList = [...productNames].sort();
+            
+            // Preencher as listas nos modais
+            populateClientList(window.clientsList);
+            populateProductList(window.productsList);
+            
+          } catch (error) {
+            console.error('Erro ao carregar clientes e produtos:', error);
+          }
+        }
+        
+        // Função para abrir o modal de clientes
+        function openClientModal() {
+          const modal = document.getElementById("clientModal");
+          modal.style.display = "block";
+          document.getElementById("modalClientSearch").focus();
+          document.getElementById("modalClientSearch").value = "";
+          filterModalClients();
+        }
+        
+        // Função para fechar o modal de clientes
+        function closeClientModal() {
+          const modal = document.getElementById("clientModal");
+          modal.style.display = "none";
+        }
+        
+        // Função para abrir o modal de produtos
+        function openProductModal() {
+          const modal = document.getElementById("productModal");
+          modal.style.display = "block";
+          document.getElementById("modalProductSearch").focus();
+          document.getElementById("modalProductSearch").value = "";
+          filterModalProducts();
+        }
+        
+        // Função para fechar o modal de produtos
+        function closeProductModal() {
+          const modal = document.getElementById("productModal");
+          modal.style.display = "none";
+        }
+        
+        // Função para preencher a lista de clientes no modal
+        function populateClientList(clients) {
+          const clientList = document.getElementById("clientList");
+          clientList.innerHTML = "";
+          
+          clients.forEach(client => {
+            const li = document.createElement("li");
+            li.textContent = client;
+            li.addEventListener("click", () => selectClient(client));
+            clientList.appendChild(li);
+          });
+        }
+        
+        // Função para selecionar um cliente da lista
+        function selectClient(clientName) {
+          document.getElementById("clientNameDisplay").value = clientName;
+          closeClientModal();
+        }
+        
+        // Função para filtrar clientes no modal
+        function filterModalClients() {
+          const searchTerm = document.getElementById("modalClientSearch").value.toLowerCase();
+          const filteredClients = window.clientsList.filter(client => 
+            client.toLowerCase().includes(searchTerm)
+          );
+          
+          populateClientList(filteredClients);
+          
+          // Mostrar ou esconder a seção de novo cliente
+          const newClientSection = document.querySelector(".new-client-section");
+          if (searchTerm && filteredClients.length === 0) {
+            newClientSection.style.display = "flex";
+            document.getElementById("newClientName").value = searchTerm;
+          } else {
+            newClientSection.style.display = "";
+          }
+        }
+        
+        // Função para adicionar um novo cliente a partir do modal
+        function addNewClientFromModal() {
+          const newClientName = document.getElementById("newClientName").value.trim();
+          if (newClientName) {
+            // Adicionar à lista global de clientes
+            window.clientsList.push(newClientName);
+            window.clientsList.sort();
+            
+            // Selecionar o novo cliente
+            selectClient(newClientName);
+            
+            // Fechar o modal
+            closeClientModal();
+          }
+        }
+        
+        // Função para preencher a lista de produtos no modal
+        function populateProductList(products) {
+          const productList = document.getElementById("productList");
+          productList.innerHTML = "";
+          
+          products.forEach(product => {
+            const li = document.createElement("li");
+            li.textContent = product;
+            li.addEventListener("click", () => selectProduct(product));
+            productList.appendChild(li);
+          });
+        }
+        
+        // Função para selecionar um produto da lista
+        function selectProduct(productName) {
+          document.getElementById("productNameDisplay").value = productName;
+          closeProductModal();
+        }
+        
+        // Função para filtrar produtos no modal
+        function filterModalProducts() {
+          const searchTerm = document.getElementById("modalProductSearch").value.toLowerCase();
+          const filteredProducts = window.productsList.filter(product => 
+            product.toLowerCase().includes(searchTerm)
+          );
+          
+          populateProductList(filteredProducts);
+          
+          // Mostrar ou esconder a seção de novo produto
+          const newProductSection = document.querySelector("#productModal .new-client-section");
+          if (searchTerm && filteredProducts.length === 0) {
+            newProductSection.style.display = "flex";
+            document.getElementById("newProductName").value = searchTerm;
+          } else {
+            newProductSection.style.display = "";
+          }
+        }
+        
+        // Função para adicionar um novo produto a partir do modal
+        function addNewProductFromModal() {
+          const newProductName = document.getElementById("newProductName").value.trim();
+          if (newProductName) {
+            // Adicionar à lista global de produtos
+            window.productsList.push(newProductName);
+            window.productsList.sort();
+            
+            // Selecionar o novo produto
+            selectProduct(newProductName);
+            
+            // Fechar o modal
+            closeProductModal();
+          }
+        }
+        
+        // Função para filtrar opções de produtos
+        function filterProductOptions() {
+          const searchInput = document.getElementById('productSearchInput').value.toLowerCase();
+          const productSelect = document.getElementById('productSelect');
+          const options = productSelect.querySelectorAll('option');
+          
+          let hasMatch = false;
+          
+          options.forEach(option => {
+            if (option.value === '' || option.value === 'novo') return; // Pular opções especiais
+            
+            if (option.textContent.toLowerCase().includes(searchInput)) {
+              option.style.display = '';
+              hasMatch = true;
+            } else {
+              option.style.display = 'none';
+            }
+          });
+          
+          // Se houver texto na busca e nenhum resultado, selecionar 'novo' e preencher o campo
+          if (searchInput && !hasMatch) {
+            productSelect.value = 'novo';
+            document.getElementById('productNameInput').style.display = 'block';
+            document.getElementById('productNameInput').value = searchInput;
+          }
+        }
 
 
        function gerarComprovanteSaida(cliente, data) {
@@ -384,26 +729,30 @@
 
   </script>
 
+<header>
+  <div class="logo-container">
+      <img src="img/Sem título(1).png" alt="Logo Rodeio Agronegócio" class="logo">
+  </div>
   <nav>
-    <ul class="navbar">
-      <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
-      <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
-      <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
-    </ul>
+      <ul class="navbar">
+          <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+          <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+          <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+      </ul>
   </nav>
-
-  <header>
-    <div class="row">
-      <div class="logo-row">
-        <img class="logo" src="img/Sem título(1).png" alt="logo rodeio"> 
-      </div>
-    </div>
-  </header>
+  <div class="header-spacer"></div>
+</header>
 
   <!-- Form to register new client -->
   <form id="clientForm">
-    <label for="clientName">Nome do Cliente:</label>
-    <input type="text" id="clientName" required>
+    <div class="form-group">
+      <label>Nome do Cliente:</label>
+      <div class="client-selection">
+        <input type="text" id="clientNameDisplay" required>
+        <button type="button" id="openClientModalBtn" class="act-botao">Selecionar</button>
+      </div>
+    </div>
+    
     <div id="buyerNameWrapper" style="display: none;">
       <label for="buyerName">Nome do Comprador:</label>
       <input type="text" id="buyerName" placeholder="Digite o nome do comprador">
@@ -413,11 +762,13 @@
       <span>Adicionar Comprador</span>
     </div>
 
-    
-
-
-    <label for="productName">Nome do Produto:</label>
-    <input type="text" id="productName" required>
+    <div class="form-group">
+      <label>Nome do Produto:</label>
+      <div class="product-selection">
+        <input type="text" id="productNameDisplay" required>
+        <button type="button" id="openProductModalBtn" class="act-botao">Selecionar</button>
+      </div>
+    </div>
 
     <label for="date">Data:</label>
     <input type="date" id="date" required>
@@ -434,7 +785,7 @@
     </div>
 
     <div class="button-container">
-      <button type="submit">Enviar</button>
+      <button class="action-btn" type="submit">Enviar</button>
       <button type="button" id="adicionarAoCarrinho">Adicionar Retirada</button>
     </div>
     
@@ -449,6 +800,50 @@
     <div class="alert-box">
       <p id="alertMessage"></p>
       <button id="closeAlert" class="alert-button">OK</button>
+    </div>
+  </div>
+  
+  <!-- Modal de Seleção de Clientes -->
+  <div id="clientModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Selecionar Cliente</h2>
+        <span class="close-modal" id="closeClientModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="search-box">
+          <input type="text" id="modalClientSearch" placeholder="Digite para buscar cliente...">
+        </div>
+        <div class="client-list-container">
+          <ul id="clientList"></ul>
+        </div>
+        <div class="new-client-section">
+          <input type="text" id="newClientName" placeholder="Nome do novo cliente">
+          <button id="addNewClientModal" class="action-btn">Adicionar Novo Cliente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Seleção de Produtos -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Selecionar Produto</h2>
+        <span class="close-modal" id="closeProductModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="search-box">
+          <input type="text" id="modalProductSearch" placeholder="Digite para buscar produto...">
+        </div>
+        <div class="client-list-container">
+          <ul id="productList"></ul>
+        </div>
+        <div class="new-client-section">
+          <input type="text" id="newProductName" placeholder="Nome do novo produto">
+          <button id="addNewProductModal" class="action-btn">Adicionar Novo Produto</button>
+        </div>
+      </div>
     </div>
   </div>
 
