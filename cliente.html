@@ -18,11 +18,11 @@
             border-radius: 4px;
             font-size: 14px;
         }
-        
+
         .editing input[type="number"] {
             text-align: right;
         }
-        
+
         .form-input {
             font-family: 'Montserrat', sans-serif;
             font-weight: bold;
@@ -32,7 +32,7 @@
             border-radius: 4px;
             font-size: 14px;
         }
-        
+
         .save-client {
             background-color: #4CAF50;
             color: white;
@@ -42,11 +42,11 @@
             cursor: pointer;
             margin-right: 5px;
         }
-        
+
         .save-client:hover {
             background-color: #45a049;
         }
-        
+
         .cancel-edit {
             background-color: #f44336;
             color: white;
@@ -56,11 +56,11 @@
             cursor: pointer;
             margin-right: 5px;
         }
-        
+
         .cancel-edit:hover {
             background-color: #d32f2f;
         }
-        
+
         /* Melhorias na tabela */
         #clientHistoryTable td {
             font-family: 'Montserrat', sans-serif;
@@ -69,17 +69,17 @@
             vertical-align: middle;
             padding: 8px 12px;
         }
-        
+
         #clientHistoryTable input[type="number"] {
             text-align: right;
             width: 80px;
         }
-        
+
         .saldo-positivo {
             color: #00cc66;
             font-weight: bold;
         }
-        
+
         .saldo-negativo {
             color: #ff4d4d;
             font-weight: bold;
@@ -89,7 +89,7 @@
             text-align: center;
             padding: 15px 0;
         }
-        
+
         .load-more-btn {
             background-color: #4285f4;
             color: white;
@@ -100,9 +100,121 @@
             font-size: 14px;
             transition: background-color 0.3s;
         }
-        
+
         .load-more-btn:hover {
             background-color: #3367d6;
+        }
+
+        /* Estilos para os modais */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close-button:hover {
+            color: black;
+        }
+
+        .list {
+            list-style-type: none;
+            padding: 0;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .list li:hover {
+            background-color: #f9f9f9;
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+        }
+
+        .search-container input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .new-client-section {
+            display: none;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+
+        .new-client-section label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .new-client-section input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .new-client-section button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .new-client-section button:hover {
+            background-color: #45a049;
         }
     </style>
 
@@ -143,16 +255,224 @@
         const itemsPerPage = 50;
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('productFilter').addEventListener('change', filterClients);
-            document.getElementById('clientSearchInput').addEventListener('input', filterClients);
-            document.getElementById('startDate').addEventListener('input', filterClients);
+            document.getElementById('productFilter').addEventListener('input', filterClients);
+            document.getElementById('clientSearchInput').addEventListener('input', filterClients);            document.getElementById('startDate').addEventListener('input', filterClients);
             document.getElementById('endDate').addEventListener('input', filterClients);
 
             // Adiciona o evento para o botão de limpar datas
             document.getElementById('clearDates').addEventListener('click', clearDates);
 
             loadClientsFromFirestore();
+
+            // Adicionar eventos de clique para abrir os modais
+            document.getElementById('openClientModal').addEventListener('click', openClientModal);
+            document.getElementById('openProductModal').addEventListener('click', openProductModal);
+
+            // Adicionar eventos de clique para fechar os modais
+            document.querySelector('#clientModal .close-button').addEventListener('click', closeClientModal);
+            document.querySelector('#productModal .close-button').addEventListener('click', closeProductModal);
+
+            // Adicionar eventos de input para filtrar os modais
+            document.getElementById('modalClientSearch').addEventListener('input', filterModalClients);
+            document.getElementById('modalProductSearch').addEventListener('input', filterModalProducts);
+
+            // Adicionar evento de clique para adicionar um novo cliente/produto a partir do modal
+            document.getElementById('addNewClient').addEventListener('click', addNewClientFromModal);
+            document.getElementById('addNewProduct').addEventListener('click', addNewProductFromModal);
+
+            // Fechar modais quando clicar fora deles
+            window.addEventListener('click', (event) => {
+                const clientModal = document.getElementById('clientModal');
+                const productModal = document.getElementById('productModal');
+                
+                if (event.target === clientModal) {
+                    closeClientModal();
+                } else if (event.target === productModal) {
+                    closeProductModal();
+                }
+            });
         });
+
+        // Variáveis globais para armazenar listas
+        window.clientsList = [];
+        window.productsList = [];
+
+        // Função para carregar clientes e produtos únicos
+        async function loadClientsAndProducts() {
+            try {
+                const clientsCollection = collection(db, 'clients');
+                const querySnapshot = await getDocs(clientsCollection);
+
+                // Extrair nomes de clientes e produtos únicos
+                const clientNames = new Set();
+                const productNames = new Set();
+
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.clientName) {
+                        clientNames.add(data.clientName);
+                    }
+                    if (data.productName) {
+                        productNames.add(data.productName);
+                    }
+                });
+
+                // Armazenar as listas para uso nos modais
+                window.clientsList = [...clientNames].sort();
+                window.productsList = [...productNames].sort();
+
+                console.log('Produtos carregados:', window.productsList); // Debug
+
+            } catch (error) {
+                console.error('Erro ao carregar clientes e produtos:', error);
+            }
+        }
+
+        // Função para abrir o modal de clientes
+        function openClientModal() {
+            loadClientsAndProducts(); // Recarregar dados atualizados
+            const modal = document.getElementById('clientModal');
+            modal.style.display = 'flex';
+            document.getElementById('modalClientSearch').focus();
+            document.getElementById('modalClientSearch').value = '';
+            filterModalClients();
+        }
+
+        // Função para fechar o modal de clientes
+        function closeClientModal() {
+            const modal = document.getElementById('clientModal');
+            modal.style.display = 'none';
+        }
+
+        // Função para abrir o modal de produtos
+        function openProductModal() {
+            loadClientsAndProducts(); // Recarregar dados atualizados
+            const modal = document.getElementById('productModal');
+            modal.style.display = 'flex';
+            document.getElementById('modalProductSearch').focus();
+            document.getElementById('modalProductSearch').value = '';
+            // Aguardar um pouco para garantir que os dados foram carregados
+            setTimeout(() => {
+                filterModalProducts();
+            }, 100);
+        }
+
+        // Função para fechar o modal de produtos
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            modal.style.display = 'none';
+        }
+
+        // Função para preencher a lista de clientes no modal
+        function populateClientList(clients) {
+            const clientList = document.getElementById('clientList');
+            clientList.innerHTML = '';
+
+            clients.forEach(client => {
+                const li = document.createElement('li');
+                li.textContent = client;
+                li.addEventListener('click', () => selectClient(client));
+                clientList.appendChild(li);
+            });
+        }
+
+        // Função para selecionar um cliente da lista
+        function selectClient(clientName) {
+            document.getElementById('clientSearchInput').value = clientName;
+            closeClientModal();
+            filterClients(); // Aplicar o filtro automaticamente
+        }
+
+        // Função para filtrar clientes no modal
+        function filterModalClients() {
+            const searchTerm = document.getElementById('modalClientSearch').value.toLowerCase();
+            const filteredClients = window.clientsList.filter(client => 
+                client.toLowerCase().includes(searchTerm)
+            );
+
+            populateClientList(filteredClients);
+
+            // Mostrar ou esconder a seção de novo cliente
+            const newClientSection = document.querySelector('#clientModal .new-client-section');
+            if (searchTerm && filteredClients.length === 0) {
+                newClientSection.style.display = 'flex';
+                document.getElementById('newClientName').value = searchTerm;
+            } else {
+                newClientSection.style.display = 'none';
+            }
+        }
+
+        // Função para adicionar um novo cliente a partir do modal
+        function addNewClientFromModal() {
+            const newClientName = document.getElementById('newClientName').value.trim();
+            if (newClientName) {
+                // Adicionar à lista global de clientes
+                window.clientsList.push(newClientName);
+                window.clientsList.sort();
+
+                // Selecionar o novo cliente
+                selectClient(newClientName);
+
+                // Fechar o modal
+                closeClientModal();
+            }
+        }
+
+        // Função para preencher a lista de produtos no modal
+        function populateProductList(products) {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            products.forEach(product => {
+                const li = document.createElement('li');
+                li.textContent = product;
+                li.addEventListener('click', () => selectProduct(product));
+                productList.appendChild(li);
+            });
+        }
+
+        // Função para selecionar um produto da lista
+        function selectProduct(productName) {
+            const productFilter = document.getElementById('productFilter');
+            productFilter.value = productName;
+            closeProductModal();
+            filterClients(); // Aplicar o filtro automaticamente
+        }
+
+        // Função para filtrar produtos no modal
+        function filterModalProducts() {
+            const searchTerm = document.getElementById('modalProductSearch').value.toLowerCase();
+            const filteredProducts = window.productsList.filter(product => 
+                product.toLowerCase().includes(searchTerm)
+            );
+
+            populateProductList(filteredProducts);
+
+            // Mostrar ou esconder a seção de novo produto
+            const newProductSection = document.querySelector('#productModal .new-client-section');
+            if (searchTerm && filteredProducts.length === 0) {
+                newProductSection.style.display = 'flex';
+                document.getElementById('newProductName').value = searchTerm;
+            } else {
+                newProductSection.style.display = 'none';
+            }
+        }
+
+        // Função para adicionar um novo produto a partir do modal
+        function addNewProductFromModal() {
+            const newProductName = document.getElementById('newProductName').value.trim();
+            if (newProductName) {
+                // Adicionar à lista global de produtos
+                window.productsList.push(newProductName);
+                window.productsList.sort();
+
+                // Selecionar o novo produto
+                selectProduct(newProductName);
+
+                // Fechar o modal
+                closeProductModal();
+            }
+        }
 
         // Função para carregar clientes do Firestore
         async function loadClientsFromFirestore() {
@@ -169,29 +489,14 @@
                 }));
 
                 renderClients(allClients);
-                populateProductDropdown(allClients);
                 calculateTotalSaldoAndEntradas(allClients);
             } catch (error) {
                 console.error('Erro ao carregar clientes do Firestore:', error);
             }
         }
+
+
         
-
-        // Popula o dropdown de produtos
-        function populateProductDropdown(clients) {
-            const productFilterDropdown = document.getElementById('productFilter');
-            productFilterDropdown.innerHTML = '<option value="">Todos os Produtos</option>';
-
-            const products = new Set(clients.map(client => client.productName));
-            products.forEach(product => {
-                if (product) {
-                    const option = document.createElement('option');
-                    option.value = product.toLowerCase();
-                    option.textContent = product;
-                    productFilterDropdown.appendChild(option);
-                }
-            });
-        }
 
         // Filtro de data
         function filterClients() {
@@ -203,7 +508,7 @@
             // Converter datas para timestamps
             const startDate = startDateInput ? new Date(startDateInput).getTime() : null;
             const endDate = endDateInput ? new Date(endDateInput).getTime() : null;
-            
+
             // Resetar a paginação quando os filtros são alterados
             currentPage = 1;
 
@@ -212,7 +517,7 @@
                 const clientNameMatches = !clientSearchInput || client.clientName.toLowerCase().includes(clientSearchInput);
 
                 // Filtro de produto
-                const productMatches = !productFilterValue || client.productName.toLowerCase() === productFilterValue;
+                const productMatches = !productFilterValue || client.productName.toLowerCase().includes(productFilterValue);
 
                 // Filtro de data
                 const clientDate = client.date && !isNaN(Date.parse(client.date))
@@ -244,7 +549,7 @@
         // Renderiza clientes na tabela
         function renderClients(clients, resetPagination = true) {
             const clientHistoryTableBody = document.querySelector('#clientHistoryTable tbody');
-            
+
             // Resetar a paginação se necessário
             if (resetPagination) {
                 currentPage = 1;
@@ -282,7 +587,7 @@
             // Calcular totais com base em TODAS as transações (independente da paginação)
             let totalEntradas = 0;
             let totalSaldo = 0;
-            
+
             // Calcular os totais com base em todos os clientes
             clients.forEach(client => {
                 totalEntradas += client.entryQuantity || 0;
@@ -292,10 +597,10 @@
             // Calcular o índice inicial e final para a página atual
             const startIndex = resetPagination ? 0 : (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, clients.length);
-            
+
             // Exibir apenas os clientes da página atual
             const clientsToShow = clients.slice(startIndex, endIndex);
-            
+
             clientsToShow.forEach(client => {
                 const row = document.createElement('tr');
                 const action = client.entryQuantity > 0 ? 'Entrada' : 'Saída';
@@ -303,7 +608,7 @@
                 row.innerHTML = `
     <td>${action}</td>
     <td>
-     
+
         <div class="tooltip-wrapper">
             ${client.soldTo ? `
                 <span class="tooltip-container">
@@ -338,7 +643,7 @@
             if (existingLoadMoreButton) {
                 existingLoadMoreButton.remove();
             }
-            
+
             // Adicionar botão "Ver mais" se houver mais itens para mostrar
             if (endIndex < clients.length) {
                 const loadMoreRow = document.createElement('tr');
@@ -349,14 +654,14 @@
                     </td>
                 `;
                 clientHistoryTableBody.appendChild(loadMoreRow);
-                
+
                 // Adicionar evento ao botão "Ver mais"
                 document.getElementById('loadMoreButton').addEventListener('click', () => {
                     currentPage++;
                     renderClients(clients, false); // Não resetar a paginação
                 });
             }
-            
+
             // Adiciona evento de clique nos botões após renderizar a tabela
             clientHistoryTableBody.removeEventListener('click', handleTableClick);
             clientHistoryTableBody.addEventListener('click', handleTableClick);
@@ -445,16 +750,16 @@
             editButton.textContent = "Salvar";
             editButton.classList.remove("edit-client");
             editButton.classList.add("save-client");
-            
+
             // Adiciona botão de cancelar
             const cancelButton = document.createElement("button");
             cancelButton.textContent = "Cancelar";
             cancelButton.className = "cancel-edit";
             cancelButton.onclick = () => cancelEdit(row);
-            
+
             const actionsCell = cells[cells.length - 1];
             actionsCell.insertBefore(cancelButton, editButton);
-            
+
             // Foca no primeiro campo editável
             const firstInput = row.querySelector('input');
             if (firstInput) firstInput.focus();
@@ -467,7 +772,7 @@
             const saida = parseInt(cells[5].querySelector("input").value) || 0;
             const saldo = entrada - saida;
             cells[6].textContent = saldo;
-            
+
             // Atualiza visualmente se o saldo é positivo ou negativo
             if (saldo < 0) {
                 cells[6].style.color = "#ff4d4d"; // Vermelho para saldo negativo
@@ -475,11 +780,11 @@
                 cells[6].style.color = "#00cc66"; // Verde para saldo positivo
             }
         }
-        
+
         // Função para cancelar a edição
         function cancelEdit(row) {
             const cells = row.querySelectorAll('td');
-            
+
             // Restaura os valores originais
             cells.forEach((cell, index) => {
                 if (index > 0 && index < cells.length - 1) { // Células editáveis
@@ -490,7 +795,7 @@
                     }
                 }
             });
-            
+
             // Restaura o botão de edição
             const saveButton = row.querySelector('.save-client');
             if (saveButton) {
@@ -498,13 +803,13 @@
                 saveButton.classList.remove('save-client');
                 saveButton.classList.add('edit-client');
             }
-            
+
             // Remove o botão de cancelar
             const cancelButton = row.querySelector('.cancel-edit');
             if (cancelButton) {
                 cancelButton.remove();
             }
-            
+
             row.classList.remove('editing');
         }
 
@@ -541,17 +846,17 @@
             await updateDoc(doc(db, 'clients', clientId), updatedClient);
             console.log('Cliente atualizado com sucesso');
             loadClientsFromFirestore();
-            
+
             // Atualiza o saldo na interface imediatamente
             cells[6].textContent = saldo;
-            
+
             // Restaura o botão de edição
             const saveButton = row.querySelector('.save-client');
             saveButton.textContent = 'Editar';
             saveButton.classList.remove('save-client');
             saveButton.classList.add('edit-client');
             row.classList.remove('editing');
-            
+
         } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar o cliente. Por favor, tente novamente.');
@@ -582,37 +887,101 @@
             <span class="material-icons">arrow_upward</span>
             <p>Total de Entradas</p>
             <h2 id="totalEntradas">0</h2>
-        </div>
+            </div>
         <div class="card">
             <span class="material-icons">paid</span>
             <p>Total de Saldo</p>
             <h2 id="totalSaldo">0</h2>
         </div>
+        
+        
     </div>
 
     <!-- Campo de pesquisa e filtro -->
-    <h1>Pesquisar Clientes</h1>
 
-    <!-- Filtros por Nome, Produto e Data -->
-    <div class="filters">
-        <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente para filtrar...">
-
-        <select id="productFilter">
-            <option value="">Todos os Produtos</option>
-        </select>
-
-        <!-- Filtro por Data -->
-        <div>
-            <label for="startDate">Data de Início:</label>
-            <input type="date" id="startDate">
-
-            <label for="endDate">Data de Fim:</label>
-            <input type="date" id="endDate">
-
-            <button id="clearDates">Limpar</button>
+    <!-- Filtros organizados em seções -->
+    <div class="filters-container">
+        <!-- Seção Pesquisar Clientes (65% da largura) -->
+        <div class="filter-section-main">
+            <h3>FILTRO DE PESQUISA</h3>
+            <div class="search-filters-vertical">
+                <!-- Filtro de Clientes -->
+                <div class="search-input-container">
+                    <input type="text" id="clientSearchInput" placeholder="Digite o nome do cliente...">
+                    <button type="button" id="openClientModal" class="search-icon-btn">
+                        <span class="material-icons">search</span>
+                    </button>
+                </div>
+                
+                <!-- Filtro de Produtos -->
+                <div class="search-input-container">
+                    <input type="text" id="productFilter" placeholder="Digite o nome do produto...">
+                    <button type="button" id="openProductModal" class="search-icon-btn">
+                        <span class="material-icons">search</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
+        <!-- Seção Filtros de Data (35% da largura) -->
+        <div class="filter-section-date">
+            <h3>FILTROS DE DATA</h3>
+            <div class="date-filters">
+                <div class="date-input-group">
+                    <label for="startDate">Data de Início:</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="date-input-group">
+                    <label for="endDate">Data de Fim:</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button id="clearDates" class="clear-dates-btn">Limpar</button>
+            </div>
+        </div>
     </div>
+
+    <!-- Modal para selecionar cliente -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Selecionar Cliente</h2>
+                <button type="button" class="close-button" onclick="closeClientModal()">×</button>
+            </div>
+            <div class="search-container">
+                <input type="text" id="modalClientSearch" placeholder="Buscar cliente...">
+            </div>
+            <ul id="clientList" class="list">
+                <!-- Lista de clientes será preenchida aqui -->
+            </ul>
+            <div class="new-client-section">
+                <label for="newClientName">Novo Cliente:</label>
+                <input type="text" id="newClientName" placeholder="Nome do novo cliente">
+                <button type="button" id="addNewClient">Adicionar Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para selecionar produto -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Selecionar Produto</h2>
+                <button type="button" class="close-button" onclick="closeProductModal()">×</button>
+            </div>
+            <div class="search-container">
+                <input type="text" id="modalProductSearch" placeholder="Buscar produto...">
+            </div>
+            <ul id="productList" class="list">
+                <!-- Lista de produtos será preenchida aqui -->
+            </ul>
+            <div class="new-client-section">
+                <label for="newProductName">Novo Produto:</label>
+                <input type="text" id="newProductName" placeholder="Nome do novo produto">
+                <button type="button" id="addNewProduct">Adicionar Produto</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Tabela Detalhada -->
     <h2>Tabela Detalhada</h2>

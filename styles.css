@@ -580,23 +580,28 @@ table tbody tr:hover {
 
 /* Totals Cards */
 .totals-cards {
-    display: flex;
-    justify-content: space-around;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center;
+    align-items: center;
     margin: 20px auto;
-    gap: 10px;
-    padding: 10px;
-    max-width: 85%;
-    flex-wrap: wrap;
+    gap: 20px;
+    padding: 15px;
+    max-width: 70%;
+    background-color: #2e2e34;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .card {
-    background-color: #333333;
-    padding: 20px;
+    background-color: #404040;
+    padding: 18px 25px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     flex: 1;
-    min-width: 200px;
+    min-width: 180px;
+    max-width: 220px;
     transition: transform 0.3s;
 }
 
@@ -722,58 +727,170 @@ footer {
 
 
 /* Estilo para o container de filtros */
-/* Container de Filtros */
-.filters {
+/* Container principal de filtros */
+.filters-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* Alinha os elementos ao centro */
-    align-items: center; /* Alinha verticalmente os itens */
-    gap: 15px; /* Espaçamento horizontal entre os filtros */
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
     margin: 20px auto;
-    padding: 10px;
+    padding: 25px;
     background-color: #333333;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 85%;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
     color: white;
 }
 
-/* Estilo para a seção de filtros de data */
-.filter-date {
+/* Seção principal de pesquisa (65% da largura) */
+.filter-section-main {
+    flex: 0 0 58%;
     display: flex;
-    flex-direction:initial; /* Organiza os elementos na vertical */
-    align-items: center; /* Alinha os elementos à esquerda */
-    gap: 10px; /* Espaçamento entre os itens */
-    margin-left: 20px; /* Espaçamento em relação aos outros filtros */
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background-color: #404040;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Inputs de data */
-.filters input[type="date"] {
-    padding: 8px;
-    margin: 5px 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+/* Seção de filtros de data (35% da largura) */
+.filter-section-date {
+    flex: 0 0 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background-color: #404040;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Container para filtros verticais de pesquisa */
+.search-filters-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Seções individuais de filtro */
+.filter-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background-color: #404040;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+}
+
+.filter-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #00ADB5;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+/* Container para inputs com ícone de busca */
+.search-input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.search-input-container input,
+.search-input-container select {
+    flex: 1;
+    padding: 12px 45px 12px 15px;
+    border: 2px solid #555;
+    border-radius: 8px;
     font-size: 14px;
     background-color: #F3F8FF;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #333;
     transition: border-color 0.3s, box-shadow 0.3s;
-    width: auto; /* Deixa o tamanho ajustável */
-    min-width: 160px; /* Define uma largura mínima */
 }
 
-.filters input[type="date"]:focus {
-    border-color: #18bc9c;
+.search-input-container input:focus,
+.search-input-container select:focus {
+    border-color: #00ADB5;
     outline: none;
-    box-shadow: 0 0 8px rgba(24, 188, 156, 0.5);
+    box-shadow: 0 0 8px rgba(0, 173, 181, 0.3);
 }
 
-/* Botão de filtro */
-.filters button {
-    padding: 10px 16px;
-    background-color: #00ADB5;
+/* Botão com ícone de lupa */
+.search-icon-btn {
+    position: absolute;
+    right:0;
+    background: rgb(24, 23, 23);
+    border: 2px solid rgba(0, 0, 0, 0.913);
+    cursor: pointer;
+    padding: 7px;
+    border-radius: 15%;
+    transition: background-color 0.3s;
+    z-index: 1;
+}
+
+.search-icon-btn:hover {
+    background-color: rgb(68, 63, 63);
+}
+
+.search-icon-btn .material-icons {
+    font-size: 35px;
+    color: #00ADB5;
+}
+
+/* Filtros de data */
+.date-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+}
+
+.date-input-group label {
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #ccc;
+    text-align: center;
+}
+
+.date-input-group input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #555;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #F3F8FF;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.date-input-group input[type="date"]:focus {
+    border-color: #00ADB5;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 173, 181, 0.3);
+}
+
+.clear-dates-btn {
+    padding: 10px 20px;
+    background-color: #e74c3c;
     color: white;
     border: none;
-    border-radius: 7px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
@@ -781,22 +898,59 @@ footer {
     margin-top: 10px;
 }
 
-.filters button:hover {
-    background-color: #16a085;
+.clear-dates-btn:hover {
+    background-color: #c0392b;
     transform: scale(1.05);
 }
 
-/* Ajustes para responsividade */
-@media (max-width: 768px) {
-    .filters {
-        flex-direction: column; /* Alinha os filtros em coluna */
-        gap: 10px; /* Reduz o espaçamento */
-        width: 100%; /* Ajusta largura para preencher o espaço */
+
+
+/* Responsividade para filtros */
+@media (max-width: 1024px) {
+    .filters-container {
+        flex-direction: column;
+        gap: 15px;
+        max-width: 95%;
     }
 
-    .filters input[type="date"], .filters button {
-        width: 100%; /* Os inputs e botões ocupam toda a largura */
+    .filter-section-main,
+    .filter-section-date {
+        flex: 1;
+        width: 100%;
     }
+
+    .filter-section {
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .filters-container {
+        padding: 15px;
+        margin: 15px auto;
+    }
+
+    .filter-section {
+        padding: 12px;
+    }
+
+    .filter-section h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .search-input-container input,
+    .search-input-container select,
+    .date-input-group input[type="date"] {
+        padding: 10px 40px 10px 12px;
+        font-size: 13px;
+    }
+
+    .search-icon-btn .material-icons {
+        font-size: 18px;
+    }
+}
     table {
         font-size: 8px; /* Reduz o tamanho do texto */
         min-width: 600px; /* Garante largura mínima */
@@ -807,21 +961,46 @@ footer {
         padding: 2px 4px; /* Espaçamento ainda menor em telas menores */
         font-size: 10px; /* Texto ainda menor */
     }
+    /* Melhorias na tabela */
+        #clientHistoryTable td {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: bold;
+            color:#333;
+            vertical-align: middle;
+            padding: 12px 15px;
+            font-size: 15px;
+        }
+
+        #clientHistoryTable th {
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        #clientHistoryTable input[type="number"] {
+            text-align: right;
+            width: 100px;
+            padding: 8px;
+            font-size: 14px;
+        }
     .delete-btn, .edit-client, .save-client {
         font-size: 10px; /* Reduz o tamanho do texto */
         padding: 4px 8px; /* Ajusta o padding */
     }
 
     .totals-cards {
-        flex-direction: column; /* Coloca os cartões em coluna */
-        align-items: stretch; /* Estica os cartões para preencher o espaço */
+        flex-direction: column;
+        align-items: center;
+        max-width: 90%;
+        padding: 12px;
     }
 
     .card {
-        margin-bottom: 10px; /* Adiciona espaço entre os cartões */
+        margin-bottom: 10px;
+        min-width: 160px;
+        max-width: 100%;
     }
 
-}
+
 
 .table-wrapper {
     overflow-x: auto; /* Permite o scroll horizontal */
@@ -842,8 +1021,7 @@ footer {
 .pagination-btn {
     background-color: #044343;
     color: white;
-    border: none;
-    border-radius: 4px;
+    border: none;border-radius: 4px;
     padding: 8px 15px;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -1036,20 +1214,3 @@ footer {
 .btn-remover:hover {
     background-color: #c0392b;
 }
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-  
