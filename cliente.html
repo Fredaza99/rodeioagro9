@@ -709,7 +709,38 @@
         // Função para excluir um cliente
         async function deleteClient(clientId) {
             try {
+                // Primeiro, verificar se existe um recibo associado
+                const clientDoc = allClients.find(client => client.id === clientId);
+                
+                // Excluir da coleção 'clients'
                 await deleteDoc(doc(db, 'clients', clientId));
+                
+                // Se o item tem recibo (isReceipt: true), também excluir da coleção 'receipts'
+                if (clientDoc && clientDoc.isReceipt) {
+                    try {
+                        // Buscar o recibo correspondente na coleção 'receipts'
+                        const receiptsCollection = collection(db, 'receipts');
+                        const receiptsSnapshot = await getDocs(receiptsCollection);
+                        
+                        // Encontrar o recibo que corresponde ao item excluído
+                        const receiptToDelete = receiptsSnapshot.docs.find(receiptDoc => {
+                            const receiptData = receiptDoc.data();
+                            return receiptData.clientName === clientDoc.clientName &&
+                                   receiptData.productName === clientDoc.productName &&
+                                   receiptData.date === clientDoc.date &&
+                                   receiptData.soldTo === clientDoc.soldTo;
+                        });
+                        
+                        if (receiptToDelete) {
+                            await deleteDoc(doc(db, 'receipts', receiptToDelete.id));
+                            console.log('Recibo correspondente também foi excluído.');
+                        }
+                    } catch (receiptError) {
+                        console.error('Erro ao excluir recibo correspondente:', receiptError);
+                        // Não interrompe o processo, apenas registra o erro
+                    }
+                }
+                
                 alert('Cliente excluído com sucesso!');
                 loadClientsFromFirestore();
             } catch (error) {
