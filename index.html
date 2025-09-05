@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+  <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css'>
+  <link rel="manifest" href="/site.webmanifest">
+  <title>Rodeio Agronegócio</title>
+</head>
+<body>
+  <script type="module">
+    // Import the functions from the Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+      authDomain: "rodeioagro-fee43.firebaseapp.com",
+      projectId: "rodeioagro-fee43",
+      storageBucket: "rodeioagro-fee43.appspot.com",
+      messagingSenderId: "981787707311",
+      appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+      measurementId: "G-FM9TP3QF6N"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // Redirect to login if the user is not authenticated
+    if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'login.html';
+    }
+
+    // Transaction type (Entry or Exit)
+    let transactionType = "Entrada";
+    let carrinhoSaida = [];
+      
+
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Página carregada, adicionando eventos...");
+
+        // ✅ 2. Criar a função no escopo global
+        function adicionarProdutoAoCarrinho() {
+          console.log("Função adicionarProdutoAoCarrinho() foi chamada!");
+
+          const produto = document.getElementById("productNameDisplay").value.trim();
+          const quantidade = parseInt(document.getElementById("quantity").value);
+
+          if (!produto || isNaN(quantidade) || quantidade <= 0) {
+            alert("Preencha corretamente o nome do produto e a quantidade.");
+            return;
+          }
+
+          carrinhoSaida.push({ produto, quantidade });
+
+          console.log("Carrinho atualizado:", carrinhoSaida);
+
+          atualizarCarrinho();
+
+          document.getElementById("productNameDisplay").value = "";
+          document.getElementById("quantity").value = "";
+        }
+
+        // ✅ 3. Agora a função está acessível globalmente
+        window.adicionarProdutoAoCarrinho = adicionarProdutoAoCarrinho;
+
+        // ✅ 4. Adicionar evento de clique ao botão
+        const botaoCarrinho = document.getElementById("adicionarAoCarrinho");
+        if (botaoCarrinho) {
+          console.log("Botão encontrado, adicionando evento...");
+          botaoCarrinho.addEventListener("click", adicionarProdutoAoCarrinho);
+        } else {
+          console.log("Erro: Botão 'adicionarAoCarrinho' não encontrado.");
+        }
+        
+        // Adicionar evento ao botão de gerar comprovante
+        const botaoComprovante = document.getElementById("finalizarSaida");
+        if (botaoComprovante) {
+          console.log("Botão de comprovante encontrado, adicionando evento...");
+          botaoComprovante.addEventListener("click", gerarComprovante);
+        } else {
+          console.log("Erro: Botão 'finalizarSaida' não encontrado.");
+        }
+
+        // ✅ 5. Atualizar a interface do carrinho
+       function atualizarCarrinho() {
+          console.log("Atualizando carrinho...");
+
+          const carrinhoLista = document.getElementById("listaCarrinho");
+          carrinhoLista.innerHTML = ""; // Limpa a lista antes de atualizar
+
+          carrinhoSaida.forEach((item, index) => {
+            console.log("Adicionando ao carrinho:", item.produto, item.quantidade);
+
+            // Criando o <li> para cada item do carrinho
+            const li = document.createElement("li");
+            li.classList.add("carrinho-item");
+
+            // Criando o nome do produto
+            const produtoInfo = document.createElement("span");
+            produtoInfo.classList.add("carrinho-produto");
+            produtoInfo.textContent = `${item.produto} - ${item.quantidade} unidades`;
+
+            // Criando o botão de remover
+            const btnRemover = document.createElement("button");
+            btnRemover.classList.add("btn-remover");
+            btnRemover.textContent = "❌";
+            btnRemover.onclick = () => removerItemDoCarrinho(index);
+
+            // Adicionando os elementos dentro da <li>
+            li.appendChild(produtoInfo);
+            li.appendChild(btnRemover);
+
+            // Adicionando a <li> na <ul>
+            carrinhoLista.appendChild(li);
+          });
+
+          console.log("Carrinho atualizado na tela!");
+        }
+
+
+        // ✅ 6. Criar a função para remover itens do carrinho
+        function removerItemDoCarrinho(index) {
+          carrinhoSaida.splice(index, 1); // Remove o item do array
+          atualizarCarrinho(); // Atualiza a interface
+        }
+
+        window.atualizarCarrinho = atualizarCarrinho;
+        window.removerItemDoCarrinho = removerItemDoCarrinho;
+        
+        // Função para gerar o comprovante de retirada em PDF
+        function gerarComprovante() {
+          console.log("Gerando comprovante de retirada...");
+          
+          // Verificar se há itens no carrinho
+          if (carrinhoSaida.length === 0) {
+            alert("Adicione pelo menos um produto ao carrinho antes de gerar o comprovante.");
+            return;
+          }
+          
+          // Obter o nome do cliente
+          const clienteNome = document.getElementById("clientNameDisplay").value.trim();
+          if (!clienteNome) {
+            alert("Selecione um cliente antes de gerar o comprovante.");
+            return;
+          }
+          
+          try {
+            // Inicializar o PDF usando jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Adicionar título
+            doc.setFontSize(18);
+            doc.text("Comprovante de Retirada - Rodeio Agronegócio", 105, 20, { align: "center" });
+            
+            // Adicionar informações do cliente
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${clienteNome}`, 20, 40);
+            doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 50);
+            
+            // Preparar dados para a tabela
+            const tableColumn = ["Produto", "Quantidade"];
+            const tableRows = [];
+            
+            // Adicionar itens do carrinho à tabela
+            carrinhoSaida.forEach(item => {
+              const itemData = [
+                item.produto,
+                item.quantidade.toString()
+              ];
+              tableRows.push(itemData);
+            });
+            
+            // Gerar a tabela no PDF
+            doc.autoTable({
+              head: [tableColumn],
+              body: tableRows,
+              startY: 60,
+              theme: 'grid',
+              styles: { fontSize: 10 },
+              headStyles: { fillColor: [40, 84, 48] }
+            });
+            
+            // Adicionar assinaturas
+            const finalY = doc.lastAutoTable.finalY + 30;
+            doc.text("_________________________", 40, finalY);
+            doc.text("_________________________", 150, finalY);
+            doc.text("Assinatura do Cliente", 40, finalY + 10);
+            doc.text("Assinatura do Responsável", 150, finalY + 10);
+            
+            // Salvar o PDF
+            doc.save(`Comprovante_${clienteNome}_${new Date().toISOString().slice(0,10)}.pdf`);
+            
+            // Registrar as saídas no banco de dados
+            registrarSaidasNoBanco(clienteNome);
+            
+            // Limpar o carrinho após gerar o comprovante
+            carrinhoSaida = [];
+            atualizarCarrinho();
+            
+            alert("Comprovante gerado com sucesso!");
+          } catch (error) {
+            console.error("Erro ao gerar comprovante:", error);
+            alert("Erro ao gerar comprovante. Verifique o console para mais detalhes.");
+          }
+        }
+        
+        window.gerarComprovante = gerarComprovante;
+        
+        // Funções para o modal de recibo
+        function showReceiptModal(clientName, productName, quantity, date, buyerName) {
+          const modal = document.getElementById("receiptModal");
+          
+          // Preencher informações do recibo
+          document.getElementById("receiptClient").textContent = clientName;
+          document.getElementById("receiptBuyer").textContent = buyerName;
+          document.getElementById("receiptProduct").textContent = productName;
+          document.getElementById("receiptQuantity").textContent = quantity;
+          document.getElementById("receiptDate").textContent = new Date(date).toLocaleDateString('pt-BR');
+          
+          // Limpar campo de valor
+          document.getElementById("productValue").value = "";
+          
+          // Mostrar modal
+          modal.style.display = "block";
+          document.getElementById("productValue").focus();
+          
+          // Armazenar dados temporariamente
+          window.tempReceiptData = {
+            clientName,
+            productName,
+            quantity,
+            date,
+            buyerName
+          };
+        }
+        
+        function closeReceiptModal() {
+          const modal = document.getElementById("receiptModal");
+          modal.style.display = "none";
+          window.tempReceiptData = null;
+        }
+        
+        async function generateReceipt() {
+          const productValue = parseFloat(document.getElementById("productValue").value);
+          
+          if (!productValue || productValue <= 0) {
+            alert("Por favor, insira um valor válido para o produto.");
+            return;
+          }
+          
+          const data = window.tempReceiptData;
+          if (!data) {
+            alert("Erro: dados do recibo não encontrados.");
+            return;
+          }
+          
+          try {
+            // Gerar PDF do recibo
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Configurações de cores
+            const primaryColor = [44, 85, 48]; // Verde escuro
+            const secondaryColor = [74, 124, 89]; // Verde médio
+            const lightGray = [240, 240, 240];
+            
+            // Adicionar logo da empresa
+            try {
+              const logoImg = new Image();
+              logoImg.crossOrigin = "anonymous";
+              logoImg.onload = function() {
+                // Logo no canto superior esquerdo
+                doc.addImage(logoImg, "PNG", 15, 15, 40, 25);
+                generateReceiptContent();
+              };
+              logoImg.onerror = function() {
+                console.warn("Logo não encontrada, gerando recibo sem logo");
+                generateReceiptContent();
+              };
+              logoImg.src = "img/logo-png.PNG";
+            } catch (error) {
+              console.warn("Erro ao carregar logo:", error);
+              generateReceiptContent();
+            }
+            
+            function generateReceiptContent() {
+              // Cabeçalho da empresa (lado direito)
+              doc.setFillColor(...primaryColor);
+              doc.rect(60, 15, 135, 25, 'F');
+              
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(16);
+              doc.text("RODEIO AGRONEGÓCIO", 127, 25, { align: "center" });
+              
+              doc.setFontSize(10);
+              doc.setFont("helvetica", "normal");
+              doc.text("Rua Osvaldo Cruz, 321 - Rio Verde de Mato Grosso/MS", 127, 32, { align: "center" });
+              doc.text("Telefone: (67) 99971-5452 | CNPJ: 12.345.678/0001-90", 127, 37, { align: "center" });
+              
+              // Título do recibo
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(20);
+              doc.text("RECIBO DE VENDA", 105, 55, { align: "center" });
+              
+              // Número do recibo
+              const receiptNumber = Date.now().toString().slice(-6);
+              doc.setFontSize(12);
+              doc.setFont("helvetica", "normal");
+              doc.text(`Recibo Nº: ${receiptNumber}`, 170, 65, { align: "right" });
+              
+              // Linha decorativa
+              doc.setDrawColor(...secondaryColor);
+              doc.setLineWidth(2);
+              doc.line(20, 70, 190, 70);
+              
+              // Seção de dados do cliente
+              doc.setFillColor(...lightGray);
+              doc.rect(20, 80, 170, 25, 'F');
+              
+              doc.setTextColor(...primaryColor);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text("DADOS DO RECIBO", 25, 90);
+              
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(12);
+              doc.text(`Data: ${new Date(data.date).toLocaleDateString('pt-BR')}`, 25, 98);
+              doc.text(`Recebemos de: ${data.buyerName}`, 120, 98);
+              
+              // Dados do produto
+              const totalValue = (productValue * data.quantity).toFixed(2);
+              
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(13);
+              doc.text("DESCRIÇÃO DA VENDA", 25, 120);
+              
+              // Tabela de produto
+              doc.setDrawColor(200, 200, 200);
+              doc.setLineWidth(0.5);
+              
+              // Cabeçalho da tabela
+              doc.setFillColor(...primaryColor);
+              doc.rect(25, 125, 165, 10, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(11);
+              doc.text("PRODUTO", 30, 132);
+              doc.text("QUANTIDADE", 100, 132);
+              doc.text("VALOR UNIT.", 135, 132);
+              doc.text("TOTAL", 170, 132);
+              
+              // Dados da tabela
+              doc.setFillColor(255, 255, 255);
+              doc.rect(25, 135, 165, 12, 'F');
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(11);
+              doc.text(data.productName, 30, 142);
+              doc.text(data.quantity.toString(), 100, 142);
+              doc.text(`R$ ${productValue.toFixed(2).replace('.', ',')}`, 135, 142);
+              doc.text(`R$ ${totalValue.replace('.', ',')}`, 170, 142);
+              
+              // Bordas da tabela
+              doc.rect(25, 125, 165, 22);
+              doc.line(95, 125, 95, 147);
+              doc.line(130, 125, 130, 147);
+              doc.line(165, 125, 165, 147);
+              doc.line(25, 135, 190, 135);
+              
+              // Valor total destacado
+              doc.setFillColor(...secondaryColor);
+              doc.rect(25, 155, 165, 15, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text(`VALOR TOTAL: R$ ${totalValue.replace('.', ',')}`, 107, 165, { align: "center" });
+              
+              // Valor por extenso
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(11);
+              const valorExtenso = `(${numeroParaExtenso(parseFloat(totalValue))})`;
+              doc.text(valorExtenso, 105, 180, { align: "center" });
+              
+              // Seção de assinaturas
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(10);
+              doc.text("Para maior clareza, firmo o presente recibo.", 105, 200, { align: "center" });
+              
+              // Linhas de assinatura
+              doc.setDrawColor(0, 0, 0);
+              doc.setLineWidth(0.5);
+              doc.line(30, 220, 90, 220);
+              doc.line(120, 220, 180, 220);
+              
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(10);
+              doc.text("Assinatura do Recebedor", 60, 230, { align: "center" });
+              doc.text("Rodeio Agronegócio", 150, 230, { align: "center" });
+              
+              // Rodapé
+              doc.setDrawColor(...primaryColor);
+              doc.setLineWidth(1);
+              doc.line(20, 250, 190, 250);
+              
+              doc.setTextColor(...primaryColor);
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(9);
+              doc.text("Este recibo tem validade fiscal conforme legislação vigente.", 105, 260, { align: "center" });
+              doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 270, { align: "center" });
+              
+              // Salvar PDF
+              const fileName = `Recibo_${data.buyerName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+              doc.save(fileName);
+              
+              // Continuar com o salvamento no Firebase...
+              saveReceiptData();
+            }
+            
+            function numeroParaExtenso(valor) {
+              // Função simples para converter número em extenso (versão básica)
+              const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+              const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+              const especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+              
+              const inteiro = Math.floor(valor);
+              const centavos = Math.round((valor - inteiro) * 100);
+              
+              let resultado = '';
+              
+              if (inteiro === 0) {
+                resultado = 'zero reais';
+              } else if (inteiro === 1) {
+                resultado = 'um real';
+              } else if (inteiro < 10) {
+                resultado = unidades[inteiro] + ' reais';
+              } else if (inteiro < 20) {
+                resultado = especiais[inteiro - 10] + ' reais';
+              } else if (inteiro < 100) {
+                const dez = Math.floor(inteiro / 10);
+                const uni = inteiro % 10;
+                resultado = dezenas[dez] + (uni > 0 ? ' e ' + unidades[uni] : '') + ' reais';
+              } else {
+                resultado = inteiro + ' reais'; // Simplificado para valores maiores
+              }
+              
+              if (centavos > 0) {
+                if (centavos === 1) {
+                  resultado += ' e um centavo';
+                } else if (centavos < 10) {
+                  resultado += ' e ' + unidades[centavos] + ' centavos';
+                } else if (centavos < 20) {
+                  resultado += ' e ' + especiais[centavos - 10] + ' centavos';
+                } else {
+                  const dezCent = Math.floor(centavos / 10);
+                  const uniCent = centavos % 10;
+                  resultado += ' e ' + dezenas[dezCent] + (uniCent > 0 ? ' e ' + unidades[uniCent] : '') + ' centavos';
+                }
+              }
+              
+              return resultado;
+            }
+            
+            async function saveReceiptData() {
+              const totalValue = (productValue * data.quantity).toFixed(2);
+              
+              // Salvar dados no Firebase incluindo informações do recibo
+              const receiptData = {
+                clientName: data.clientName,
+                productName: data.productName,
+                date: data.date,
+                entryQuantity: 0,
+                exitQuantity: data.quantity,
+                saldo: -data.quantity,
+                soldTo: data.buyerName,
+                isReceipt: true,
+                unitValue: productValue,
+                totalValue: parseFloat(totalValue),
+                receiptNumber: Date.now().toString()
+              };
+              
+              try {
+                const docRef = await addDoc(collection(db, 'clients'), receiptData);
+                
+                // Salvar também na coleção de recibos para relatório
+                await addDoc(collection(db, 'receipts'), {
+                  ...receiptData,
+                  clientId: docRef.id,
+                  generatedAt: new Date().toISOString()
+                });
+                
+                console.log("Recibo salvo com ID: ", docRef.id);
+                
+                // Fechar modal e limpar formulário
+                closeReceiptModal();
+                
+                // Limpar campos do formulário
+                document.getElementById('buyerName').value = '';
+                document.getElementById('buyerNameWrapper').style.display = 'none';
+                document.getElementById('quantity').value = '';
+                document.getElementById('entryButton').classList.remove('active');
+                document.getElementById('exitButton').classList.remove('active');
+                transactionType = "Entrada";
+                
+                showReceiptSuccessAlert(`Recibo gerado com sucesso! Valor total: R$ ${totalValue.replace('.', ',')}`);
+                
+              } catch (error) {
+                console.error("Erro ao salvar recibo:", error);
+                showReceiptErrorAlert("Erro ao salvar recibo no banco de dados.");
+              }
+            }
+            
+          } catch (error) {
+            console.error("Erro ao gerar recibo:", error);
+            showReceiptErrorAlert("Erro ao gerar recibo. Verifique o console para mais detalhes.");
+          }
+        }
+        
+        // Adicionar event listeners para o modal de recibo
+        document.getElementById("closeReceiptModal").addEventListener("click", closeReceiptModal);
+        document.getElementById("cancelReceiptBtn").addEventListener("click", closeReceiptModal);
+        document.getElementById("generateReceiptBtn").addEventListener("click", generateReceipt);
+        
+        // Fechar modal ao clicar fora
+        window.addEventListener("click", (event) => {
+          const receiptModal = document.getElementById("receiptModal");
+          if (event.target === receiptModal) {
+            closeReceiptModal();
+          }
+        });
+        
+        // Permitir gerar recibo ao pressionar Enter no campo de valor
+        document.getElementById("productValue").addEventListener("keypress", (event) => {
+          if (event.key === "Enter") {
+            generateReceipt();
+          }
+        });
+        
+        // Funções para alertas customizados de recibo
+        function showReceiptSuccessAlert(message) {
+          const alertContainer = document.createElement('div');
+          alertContainer.className = 'receipt-alert success';
+          alertContainer.innerHTML = `
+            <div class="receipt-alert-content">
+              <div class="receipt-alert-icon">✓</div>
+              <div class="receipt-alert-message">${message}</div>
+              <button class="receipt-alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+          `;
+          document.body.appendChild(alertContainer);
+          
+          // Auto-remove após 5 segundos
+          setTimeout(() => {
+            if (alertContainer.parentElement) {
+              alertContainer.remove();
+            }
+          }, 5000);
+        }
+        
+        function showReceiptErrorAlert(message) {
+          const alertContainer = document.createElement('div');
+          alertContainer.className = 'receipt-alert error';
+          alertContainer.innerHTML = `
+            <div class="receipt-alert-content">
+              <div class="receipt-alert-icon">⚠</div>
+              <div class="receipt-alert-message">${message}</div>
+              <button class="receipt-alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+          `;
+          document.body.appendChild(alertContainer);
+          
+          // Auto-remove após 7 segundos para erros
+          setTimeout(() => {
+            if (alertContainer.parentElement) {
+              alertContainer.remove();
+            }
+          }, 7000);
+        }
+
+        window.showReceiptModal = showReceiptModal;
+        window.closeReceiptModal = closeReceiptModal;
+        window.generateReceipt = generateReceipt;
+        window.showReceiptSuccessAlert = showReceiptSuccessAlert;
+        window.showReceiptErrorAlert = showReceiptErrorAlert;
+      });
+
+     // Função para registrar todas as saídas do carrinho no Firebase
+     async function registrarSaidasNoBanco(clienteNome) {
+       try {
+         console.log("Registrando saídas no banco de dados para cliente:", clienteNome);
+         
+         // Obter a data atual em formato ISO
+         const dataAtual = new Date().toISOString().split('T')[0];
+         
+         // Para cada item no carrinho, criar um registro de saída no Firebase
+         for (const item of carrinhoSaida) {
+           await addDoc(collection(db, 'clients'), {
+             clientName: clienteNome,
+             productName: item.produto,
+             date: dataAtual,
+             entryQuantity: 0,
+             exitQuantity: item.quantidade,
+             saldo: -item.quantidade // Saldo negativo para saídas
+           });
+           
+           console.log(`Saída registrada: ${item.quantidade} unidades de ${item.produto} para ${clienteNome}`);
+         }
+         
+         console.log("Todas as saídas foram registradas com sucesso!");
+       } catch (error) {
+         console.error("Erro ao registrar saídas no banco de dados:", error);
+         alert("Erro ao registrar saídas no banco de dados. Verifique o console para mais detalhes.");
+       }
+     }
+     
+     async function registrarSaidaNoBanco(cliente) {
+        const db = getFirestore();
+        const clientsRef = collection(db, "clients"); // Agora salvando em "clients"
+
+        try {
+          const date = new Date().toISOString().split('T')[0]; // Formata a data para YYYY-MM-DD
+
+          // Percorre o array de produtos no carrinho e salva cada um individualmente na coleção "clients"
+          for (const item of carrinhoSaida) {
+            const saida = {
+              clientName: cliente, // Nome do cliente
+              productName: item.produto.toUpperCase(), // Nome do produto
+              date: date, // Data da transação
+              entryQuantity: 0, // Sempre 0 para saídas
+              exitQuantity: item.quantidade, // Quantidade retirada
+              saldo: -Math.abs(item.quantidade), // Saldo sempre negativo
+              soldTo: "" // Pode ser preenchido se necessário
+            };
+
+            // Adiciona a saída na coleção "clients"
+            await addDoc(clientsRef, saida);
+          }
+
+          // Exibe mensagem de sucesso e limpa o carrinho
+          alert("Saída registrada com sucesso!");
+          carrinhoSaida = []; // Limpa o carrinho após salvar
+          atualizarCarrinho(); // Atualiza a interface do carrinho
+          loadClientsFromFirestore(); // Atualiza a tabela automaticamente
+
+        } catch (error) {
+          console.error("Erro ao registrar saída no banco:", error);
+        }
+      }
+        
+
+
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Carregar clientes e produtos existentes
+      loadClientsAndProducts();
+
+      // Event listeners for Entry and Exit buttons
+      document.getElementById("entryButton").addEventListener("click", () => setTransactionType("Entrada"));
+      document.getElementById("exitButton").addEventListener("click", () => setTransactionType("Saída"));
+      
+      // Event listeners para botões de abrir modais
+      document.getElementById("openClientModalBtn").addEventListener("click", openClientModal);
+      document.getElementById("openProductModalBtn").addEventListener("click", openProductModal);
+      
+      // Configurar eventos dos modais
+      document.getElementById("closeClientModal").addEventListener("click", closeClientModal);
+      document.getElementById("closeProductModal").addEventListener("click", closeProductModal);
+      document.getElementById("modalClientSearch").addEventListener("input", filterModalClients);
+      document.getElementById("modalProductSearch").addEventListener("input", filterModalProducts);
+      document.getElementById("addNewClientModal").addEventListener("click", addNewClientFromModal);
+      document.getElementById("addNewProductModal").addEventListener("click", addNewProductFromModal);
+      
+      // Fechar os modais se o usuário clicar fora deles
+      window.addEventListener("click", (event) => {
+        const clientModal = document.getElementById("clientModal");
+        const productModal = document.getElementById("productModal");
+        
+        if (event.target === clientModal) {
+          closeClientModal();
+        } else if (event.target === productModal) {
+          closeProductModal();
+        }
+      });
+
+      function setTransactionType(type) {
+        transactionType = type;
+        document.getElementById("entryButton").classList.toggle("active", type === "Entrada");
+        document.getElementById("exitButton").classList.toggle("active", type === "Saída");
+      }
+
+      // Function to submit the form
+      document.getElementById('clientForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Collect form data
+        const clientName = document.getElementById("clientNameDisplay").value.trim().toUpperCase();
+        
+        const productName = document.getElementById("productNameDisplay").value.trim().toUpperCase();
+        
+        const date = document.getElementById('date').value;
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const buyerName = document.getElementById('buyerName').value || ''; // Nome do comprador, se preenchido
+
+            const isExit = transactionType === "Saída"; // Verifica se é uma saída
+
+        // Define client data based on transaction type
+        const client = {
+          clientName,
+          productName,
+          date,
+          entryQuantity: isExit ? 0 : quantity,
+          exitQuantity: isExit ? quantity : 0,
+          saldo: isExit ? -quantity : quantity,
+          soldTo: buyerName
+        };
+
+        try {
+          // Verificar se é RODEIO AGRONEGOCIO e tem comprador para gerar recibo
+          if (clientName === 'RODEIO AGRONEGOCIO' && buyerName.trim() !== '') {
+            // Mostrar modal para inserir valor e gerar recibo
+            showReceiptModal(clientName, productName, quantity, date, buyerName);
+            return; // Não salvar ainda, aguardar o recibo
+          }
+          
+          const docRef = await addDoc(collection(db, 'clients'), client);
+          console.log("Cliente salvo no Firestore com ID: ", docRef.id);
+              showCustomAlert(
+            'Cadastro realizado com sucesso!',
+            isExit,
+            clientName,
+            productName,
+            quantity,
+            date
+          );
+
+          
+        document.getElementById('buyerName').value = ''; // Reseta o campo comprador
+        document.getElementById('buyerNameWrapper').style.display = 'none'; // Oculta novamente  
+        document.getElementById('quantity').value = ''; // Limpa a quantidade
+        document.getElementById('entryButton').classList.remove('active'); // Reseta botão "Entrada"
+        document.getElementById('exitButton').classList.remove('active'); // Reseta botão "Saída"
+        transactionType = "Entrada"; // Define valor padrão
+
+          // Update localStorage with new client
+          const clientsData = JSON.parse(localStorage.getItem('clientsData')) || [];
+          clientsData.push({ id: docRef.id, ...client });
+          localStorage.setItem('clientsData', JSON.stringify(clientsData));
+
+          // Re-render the table with the updated data
+          // Check if renderClients function exists and call it
+          if (typeof renderClients === 'function') {
+            renderClients(clientsData);
+          } else {
+            console.warn('A função renderClients não está definida.');
+          }
+        } catch (error) {
+          console.error("Erro ao adicionar cliente: ", error);
+        }
+      });
+
+ function showCustomAlert(message) {
+        const alertContainer = document.getElementById('customAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        const closeAlertBtn = document.getElementById('closeAlert');
+
+        alertMessage.textContent = message;
+        alertContainer.style.display = 'flex';
+
+        // ⬇️🔹 MELHORANDO O FECHAMENTO DO ALERTA 🔹⬇️
+        closeAlertBtn.onclick = function () {
+          alertContainer.style.display = 'none';
+        };
+      }
+      
+
+
+
+
+        
+
+
+
+
+      const botaoCarrinho = document.getElementById("adicionarAoCarrinho");
+          if (botaoCarrinho) {
+            console.log("Botão encontrado, adicionando evento...");
+            botaoCarrinho.addEventListener("click", adicionarProdutoAoCarrinho);
+          } else {
+            console.log("Erro: Botão 'adicionarAoCarrinho' não encontrado.");
+          }
+
+
+
+
+
+      // Ensure the table and necessary elements are available
+      const clientHistoryTable = document.getElementById('clientHistoryTable');
+      if (!clientHistoryTable) {
+        console.error('Elemento da tabela não encontrado.');
+        return;
+      }
+    });
+
+        document.getElementById('toggleBuyerField').addEventListener('click', () => {
+            const buyerWrapper = document.getElementById('buyerNameWrapper');
+            buyerWrapper.style.display = buyerWrapper.style.display === 'none' ? 'block' : 'none';
+          });
+          
+        // Função para carregar clientes e produtos existentes
+        async function loadClientsAndProducts() {
+          try {
+            const clientsCollection = collection(db, 'clients');
+            const querySnapshot = await getDocs(clientsCollection);
+            
+            // Extrair nomes de clientes e produtos únicos
+            const clientNames = new Set();
+            const productNames = new Set();
+            
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              if (data.clientName) {
+                clientNames.add(data.clientName);
+              }
+              if (data.productName) {
+                productNames.add(data.productName);
+              }
+            });
+            
+            // Armazenar as listas para uso nos modais
+            window.clientsList = [...clientNames].sort();
+            window.productsList = [...productNames].sort();
+            
+            // Preencher as listas nos modais
+            populateClientList(window.clientsList);
+            populateProductList(window.productsList);
+            
+          } catch (error) {
+            console.error('Erro ao carregar clientes e produtos:', error);
+          }
+        }
+        
+        // Função para abrir o modal de clientes
+        function openClientModal() {
+          const modal = document.getElementById("clientModal");
+          modal.style.display = "block";
+          document.getElementById("modalClientSearch").focus();
+          document.getElementById("modalClientSearch").value = "";
+          filterModalClients();
+        }
+        
+        // Função para fechar o modal de clientes
+        function closeClientModal() {
+          const modal = document.getElementById("clientModal");
+          modal.style.display = "none";
+        }
+        
+        // Função para abrir o modal de produtos
+        function openProductModal() {
+          const modal = document.getElementById("productModal");
+          modal.style.display = "block";
+          document.getElementById("modalProductSearch").focus();
+          document.getElementById("modalProductSearch").value = "";
+          filterModalProducts();
+        }
+        
+        // Função para fechar o modal de produtos
+        function closeProductModal() {
+          const modal = document.getElementById("productModal");
+          modal.style.display = "none";
+        }
+        
+        // Função para preencher a lista de clientes no modal
+        function populateClientList(clients) {
+          const clientList = document.getElementById("clientList");
+          clientList.innerHTML = "";
+          
+          clients.forEach(client => {
+            const li = document.createElement("li");
+            li.textContent = client;
+            li.addEventListener("click", () => selectClient(client));
+            clientList.appendChild(li);
+          });
+        }
+        
+        // Função para selecionar um cliente da lista
+        function selectClient(clientName) {
+          document.getElementById("clientNameDisplay").value = clientName;
+          closeClientModal();
+        }
+        
+        // Função para filtrar clientes no modal
+        function filterModalClients() {
+          const searchTerm = document.getElementById("modalClientSearch").value.toLowerCase();
+          const filteredClients = window.clientsList.filter(client => 
+            client.toLowerCase().includes(searchTerm)
+          );
+          
+          populateClientList(filteredClients);
+          
+          // Mostrar ou esconder a seção de novo cliente
+          const newClientSection = document.querySelector(".new-client-section");
+          if (searchTerm && filteredClients.length === 0) {
+            newClientSection.style.display = "flex";
+            document.getElementById("newClientName").value = searchTerm;
+          } else {
+            newClientSection.style.display = "";
+          }
+        }
+        
+        // Função para adicionar um novo cliente a partir do modal
+        function addNewClientFromModal() {
+          const newClientName = document.getElementById("newClientName").value.trim();
+          if (newClientName) {
+            // Adicionar à lista global de clientes
+            window.clientsList.push(newClientName);
+            window.clientsList.sort();
+            
+            // Selecionar o novo cliente
+            selectClient(newClientName);
+            
+            // Fechar o modal
+            closeClientModal();
+          }
+        }
+        
+        // Função para preencher a lista de produtos no modal
+        function populateProductList(products) {
+          const productList = document.getElementById("productList");
+          productList.innerHTML = "";
+          
+          products.forEach(product => {
+            const li = document.createElement("li");
+            li.textContent = product;
+            li.addEventListener("click", () => selectProduct(product));
+            productList.appendChild(li);
+          });
+        }
+        
+        // Função para selecionar um produto da lista
+        function selectProduct(productName) {
+          document.getElementById("productNameDisplay").value = productName;
+          closeProductModal();
+        }
+        
+        // Função para filtrar produtos no modal
+        function filterModalProducts() {
+          const searchTerm = document.getElementById("modalProductSearch").value.toLowerCase();
+          const filteredProducts = window.productsList.filter(product => 
+            product.toLowerCase().includes(searchTerm)
+          );
+          
+          populateProductList(filteredProducts);
+          
+          // Mostrar ou esconder a seção de novo produto
+          const newProductSection = document.querySelector("#productModal .new-client-section");
+          if (searchTerm && filteredProducts.length === 0) {
+            newProductSection.style.display = "flex";
+            document.getElementById("newProductName").value = searchTerm;
+          } else {
+            newProductSection.style.display = "";
+          }
+        }
+        
+        // Função para adicionar um novo produto a partir do modal
+        function addNewProductFromModal() {
+          const newProductName = document.getElementById("newProductName").value.trim();
+          if (newProductName) {
+            // Adicionar à lista global de produtos
+            window.productsList.push(newProductName);
+            window.productsList.sort();
+            
+            // Selecionar o novo produto
+            selectProduct(newProductName);
+            
+            // Fechar o modal
+            closeProductModal();
+          }
+        }
+        
+        // Função para filtrar opções de produtos
+        function filterProductOptions() {
+          const searchInput = document.getElementById('productSearchInput').value.toLowerCase();
+          const productSelect = document.getElementById('productSelect');
+          const options = productSelect.querySelectorAll('option');
+          
+          let hasMatch = false;
+          
+          options.forEach(option => {
+            if (option.value === '' || option.value === 'novo') return; // Pular opções especiais
+            
+            if (option.textContent.toLowerCase().includes(searchInput)) {
+              option.style.display = '';
+              hasMatch = true;
+            } else {
+              option.style.display = 'none';
+            }
+          });
+          
+          // Se houver texto na busca e nenhum resultado, selecionar 'novo' e preencher o campo
+          if (searchInput && !hasMatch) {
+            productSelect.value = 'novo';
+            document.getElementById('productNameInput').style.display = 'block';
+            document.getElementById('productNameInput').value = searchInput;
+          }
+        }
+
+
+       function gerarComprovanteSaida(cliente, data) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Configurações gerais do documento
+          const pageWidth = doc.internal.pageSize.width;
+
+          // **1️⃣ Logotipo da Empresa**
+          const logoUrl = "img/logo-png.PNG"; // Substitua pelo caminho correto do logo
+          doc.addImage(logoUrl, "PNG", 10, 10, 30, 30);
+
+          // **2️⃣ Cabeçalho com Informações da Empresa**
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.text("Rodeio Agronegócio", 50, 15);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text("Endereço: Rua Osvaldo Cruz, 321 - Rio Verde de Mato Grosso/MS", 50, 22);
+          doc.text("Telefone: (67) 99971-5452 | Email: rodeioagronegocio@terra.com.br", 50, 28);
+          doc.text("CNPJ: 12.345.678/0001-90", 50, 34);
+
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(16);
+          doc.text("COMPROVANTE DE SAÍDA DE PRODUTOS", pageWidth / 2, 50, { align: "center" });
+
+          
+           const dataObj = new Date(data);
+         const dataPtBr = dataObj.toLocaleDateString('pt-BR');
+
+         doc.setFontSize(12);
+         doc.setFont("helvetica", "normal");
+         doc.text(`Cliente: ${cliente}`, 10, 65);
+         doc.text(`Data: ${dataPtBr}`, pageWidth - 50, 65);
+
+         const produtosTabela = carrinhoSaida.map(item => [item.produto, item.quantidade]);
+
+          doc.autoTable({
+            startY: 75,
+            head: [["Produto", "Quantidade"]],
+            body: produtosTabela,
+            theme: "grid",
+            headStyles: { fillColor: [60, 141, 188] },
+            styles: { fontSize: 12 }
+          });
+
+          
+          doc.line(10, doc.lastAutoTable.finalY + 20, 80, doc.lastAutoTable.finalY + 20);
+          doc.text("Assinatura do Cliente", 10, doc.lastAutoTable.finalY + 25);
+
+          doc.line(pageWidth - 80, doc.lastAutoTable.finalY + 20, pageWidth - 10, doc.lastAutoTable.finalY + 20);
+          doc.text("Assinatura do Responsável", pageWidth - 80, doc.lastAutoTable.finalY + 25);
+
+          
+          doc.save(`Comprovante_Saida_${cliente}.pdf`);
+
+          
+          registrarSaidaNoBanco(cliente, data);
+
+          
+          carrinhoSaida = [];
+          atualizarCarrinho();
+        }
+
+
+          document.getElementById("finalizarSaida").addEventListener("click", () => {
+              const cliente = document.getElementById("clientName").value.trim();
+              const date = new Date();
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // Ajuste do fuso horário
+            const formattedDate = date.toISOString().split('T')[0]; // Salva no formato YYYY-MM-DD
+
+
+              if (carrinhoSaida.length === 0) {
+                alert("Adicione ao menos um produto antes de finalizar.");
+                return;
+              }
+
+              gerarComprovanteSaida(cliente, formattedDate);
+
+            });
+
+
+
+            
+
+
+
+
+
+
+
+  </script>
+
+<header>
+  <div class="logo-container">
+      <img src="img/Sem título(1).png" alt="Logo Rodeio Agronegócio" class="logo">
+  </div>
+    <nav>
+        <ul class="navbar">
+            <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+            <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+            <li><a href="relatorio-vendas.html"><span class="material-icons">receipt</span>Vendas</a></li>
+        </ul>
+    </nav>
+  <div class="header-spacer"></div>
+</header>
+
+  <!-- Form to register new client -->
+  <form id="clientForm">
+    <div class="form-group">
+      <label>Nome do Cliente:</label>
+      <div class="client-selection">
+        <input type="text" id="clientNameDisplay" required>
+        <button type="button" id="openClientModalBtn" class="act-botao">Selecionar</button>
+      </div>
+    </div>
+    
+    <div id="buyerNameWrapper" style="display: none;">
+      <label for="buyerName">Nome do Comprador:</label>
+      <input type="text" id="buyerName" placeholder="Digite o nome do comprador">
+    </div>
+    <div class="checkbox-wrapper">
+      <input id="toggleBuyerField" type="checkbox">
+      <span>Adicionar Comprador</span>
+    </div>
+
+    <div class="form-group">
+      <label>Nome do Produto:</label>
+      <div class="product-selection">
+        <input type="text" id="productNameDisplay" required>
+        <button type="button" id="openProductModalBtn" class="act-botao">Selecionar</button>
+      </div>
+    </div>
+
+    <label for="date">Data:</label>
+    <input type="date" id="date" required>
+
+    <label for="quantity">Quantidade:</label>
+    <input type="number" id="quantity" required>
+    
+
+    <!-- Buttons to select Entry or Exit -->
+    <div id="transactionButtons">
+      <button type="button" id="entryButton" class="transaction-btn">Entrada</button>
+      <button type="button" id="exitButton" class="transaction-btn">Saída</button>
+
+    </div>
+
+    <div class="button-container">
+      <button class="action-btn" type="submit">Enviar</button>
+      <button type="button" id="adicionarAoCarrinho">Adicionar Retirada</button>
+    </div>
+    
+    <h3>Produtos Retirados ⬇️</h3>
+
+    <ul id="listaCarrinho"></ul>
+    
+    <button type="button" id="finalizarSaida">Gerar Comprovante</button>
+  </form>
+
+  <div id="customAlert" class="alert-container" style="display: none;">
+    <div class="alert-box">
+      <p id="alertMessage"></p>
+      <button id="closeAlert" class="alert-button">OK</button>
+    </div>
+  </div>
+  
+  <!-- Modal de Seleção de Clientes -->
+  <div id="clientModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Selecionar Cliente</h2>
+        <span class="close-modal" id="closeClientModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="search-box">
+          <input type="text" id="modalClientSearch" placeholder="Digite para buscar cliente...">
+        </div>
+        <div class="client-list-container">
+          <ul id="clientList"></ul>
+        </div>
+        <div class="new-client-section">
+          <input type="text" id="newClientName" placeholder="Nome do novo cliente">
+          <button id="addNewClientModal" class="action-btn">Adicionar Novo Cliente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de Seleção de Produtos -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Selecionar Produto</h2>
+        <span class="close-modal" id="closeProductModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="search-box">
+          <input type="text" id="modalProductSearch" placeholder="Digite para buscar produto...">
+        </div>
+        <div class="client-list-container">
+          <ul id="productList"></ul>
+        </div>
+        <div class="new-client-section">
+          <input type="text" id="newProductName" placeholder="Nome do novo produto">
+          <button id="addNewProductModal" class="action-btn">Adicionar Novo Produto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Recibo -->
+  <div id="receiptModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Gerar Recibo de Venda</h2>
+        <span class="close-modal" id="closeReceiptModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="receipt-info">
+          <p><strong>Cliente:</strong> <span id="receiptClient"></span></p>
+          <p><strong>Comprador:</strong> <span id="receiptBuyer"></span></p>
+          <p><strong>Produto:</strong> <span id="receiptProduct"></span></p>
+          <p><strong>Quantidade:</strong> <span id="receiptQuantity"></span></p>
+          <p><strong>Data:</strong> <span id="receiptDate"></span></p>
+        </div>
+        <div class="value-input-section">
+          <label for="productValue">Valor do Produto (R$):</label>
+          <input type="number" id="productValue" step="0.01" min="0" placeholder="0,00" required>
+        </div>
+        <div class="modal-buttons">
+          <button id="generateReceiptBtn" class="action-btn">Gerar Recibo</button>
+          <button id="cancelReceiptBtn" class="cancel-btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

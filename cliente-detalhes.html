@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-straight/css/uicons-solid-straight.css'>
+    <link rel="manifest" href="/site.webmanifest">
+    <title>Rodeio Agronegócio</title>
+</head>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+    
+    /* Estilos para o modal de débito */
+    .debit-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .debit-modal-content {
+        background-color: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        color: #fff;
+        position: relative;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+    
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .debit-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #444;
+    }
+    
+    .debit-modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        color: #ff5722;
+    }
+    
+    .close-debit-modal {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close-debit-modal:hover {
+        color: #fff;
+    }
+    
+    .debit-modal-body {
+        margin-bottom: 20px;
+    }
+    
+    .debit-modal-body p {
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+    
+    .debit-modal-body input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        background-color: #333;
+        border: 1px solid #555;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 16px;
+    }
+    
+    .debit-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .debit-modal-footer button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    
+    .confirm-debit-btn {
+        background-color: #4caf50;
+        color: white;
+    }
+    
+    .confirm-debit-btn:hover {
+        background-color: #45a049;
+    }
+    
+    .cancel-debit-btn {
+        background-color: #f44336;
+        color: white;
+    }
+    
+    .cancel-debit-btn:hover {
+        background-color: #d32f2f;
+    }
+    
+    /* Estilos para o item de saldo e botão de débito */
+    .saldo-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        margin-bottom: 8px;
+        background: #252525;
+        border-radius: 5px;
+    }
+    
+    .saldo-text {
+        flex: 1;
+    }
+    
+    .debit-btn {
+        background-color: #ff5722;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 10px;
+        transition: background-color 0.3s;
+    }
+    
+    .debit-btn:hover {
+        background-color: #e64a19;
+    }
+    
+    /* Estilos para paginação */
+    .pagination-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #252525;
+        border-radius: 5px;
+    }
+    
+    .pagination-btn {
+        background-color: #044343;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin: 0;
+    }
+    
+    .pagination-btn:hover {
+        background-color: #0f5685;
+    }
+    
+    .pagination-btn:disabled {
+        background-color: #333;
+        color: #666;
+        cursor: not-allowed;
+    }
+    
+    .pagination-info {
+        color: #fff;
+        font-size: 14px;
+    }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #1E1E1E;
+    color: #fff;
+    padding: 0;
+    margin: 0;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px;
+    background:linear-gradient(20deg, #08461e, #2a603e);
+    box-shadow: 0 4px 10px 2px rgba(0, 0, 0, 0.3);
+
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+#clientBalance{
+    display: none;
+}
+
+#exportPdf{
+    display: none;
+}
+
+header h1 {
+    font-size: 35px;
+    font-weight: bolder;
+}
+#clientName {
+    font-family: 'Playfair Display', sans-serif;
+    font-size: 33px;
+    padding-bottom: 20px;
+    padding-top:10px;
+    font-weight: bolder;
+    color: #ffffff;
+    animation: fadeInScale 1.2s ease-out;
+
+}
+
+@keyframes fadeInScale {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.btn-voltar {
+    text-decoration: none;
+    background-color: #FF5722;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-voltar:hover {
+    background-color: #E64A19;
+}
+
+/* Seções */
+main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+    font-family: 'Montserrat',sans-serif;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #b2dbf6;
+    padding-bottom: 5px;
+}
+
+/* Informações do Cliente */
+.cliente-info p {
+    font-family: 'Montserrat',sans-serif;
+    margin: 5px 0;
+}
+
+/* Alertas */
+.alerta {
+    background-color: #ffcc00;
+    color: #333;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: none;
+}
+
+.alerta.oculto {
+    display: none;
+}
+
+/* Tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table th, table td {
+    font-family: 'Montserrat',sans-serif;
+    font-weight: bold;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #555;
+}
+
+table th {
+    background-color: #045757;
+}
+
+table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botões */
+button {
+    background-color: #044343;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: #0f5685e4;
+}
+
+/* Seção de estoque */
+.estoque-cliente ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.estoque-cliente li {
+    background: #252525;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+/* Ações rápidas */
+.acoes-rapidas button {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Estilização da seção de movimentações */
+.movimentacoes {
+    background-color: #1e1e1e; /* Fundo escuro para contraste */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+}
+
+/* Estilização da tabela */
+.movimentacoes table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #252525; /* Cor de fundo da tabela */
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Cabeçalho da tabela */
+.movimentacoes thead {
+    background-color: #303030;
+    color: #ffffff;
+    text-align: left;
+    font-weight: bold;
+}
+
+/* Linhas da tabela */
+.movimentacoes tbody tr {
+    border-bottom: 1px solid #3a3a3a;
+    transition: background 0.2s ease-in-out;
+}
+
+.movimentacoes tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+/* Células da tabela */
+.movimentacoes th, 
+.movimentacoes td {
+    padding: 12px;
+    text-align: left;
+    color: #ffffff !important;
+}
+
+/* Ajuste para a última linha sem borda inferior */
+.movimentacoes tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* Melhorando a visibilidade dos valores */
+.movimentacoes td:nth-child(3) { /* Coluna de entrada/saída */
+    font-weight: bold;
+    color: #ffcc00 !important;
+}
+
+.movimentacoes td:nth-child(4) { /* Coluna de quantidade */
+    font-weight: bold;
+    color: #00ff99 !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .movimentacoes th, 
+    .movimentacoes td {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .movimentacoes {
+        padding: 15px;
+    }
+}
+
+
+/* Responsividade */
+@media (max-width: 600px) {
+    main {
+        padding: 15px;
+    }
+
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn-voltar {
+        margin-top: 10px;
+    }
+
+    .acoes-rapidas button {
+        font-size: 14px;
+    }
+}
+
+    /* Estilos adicionais para o header */
+    .logo-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+    
+    .logo {
+        max-height: 70px;
+        max-width: 160px;
+    }
+    
+    nav {
+        flex: 2;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .navbar {
+        display: flex;
+        list-style-type: none;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+        justify-content: center;
+    }
+    
+    .navbar li a {
+        display: flex;
+        align-items: center;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        background: transparent;
+    }
+    
+    .navbar li a:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .navbar li a span, 
+    .navbar li a i {
+        margin-right: 5px;
+    }
+    
+    .header-spacer {
+        flex: 1;
+    }
+    
+    /* Responsividade para o header */
+    @media (max-width: 768px) {
+        header {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .logo-container {
+            justify-content: center;
+        }
+        
+        nav {
+            width: 100%;
+        }
+        
+        .navbar {
+            width: 100%;
+            justify-content: space-around;
+        }
+    }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+            // Importando Firebase
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+                import { getFirestore, doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+                // Configuração do Firebase (Já definida no seu projeto)
+               const firebaseConfig = {
+                    apiKey: "AIzaSyCAM6g3AXwsKoQOsBRYlNs5f6E7dv3H0As",
+                    authDomain: "rodeioagro-fee43.firebaseapp.com",
+                    projectId: "rodeioagro-fee43",
+                    storageBucket: "rodeioagro-fee43.appspot.com",
+                    messagingSenderId: "981787707311",
+                    appId: "1:981787707311:web:e5a8749b6928969ff1d15a",
+                    measurementId: "G-FM9TP3QF6N"
+                };
+
+                // Inicializa Firebase
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+
+                // Obtém o ID do cliente da URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const clientId = urlParams.get("id");
+
+                if (!clientId) {
+                    alert("Cliente não encontrado.");
+                    window.location.href = "cliente.html"; // Redireciona de volta se não houver ID
+                }
+
+                // Redirect to login if the user is not authenticated
+                    if (!sessionStorage.getItem('loggedIn')) {
+                        window.location.href = 'login.html';
+                    }
+
+                // Função para carregar dados do cliente
+                async function loadClientDetails() {
+                    try {
+                        // Obtém os dados do cliente
+                        const clientDocRef = doc(db, "clients", clientId);
+                        const clientDocSnap = await getDoc(clientDocRef);
+
+                        if (!clientDocSnap.exists()) {
+                            alert("Cliente não encontrado.");
+                            window.location.href = "cliente.html";
+                            return;
+                        }
+
+                        const clientData = clientDocSnap.data();
+
+                        // Atualiza a página com os dados do cliente
+                        document.getElementById("clientName").textContent = clientData.clientName || "Nome não disponível";
+                        document.getElementById("clientBalance").textContent = clientData.saldo !== undefined ? clientData.saldo : "N/A";
+
+                        // Verifica inatividade (> 3 meses sem movimentação)
+                        if (clientData.date) {
+                            const lastTransactionDate = new Date(clientData.date);
+                            const threeMonthsAgo = new Date();
+                            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+                            if (lastTransactionDate < threeMonthsAgo) {
+                                document.getElementById("alerta-inatividade").classList.remove("oculto");
+                            }
+                        }
+
+                        // Verifica pendência financeira (Saldo negativo)
+                        if (clientData.saldo < 0) {
+                            document.getElementById("alerta-pendencia").classList.remove("oculto");
+                        }
+
+                        // Carrega histórico de movimentação do cliente
+                        await loadClientMovements(clientData.clientName);
+
+                        // Carrega produtos em estoque
+                        await loadClientStock(clientData.clientName);
+
+                    } catch (error) {
+                        console.error("Erro ao carregar detalhes do cliente:", error);
+                    }
+                }
+
+                // Função para carregar histórico de movimentações do cliente
+                async function loadClientMovements(clientName) {
+                    try {
+                        const movementsTableBody = document.querySelector("#clientHistoryTable tbody");
+                        movementsTableBody.innerHTML = "";
+                        
+                        const movementsQuery = query(
+                            collection(db, "clients"),
+                            where("clientName", "==", clientName)
+                        );
+
+                        const querySnapshot = await getDocs(movementsQuery);
+
+                        // Convertendo os documentos para um array e ordenando por data decrescente
+                        const movements = querySnapshot.docs.map(doc => doc.data()).sort((a, b) => {
+                            return new Date(b.date) - new Date(a.date);
+                        });
+                        
+                        // Exibir apenas os primeiros 10 movimentos inicialmente
+                        const displayCount = Math.min(10, movements.length);
+                        
+                        for (let i = 0; i < displayCount; i++) {
+                            const movement = movements[i];
+                            const row = document.createElement("tr");
+
+                            row.innerHTML = `
+                                <td>${movement.date || "N/A"}</td>
+                                <td>${movement.productName || "N/A"}</td>
+                                <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
+                                <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
+                            `;
+
+                            movementsTableBody.appendChild(row);
+                        }
+                        
+                        // Mostrar ou ocultar o botão "Ver mais" conforme necessário
+                        const verMaisBtn = document.getElementById("verMaisBtn");
+                        if (movements.length > 10) {
+                            verMaisBtn.style.display = "block";
+                            verMaisBtn.dataset.remaining = movements.length - 10;
+                            verMaisBtn.textContent = `Ver mais (${movements.length - 10} restantes)`;
+                        } else {
+                            verMaisBtn.style.display = "none";
+                        }
+                        
+                        // Armazenar todos os movimentos para uso posterior
+                        verMaisBtn.dataset.movements = JSON.stringify(movements);
+
+                    } catch (error) {
+                        console.error("Erro ao carregar histórico de movimentações:", error);
+                    }
+                }
+                
+                // Função para renderizar uma página de movimentações
+                function renderMovementsPage() {
+                    const movementsTableBody = document.querySelector("#clientHistoryTable tbody");
+                    movementsTableBody.innerHTML = "";
+                    
+                    // Calcular índices de início e fim para a página atual
+                    const startIndex = (currentPage - 1) * itemsPerPage;
+                    const endIndex = Math.min(startIndex + itemsPerPage, allMovements.length);
+                    
+                    // Exibir apenas os itens da página atual
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const movement = allMovements[i];
+                        const row = document.createElement("tr");
+
+                        row.innerHTML = `
+                            <td>${movement.date || "N/A"}</td>
+                            <td>${movement.productName || "N/A"}</td>
+                            <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
+                            <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
+                        `;
+
+                        movementsTableBody.appendChild(row);
+                    }
+                    
+                    // Mostrar ou ocultar botões de paginação conforme necessário
+                    const paginationControls = document.getElementById("paginationControls");
+                    if (allMovements.length <= itemsPerPage) {
+                        paginationControls.style.display = "none";
+                    } else {
+                        paginationControls.style.display = "flex";
+                    }
+                }
+                
+                // Função para atualizar informações de paginação
+                function updatePaginationInfo() {
+                    const totalPages = Math.ceil(allMovements.length / itemsPerPage);
+                    document.getElementById("currentPage").textContent = currentPage;
+                    document.getElementById("totalPages").textContent = totalPages;
+                    
+                    // Habilitar/desabilitar botões conforme necessário
+                    document.getElementById("prevPage").disabled = currentPage === 1;
+                    document.getElementById("nextPage").disabled = currentPage === totalPages;
+                }
+                
+                // Função para ir para a próxima página
+                function nextPage() {
+                    const totalPages = Math.ceil(allMovements.length / itemsPerPage);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderMovementsPage();
+                        updatePaginationInfo();
+                    }
+                }
+                
+                // Função para ir para a página anterior
+                function prevPage() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderMovementsPage();
+                        updatePaginationInfo();
+                    }
+                }
+                
+                // Tornando as funções globais
+                window.nextPage = nextPage;
+                window.prevPage = prevPage;
+
+
+               async function loadClientStock(clientName) {
+                    const saldoList = document.getElementById("listaSaldo");
+                    saldoList.innerHTML = "";
+
+                    try {
+                        const stockQuery = query(collection(db, "clients"), where("clientName", "==", clientName));
+                        const querySnapshot = await getDocs(stockQuery);
+
+                        const saldo = {};
+
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const productName = data.productName;
+
+                            if (!saldo[productName]) {
+                                saldo[productName] = { entry: 0, exit: 0 };
+                            }
+
+                            saldo[productName].entry += data.entryQuantity || 0;
+                            saldo[productName].exit += data.exitQuantity || 0;
+                        });
+
+                        // Renderiza os produtos com saldo correto (positivos e negativos)
+                        Object.entries(saldo).forEach(([product, values]) => {
+                            const saldoFinal = values.entry - values.exit; // Calculando saldo corretamente
+                            const listItem = document.createElement("li");
+                            listItem.className = "saldo-item";
+
+                            // Criando o container para o texto do saldo
+                            const saldoText = document.createElement("span");
+                            saldoText.className = "saldo-text";
+
+                            if (saldoFinal >= 0) {
+                                saldoText.textContent = `${product}: ${saldoFinal} unidade(s)`;
+                                saldoText.style.color = "#00ff99"; // Verde para saldo positivo
+                            } else {
+                                saldoText.textContent = `${product}: ${saldoFinal} unidade(s) (DÍVIDA)`;
+                                saldoText.style.color = "#ff4d4d"; // Vermelho para saldo negativo
+                                saldoText.style.fontWeight = "bold";
+                                
+                                // Adicionar botão de débito apenas para saldos negativos
+                                if (clientName !== "RODEIO AGRONEGOCIO") {
+                                    const debitButton = document.createElement("button");
+                                    debitButton.className = "debit-btn";
+                                    debitButton.textContent = "Dar Baixa";
+                                    debitButton.dataset.product = product;
+                                    debitButton.dataset.saldo = Math.abs(saldoFinal);
+                                    debitButton.addEventListener("click", function(e) {
+                                        e.preventDefault();
+                                        // Abre o modal de débito
+                                        const modal = document.getElementById("debitModal");
+                                        if (!modal) {
+                                            console.error("Modal não encontrado!");
+                                            return;
+                                        }
+                                        
+                                        // Atualiza os elementos do modal
+                                        document.getElementById("debitProductName").textContent = product;
+                                        document.getElementById("debitClientName").textContent = clientName;
+                                        document.getElementById("debitMaxAmount").textContent = Math.abs(saldoFinal);
+                                        
+                                        // Configura o input
+                                        const amountInput = document.getElementById("debitAmount");
+                                        amountInput.max = Math.abs(saldoFinal);
+                                        amountInput.value = Math.abs(saldoFinal);
+                                        
+                                        // Armazena dados para uso posterior
+                                        modal.dataset.product = product;
+                                        modal.dataset.clientName = clientName;
+                                        modal.dataset.maxAmount = Math.abs(saldoFinal);
+                                        
+                                        // Exibe o modal
+                                        modal.style.display = "flex";
+                                        document.body.style.overflow = "hidden";
+                                    });
+                                    
+                                    // Colocar o botão à direita
+                                    listItem.appendChild(debitButton);
+                                }
+                            }
+                            
+                            listItem.appendChild(saldoText);
+                            saldoList.appendChild(listItem);
+                        });
+
+                        // Se nenhum produto foi encontrado
+                        if (Object.keys(saldo).length === 0) {
+                            saldoList.innerHTML = "<li>Nenhum saldo registrado.</li>";
+                        }
+
+                    } catch (error) {
+                        console.error("Erro ao carregar saldo do cliente:", error);
+                    }
+                }
+
+
+
+                // Evento de exportação para PDF
+                document.getElementById("exportPdf").addEventListener("click", () => {
+                    alert("Função de exportação para PDF será implementada!");
+                });
+
+                // Evento para adicionar movimentação
+                document.getElementById("novaMovimentacao").addEventListener("click", () => {
+                    alert("Função para adicionar movimentação será implementada!");
+                });
+
+                // Evento para editar cliente
+                document.getElementById("editarCliente").addEventListener("click", () => {
+                    
+                });
+                
+                // Função para abrir o modal de débito
+                function openDebitModal(product, maxAmount, clientName) {
+                    const modal = document.getElementById("debitModal");
+                    const productNameSpan = document.getElementById("debitProductName");
+                    const clientNameSpan = document.getElementById("debitClientName");
+                    const maxAmountSpan = document.getElementById("debitMaxAmount");
+                    const amountInput = document.getElementById("debitAmount");
+                    
+                    productNameSpan.textContent = product;
+                    clientNameSpan.textContent = clientName;
+                    maxAmountSpan.textContent = maxAmount;
+                    
+                    // Definir o valor máximo do input
+                    amountInput.max = maxAmount;
+                    amountInput.value = maxAmount;
+                    
+                    // Armazenar informações para uso posterior
+                    modal.dataset.product = product;
+                    modal.dataset.clientName = clientName;
+                    modal.dataset.maxAmount = maxAmount;
+                    
+                    // Posicionar o modal no centro da tela
+                    modal.style.display = "flex";
+                    document.body.style.overflow = "hidden"; // Impedir rolagem da página
+                }
+                
+                // Tornando a função global
+                window.openDebitModal = openDebitModal;
+                
+                // Função para processar o débito
+                async function processDebit() {
+                    const modal = document.getElementById("debitModal");
+                    const amount = parseInt(document.getElementById("debitAmount").value);
+                    const product = modal.dataset.product;
+                    const clientName = modal.dataset.clientName;
+                    const maxAmount = parseInt(modal.dataset.maxAmount);
+                    
+                    if (isNaN(amount) || amount <= 0 || amount > maxAmount) {
+                        alert(`Por favor, insira um valor entre 1 e ${maxAmount}.`);
+                        return;
+                    }
+                    
+                    try {
+                        // Data atual formatada como YYYY-MM-DD
+                        const today = new Date().toISOString().split('T')[0];
+                        
+                        // 1. Adicionar saída ao cliente RODEIO AGRONEGOCIO
+                        await addDoc(collection(db, "clients"), {
+                            clientName: "RODEIO AGRONEGOCIO",
+                            productName: product,
+                            date: today,
+                            entryQuantity: 0,
+                            exitQuantity: amount,
+                            saldo: -amount,
+                            soldTo: clientName // Registrar para quem foi vendido/debitado
+                        });
+                        
+                        // 2. Adicionar entrada ao cliente atual para zerar o débito
+                        await addDoc(collection(db, "clients"), {
+                            clientName: clientName,
+                            productName: product,
+                            date: today,
+                            entryQuantity: amount,
+                            exitQuantity: 0,
+                            saldo: amount,
+                            soldTo: "" // Campo vazio pois é uma entrada
+                        });
+                        
+                        alert(`Débito de ${amount} unidades de ${product} transferido com sucesso para RODEIO AGRONEGOCIO.`);
+                        closeDebitModal();
+                        
+                        // Recarregar os dados do cliente
+                        loadClientDetails();
+                        
+                    } catch (error) {
+                        console.error("Erro ao processar débito:", error);
+                        alert("Erro ao processar o débito. Verifique o console para mais detalhes.");
+                    }
+                }
+                
+                // Função para fechar o modal de débito
+                function closeDebitModal() {
+                    document.getElementById("debitModal").style.display = "none";
+                    document.body.style.overflow = "auto"; // Restaurar rolagem da página
+                }
+                
+                // Tornando a função global
+                window.closeDebitModal = closeDebitModal;
+
+
+             
+
+                 
+
+               
+
+                // Inicia o carregamento dos detalhes do cliente
+                loadClientDetails();
+
+
+    </script>
+    <header>
+        <div class="logo-container">
+            <img src="img/Sem título(1).png" alt="Logo Rodeio Agronegócio" class="logo">
+        </div>
+        <nav>
+            <ul class="navbar">
+                <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+                <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+                <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+            </ul>
+        </nav>
+        <div class="header-spacer"></div>
+    </header>
+
+    
+        
+        <div id="clientInfo">
+        <h2 id="clientName">Carregando...</h2>
+            <p><strong>Telefone:</strong> <span id="clientPhone">N/A</span></p>
+            <p><strong>Última Movimentação:</strong> <span id="lastMovement">N/A</span></p>
+            <p><strong></strong> <span id="clientBalance"></span></p>
+            <div id="alerta-inatividade" class="alerta oculto">⚠ Cliente inativo há mais de 3 meses!</div>
+            <div id="alerta-pendencia" class="alerta oculto">❗ Pendência financeira detectada!</div>
+            </div>
+        
+
+        <!-- Tabela de Movimentações -->
+        <section class="movimentacoes">
+            <button id="gerarRelatorio">📄 Gerar Relatório</button>
+            <h2>Histórico de Movimentações</h2>
+            <table id="clientHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+            
+            <!-- Botão Ver Mais -->
+            <button id="verMaisBtn" class="ver-mais-btn">Ver mais</button>
+            </section>
+            <button id="exportPdf"></button>
+        
+
+        
+        <section class="estoque-cliente">
+            <h2>Produtos em Estoque</h2>
+            <ul id="listaSaldo">
+            </ul>
+        </section>
+        
+
+        <!-- Ações Rápidas -->
+        <section class="acoes-rapidas">
+            <h2>Ações</h2>
+            <button id="novaMovimentacao">➕ Adicionar Movimentação</button>
+            <button id="editarCliente">✏ Editar Cliente</button>
+        </section>
+    </main>
+
+    
+        <!-- Modal de Débito -->
+        <div id="debitModal" class="debit-modal">
+            <div class="debit-modal-content">
+                <div class="debit-modal-header">
+                    <h3>Dar Baixa em Débito</h3>
+                    <span class="close-debit-modal" id="closeModalBtn">&times;</span>
+                </div>
+                <div class="debit-modal-body">
+                    <p>Você está dando baixa no débito de <strong><span id="debitProductName"></span></strong> do cliente <strong><span id="debitClientName"></span></strong>.</p>
+                    <p>Este débito será transferido para o cliente RODEIO AGRONEGOCIO.</p>
+                    <p>Quantidade máxima: <strong><span id="debitMaxAmount"></span></strong> unidades</p>
+                    <label for="debitAmount">Quantidade para dar baixa:</label>
+                    <input type="number" id="debitAmount" min="1" required>
+                </div>
+                <div class="debit-modal-footer">
+                    <button class="cancel-debit-btn" id="cancelDebitBtn">Cancelar</button>
+                    <button class="confirm-debit-btn" id="confirmDebitBtn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados.</p>
+        </footer>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="cliente-detalhes.js"></script>
+        
+        <script>
+            // Variáveis globais para paginação
+            const allMovements = [];
+            const currentPage = 1;
+            const itemsPerPage = 10;
+            
+            // Função para abrir o modal de débito
+            function openDebitModal(product, maxAmount, clientName) {
+                const modal = document.getElementById("debitModal");
+                const productNameSpan = document.getElementById("debitProductName");
+                const clientNameSpan = document.getElementById("debitClientName");
+                const maxAmountSpan = document.getElementById("debitMaxAmount");
+                const amountInput = document.getElementById("debitAmount");
+                
+                productNameSpan.textContent = product;
+                clientNameSpan.textContent = clientName;
+                maxAmountSpan.textContent = maxAmount;
+                
+                // Definir o valor máximo do input
+                amountInput.max = maxAmount;
+                amountInput.value = maxAmount;
+                
+                // Armazenar informações para uso posterior
+                modal.dataset.product = product;
+                modal.dataset.clientName = clientName;
+                modal.dataset.maxAmount = maxAmount;
+                
+                // Posicionar o modal no centro da tela
+                modal.style.display = "flex";
+                document.body.style.overflow = "hidden"; // Impedir rolagem da página
+            }
+            
+            // Função para fechar o modal de débito
+            function closeDebitModal() {
+                document.getElementById("debitModal").style.display = "none";
+                document.body.style.overflow = "auto"; // Restaurar rolagem da página
+            }
+            
+            // Função para processar o débito
+            async function processDebit() {
+                try {
+                    const modal = document.getElementById("debitModal");
+                    const amount = parseInt(document.getElementById("debitAmount").value);
+                    const product = modal.dataset.product;
+                    const clientName = modal.dataset.clientName;
+                    const maxAmount = parseInt(modal.dataset.maxAmount);
+                    
+                    console.log("Dados do débito:", { product, clientName, amount, maxAmount });
+                    
+                    if (isNaN(amount) || amount <= 0 || amount > maxAmount) {
+                        alert(`Por favor, insira um valor entre 1 e ${maxAmount}.`);
+                        return;
+                    }
+                    
+                    // Obter a data atual formatada
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    // 1. Registrar saída no cliente RODEIO AGRONEGOCIO
+                    await addDoc(collection(db, "clients"), {
+                        clientName: "RODEIO AGRONEGOCIO",
+                        productName: product,
+                        date: today,
+                        entryQuantity: 0,
+                        exitQuantity: amount,
+                        timestamp: serverTimestamp(),
+                        soldTo: clientName
+                    });
+                    
+                    // 2. Registrar entrada no cliente atual (para zerar o débito)
+                    await addDoc(collection(db, "clients"), {
+                        clientName: clientName,
+                        productName: product,
+                        date: today,
+                        entryQuantity: amount,
+                        exitQuantity: 0,
+                        timestamp: serverTimestamp()
+                    });
+                    
+                    alert(`Débito de ${amount} unidades de ${product} transferido com sucesso para RODEIO AGRONEGOCIO.`);
+                    
+                    // Fechar o modal
+                    document.getElementById("debitModal").style.display = "none";
+                    document.body.style.overflow = "auto";
+                    
+                    // Recarregar os dados do cliente
+                    window.location.reload();
+                } catch (error) {
+                    console.error("Erro ao processar débito:", error);
+                    alert("Erro ao processar o débito. Verifique o console para mais detalhes.");
+                }
+            }
+            
+            // Função para renderizar uma página de movimentações
+            function renderMovementsPage() {
+                const movementsTableBody = document.querySelector("#clientHistoryTable tbody");
+                movementsTableBody.innerHTML = "";
+                
+                // Calcular índices de início e fim para a página atual
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, allMovements.length);
+                
+                // Exibir apenas os itens da página atual
+                for (let i = startIndex; i < endIndex; i++) {
+                    const movement = allMovements[i];
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${movement.date || "N/A"}</td>
+                        <td>${movement.productName || "N/A"}</td>
+                        <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
+                        <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
+                    `;
+
+                    movementsTableBody.appendChild(row);
+                }
+                
+                // Mostrar ou ocultar botões de paginação conforme necessário
+                const paginationControls = document.getElementById("paginationControls");
+                if (allMovements.length <= itemsPerPage) {
+                    paginationControls.style.display = "none";
+                } else {
+                    paginationControls.style.display = "flex";
+                }
+            }
+            
+            // Função para atualizar informações de paginação
+            function updatePaginationInfo() {
+                const totalPages = Math.ceil(allMovements.length / itemsPerPage);
+                document.getElementById("currentPage").textContent = currentPage;
+                document.getElementById("totalPages").textContent = totalPages;
+                
+                // Habilitar/desabilitar botões conforme necessário
+                document.getElementById("prevPage").disabled = currentPage === 1;
+                document.getElementById("nextPage").disabled = currentPage === totalPages;
+            }
+            
+            // Função para ir para a próxima página
+            function nextPage() {
+                const totalPages = Math.ceil(allMovements.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderMovementsPage();
+                    updatePaginationInfo();
+                }
+            }
+            
+            // Função para ir para a página anterior
+            function prevPage() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderMovementsPage();
+                    updatePaginationInfo();
+                }
+            }
+            
+            // Configurar event listeners quando o DOM estiver carregado
+            document.addEventListener('DOMContentLoaded', function() {
+                // Garantir que o modal esteja escondido inicialmente
+                const modal = document.getElementById("debitModal");
+                if (modal) {
+                    modal.style.display = "none";
+                }
+                
+                // Adicionar listener para o botão de fechar o modal
+                const closeBtn = document.getElementById("closeModalBtn");
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        document.getElementById("debitModal").style.display = "none";
+                        document.body.style.overflow = "auto";
+                    });
+                }
+                
+                // Adicionar listener para o botão de cancelar
+                const cancelBtn = document.getElementById("cancelDebitBtn");
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        document.getElementById("debitModal").style.display = "none";
+                        document.body.style.overflow = "auto";
+                    });
+                }
+                
+                // Adicionar listener para o botão de confirmar débito
+                const confirmBtn = document.getElementById("confirmDebitBtn");
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function() {
+                        try {
+                            // Obter dados do modal
+                            const modal = document.getElementById("debitModal");
+                            const amount = parseInt(document.getElementById("debitAmount").value);
+                            const product = modal.dataset.product;
+                            const clientName = modal.dataset.clientName;
+                            const maxAmount = parseInt(modal.dataset.maxAmount);
+                            
+                            console.log("Dados do débito:", { product, clientName, amount, maxAmount });
+                            
+                            // Validar a quantidade
+                            if (isNaN(amount) || amount <= 0 || amount > maxAmount) {
+                                alert(`Por favor, insira um valor entre 1 e ${maxAmount}.`);
+                                return;
+                            }
+                            
+                            // Obter data atual
+                            const today = new Date().toISOString().split('T')[0];
+                            
+                            // Processar o débito (versão simplificada para teste)
+                            alert(`Débito de ${amount} unidades de ${product} será processado para o cliente ${clientName}.\n\nEm um ambiente de produção, este débito seria registrado no Firebase.`);
+                            
+                            // Fechar o modal
+                            modal.style.display = "none";
+                            document.body.style.overflow = "auto";
+                        } catch (error) {
+                            console.error("Erro ao processar débito:", error);
+                            alert("Erro ao processar o débito. Verifique o console para mais detalhes.");
+                        }
+                    });
+                }
+                
+                // Adicionar listener para o botão "Ver mais"
+                const verMaisBtn = document.getElementById("verMaisBtn");
+                if (verMaisBtn) {
+                    verMaisBtn.addEventListener('click', function() {
+                        try {
+                            // Obter os movimentos armazenados no dataset
+                            const movements = JSON.parse(this.dataset.movements || '[]');
+                            const currentCount = document.querySelectorAll('#clientHistoryTable tbody tr').length;
+                            const moreToShow = Math.min(10, movements.length - currentCount); // Mostrar mais 10 ou o restante
+                            
+                            if (moreToShow <= 0) {
+                                this.style.display = 'none';
+                                return;
+                            }
+                            
+                            // Adicionar mais linhas à tabela
+                            const movementsTableBody = document.querySelector("#clientHistoryTable tbody");
+                            
+                            for (let i = currentCount; i < currentCount + moreToShow; i++) {
+                                const movement = movements[i];
+                                const row = document.createElement("tr");
+
+                                row.innerHTML = `
+                                    <td>${movement.date || "N/A"}</td>
+                                    <td>${movement.productName || "N/A"}</td>
+                                    <td>${movement.entryQuantity > 0 ? "Entrada" : "Saída"}</td>
+                                    <td>${movement.entryQuantity || movement.exitQuantity || 0}</td>
+                                `;
+
+                                movementsTableBody.appendChild(row);
+                            }
+                            
+                            // Atualizar o texto do botão
+                            const remaining = movements.length - (currentCount + moreToShow);
+                            if (remaining > 0) {
+                                this.textContent = `Ver mais (${remaining} restantes)`;
+                            } else {
+                                this.style.display = 'none';
+                            }
+                        } catch (error) {
+                            console.error("Erro ao mostrar mais movimentações:", error);
+                        }
+                    });
+                }
+            });
+        </script>
+</body>
+
+</html>

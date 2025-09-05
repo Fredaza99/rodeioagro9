@@ -1,0 +1,432 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+    
+/* Estilos para o modal de débito */
+.debit-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.debit-modal-content {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.debit-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+.debit-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #ff5722;
+}
+
+.close-debit-modal {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-debit-modal:hover {
+    color: #fff;
+}
+
+.debit-modal-body {
+    margin-bottom: 20px;
+}
+
+.debit-modal-body p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.debit-modal-body input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+}
+
+.debit-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.debit-modal-footer button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.confirm-debit-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+.confirm-debit-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-debit-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancel-debit-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Estilos para o item de saldo e botão de débito */
+.saldo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background: #252525;
+    border-radius: 5px;
+}
+
+.saldo-text {
+    flex: 1;
+}
+
+.debit-btn {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+    transition: background-color 0.3s;
+}
+
+.debit-btn:hover {
+    background-color: #e64a19;
+}
+
+/* Estilos para paginação */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #252525;
+    border-radius: 5px;
+}
+
+.pagination-btn {
+    background-color: #044343;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 0;
+}
+
+.pagination-btn:hover {
+    background-color: #0f5685;
+}
+
+.pagination-btn:disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: #fff;
+    font-size: 14px;
+}
+
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: Arial, sans-serif;
+}
+
+body {
+background-color: #1E1E1E;
+color: #fff;
+padding: 20px;
+}
+
+/* Header */
+header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 15px;
+background: linear-gradient(45deg, #4CAF50, #2E7D32);
+border-radius: 8px;
+}
+#clientBalance{
+display: none;
+}
+
+#exportPdf{
+display: none;
+}
+
+header h1 {
+font-size: 35px;
+font-weight: bolder;
+}
+#clientName {
+font-family: 'Playfair Display', sans-serif;
+font-size: 33px;
+padding-bottom: 20px;
+padding-top:10px;
+font-weight: bolder;
+color: #ffffff;
+animation: fadeInScale 1.2s ease-out;
+
+}
+
+@keyframes fadeInScale {
+0% { opacity: 0; transform: scale(0.9); }
+100% { opacity: 1; transform: scale(1); }
+}
+
+.btn-voltar {
+text-decoration: none;
+background-color: #FF5722;
+color: white;
+padding: 8px 12px;
+border-radius: 5px;
+font-weight: bold;
+}
+
+.btn-voltar:hover {
+background-color: #E64A19;
+}
+
+/* Seções */
+main {
+max-width: 900px;
+margin: 20px auto;
+padding: 20px;
+background: #1e1e1e;
+border-radius: 10px;
+box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+font-family: 'Montserrat',sans-serif;
+margin-bottom: 10px;
+border-bottom: 2px solid #b2dbf6;
+padding-bottom: 5px;
+}
+
+/* Informações do Cliente */
+.cliente-info p {
+font-family: 'Montserrat',sans-serif;
+margin: 5px 0;
+}
+
+/* Alertas */
+.alerta {
+background-color: #ffcc00;
+color: #333;
+padding: 10px;
+margin-top: 10px;
+border-radius: 5px;
+font-weight: bold;
+display: none;
+}
+
+.alerta.oculto {
+display: none;
+}
+
+/* Tabela */
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 15px;
+}
+
+table th, table td {
+padding: 10px;
+text-align: left;
+border-bottom: 1px solid #555;
+}
+
+table th {
+background-color: #045757;
+}
+
+table tbody tr:hover {
+background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botões */
+button {
+background-color: #044343;
+color: white;
+padding: 10px;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+margin-top: 10px;
+transition: 0.3s;
+}
+
+button:hover {
+background-color: #0f5685e4;
+}
+
+/* Seção de estoque */
+.estoque-cliente ul {
+list-style-type: none;
+padding: 0;
+}
+
+.estoque-cliente li {
+background: #252525;
+padding: 8px;
+margin: 5px 0;
+border-radius: 5px;
+}
+
+/* Ações rápidas */
+.acoes-rapidas button {
+display: block;
+width: 100%;
+margin-top: 10px;
+}
+
+/* Estilização da seção de movimentações */
+.movimentacoes {
+background-color: #1e1e1e; /* Fundo escuro para contraste */
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+margin-top: 20px;
+}
+
+/* Estilização da tabela */
+.movimentacoes table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 10px;
+background: #252525; /* Cor de fundo da tabela */
+border-radius: 8px;
+overflow: hidden;
+}
+
+/* Cabeçalho da tabela */
+.movimentacoes thead {
+background-color: #303030;
+color: #ffffff;
+text-align: left;
+font-weight: bold;
+}
+
+/* Linhas da tabela */
+.movimentacoes tbody tr {
+border-bottom: 1px solid #3a3a3a;
+transition: background 0.2s ease-in-out;
+}
+
+.movimentacoes tbody tr:hover {
+background-color: #2a2a2a;
+}
+
+/* Células da tabela */
+.movimentacoes th, 
+.movimentacoes td {
+padding: 12px;
+text-align: left;
+color: #f0f0f0;
+}
+
+/* Ajuste para a última linha sem borda inferior */
+.movimentacoes tbody tr:last-child {
+border-bottom: none;
+}
+
+/* Melhorando a visibilidade dos valores */
+.movimentacoes td:nth-child(3) { /* Coluna de entrada/saída */
+font-weight: bold;
+color: #ffcc00;
+}
+
+.movimentacoes td:nth-child(4) { /* Coluna de quantidade */
+font-weight: bold;
+color: #00ff99;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+.movimentacoes th, 
+.movimentacoes td {
+    padding: 10px;
+    font-size: 14px;
+}
+
+.movimentacoes {
+    padding: 15px;
+}
+}
+
+
+/* Responsividade */
+@media (max-width: 600px) {
+main {
+    padding: 15px;
+}
+
+header {
+    flex-direction: column;
+    text-align: center;
+}
+
+.btn-voltar {
+    margin-top: 10px;
+}
+
+.acoes-rapidas button {
+    font-size: 14px;
+}
+}

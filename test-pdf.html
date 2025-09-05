@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste PDF</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="pdf-modal.css">
+    
+    <!-- Scripts para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1E1E1E;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            color: black;
+        }
+        
+        .test-table th,
+        .test-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .test-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Teste de Geração de PDF</h1>
+        
+        <button onclick="openPDFModal()" class="pdf-main-btn">
+            <i class="fas fa-file-pdf"></i>
+            Gerar Relatório PDF
+        </button>
+        
+        <h2>Tabela de Teste</h2>
+        <table id="clientHistoryTable" class="test-table">
+            <thead>
+                <tr>
+                    <th>Ação</th>
+                    <th>Nome do Cliente</th>
+                    <th>Produto</th>
+                    <th>Data</th>
+                    <th>Quantidade Entrada</th>
+                    <th>Quantidade Retirada</th>
+                    <th>Saldo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Entrada</td>
+                    <td>João Silva</td>
+                    <td>Milho</td>
+                    <td>2024-01-15</td>
+                    <td>100</td>
+                    <td>0</td>
+                    <td>100</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Saída</td>
+                    <td>João Silva</td>
+                    <td>Milho</td>
+                    <td>2024-01-20</td>
+                    <td>0</td>
+                    <td>30</td>
+                    <td>70</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Entrada</td>
+                    <td>Maria Santos</td>
+                    <td>Soja</td>
+                    <td>2024-01-18</td>
+                    <td>200</td>
+                    <td>0</td>
+                    <td>200</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Saída</td>
+                    <td>Maria Santos</td>
+                    <td>Soja</td>
+                    <td>2024-01-25</td>
+                    <td>0</td>
+                    <td>50</td>
+                    <td>150</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Scripts PDF -->
+    <script src="pdf-fallback.js"></script>
+    <script src="pdf-generator.js"></script>
+    <script src="pdf-modal.js"></script>
+</body>
+</html>
