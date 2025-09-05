@@ -1214,3 +1214,346 @@ footer {
 .btn-remover:hover {
     background-color: #c0392b;
 }
+
+/* Estilos para a seção de geração de PDFs */
+.pdf-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin: 30px auto;
+    max-width: 1200px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.pdf-section h2 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+}
+
+.pdf-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.pdf-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 15px 25px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 250px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.pdf-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.pdf-btn:hover::before {
+    left: 100%;
+}
+
+.pdf-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.pdf-btn:active {
+    transform: translateY(-1px);
+}
+
+.pdf-btn i {
+    font-size: 20px;
+}
+
+/* Cores específicas para cada botão */
+.pdf-table {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.pdf-table:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.pdf-products {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.pdf-products:hover {
+    background: linear-gradient(135deg, #e081e9 0%, #e3455a 100%);
+}
+
+.pdf-clients {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.pdf-clients:hover {
+    background: linear-gradient(135deg, #3d9aec 0%, #00e0ec 100%);
+}
+
+.pdf-matrix {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.pdf-matrix:hover {
+    background: linear-gradient(135deg, #31d769 0%, #26e7c5 100%);
+}
+
+/* Responsividade para botões PDF */
+@media (max-width: 768px) {
+    .pdf-section {
+        padding: 20px 15px;
+        margin: 20px 10px;
+    }
+    
+    .pdf-section h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .pdf-buttons {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .pdf-btn {
+        min-width: 100%;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .pdf-btn i {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pdf-section {
+        padding: 15px 10px;
+    }
+    
+    .pdf-btn {
+        padding: 10px 15px;
+        font-size: 13px;
+        gap: 8px;
+    }
+    
+    .pdf-btn i {
+        font-size: 16px;
+    }
+}
+
+/* Seção compacta para o botão de PDF */
+.pdf-section-compact {
+    text-align: center;
+    margin: 20px auto;
+    padding: 15px;
+}
+
+/* Estilos para o modal de recibo */
+.receipt-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4a7c59;
+}
+
+.receipt-info p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.receipt-info strong {
+    color: #2c5530;
+    font-weight: 600;
+}
+
+.value-input-section {
+    margin-bottom: 25px;
+}
+
+.value-input-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c5530;
+}
+
+.value-input-section input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.value-input-section input:focus {
+    outline: none;
+    border-color: #4a7c59;
+    box-shadow: 0 0 0 3px rgba(76, 124, 89, 0.1);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+}
+
+/* Responsividade para o modal de recibo */
+@media (max-width: 768px) {
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .receipt-info {
+        padding: 15px;
+    }
+    
+    .value-input-section input {
+        font-size: 16px; /* Evita zoom no iOS */
+    }
+}
+
+/* Estilos para alertas customizados de recibo */
+.receipt-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    min-width: 350px;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.4s ease-out;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.receipt-alert.success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-left: 5px solid #155724;
+}
+
+.receipt-alert.error {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    border-left: 5px solid #721c24;
+}
+
+.receipt-alert-content {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    color: white;
+    position: relative;
+}
+
+.receipt-alert-icon {
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 15px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.receipt-alert-message {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.receipt-alert-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 15px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.receipt-alert-close:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsividade para alertas */
+@media (max-width: 768px) {
+    .receipt-alert {
+        left: 20px;
+        right: 20px;
+        min-width: auto;
+        max-width: none;
+    }
+    
+    .receipt-alert-content {
+        padding: 15px;
+    }
+    
+    .receipt-alert-message {
+        font-size: 13px;
+    }
+}

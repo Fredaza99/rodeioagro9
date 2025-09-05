@@ -215,6 +215,386 @@
         }
         
         window.gerarComprovante = gerarComprovante;
+        
+        // Funções para o modal de recibo
+        function showReceiptModal(clientName, productName, quantity, date, buyerName) {
+          const modal = document.getElementById("receiptModal");
+          
+          // Preencher informações do recibo
+          document.getElementById("receiptClient").textContent = clientName;
+          document.getElementById("receiptBuyer").textContent = buyerName;
+          document.getElementById("receiptProduct").textContent = productName;
+          document.getElementById("receiptQuantity").textContent = quantity;
+          document.getElementById("receiptDate").textContent = new Date(date).toLocaleDateString('pt-BR');
+          
+          // Limpar campo de valor
+          document.getElementById("productValue").value = "";
+          
+          // Mostrar modal
+          modal.style.display = "block";
+          document.getElementById("productValue").focus();
+          
+          // Armazenar dados temporariamente
+          window.tempReceiptData = {
+            clientName,
+            productName,
+            quantity,
+            date,
+            buyerName
+          };
+        }
+        
+        function closeReceiptModal() {
+          const modal = document.getElementById("receiptModal");
+          modal.style.display = "none";
+          window.tempReceiptData = null;
+        }
+        
+        async function generateReceipt() {
+          const productValue = parseFloat(document.getElementById("productValue").value);
+          
+          if (!productValue || productValue <= 0) {
+            alert("Por favor, insira um valor válido para o produto.");
+            return;
+          }
+          
+          const data = window.tempReceiptData;
+          if (!data) {
+            alert("Erro: dados do recibo não encontrados.");
+            return;
+          }
+          
+          try {
+            // Gerar PDF do recibo
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Configurações de cores
+            const primaryColor = [44, 85, 48]; // Verde escuro
+            const secondaryColor = [74, 124, 89]; // Verde médio
+            const lightGray = [240, 240, 240];
+            
+            // Adicionar logo da empresa
+            try {
+              const logoImg = new Image();
+              logoImg.crossOrigin = "anonymous";
+              logoImg.onload = function() {
+                // Logo no canto superior esquerdo
+                doc.addImage(logoImg, "PNG", 15, 15, 40, 25);
+                generateReceiptContent();
+              };
+              logoImg.onerror = function() {
+                console.warn("Logo não encontrada, gerando recibo sem logo");
+                generateReceiptContent();
+              };
+              logoImg.src = "img/logo-png.PNG";
+            } catch (error) {
+              console.warn("Erro ao carregar logo:", error);
+              generateReceiptContent();
+            }
+            
+            function generateReceiptContent() {
+              // Cabeçalho da empresa (lado direito)
+              doc.setFillColor(...primaryColor);
+              doc.rect(60, 15, 135, 25, 'F');
+              
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(16);
+              doc.text("RODEIO AGRONEGÓCIO", 127, 25, { align: "center" });
+              
+              doc.setFontSize(10);
+              doc.setFont("helvetica", "normal");
+              doc.text("Rua Osvaldo Cruz, 321 - Rio Verde de Mato Grosso/MS", 127, 32, { align: "center" });
+              doc.text("Telefone: (67) 99971-5452 | CNPJ: 12.345.678/0001-90", 127, 37, { align: "center" });
+              
+              // Título do recibo
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(20);
+              doc.text("RECIBO DE VENDA", 105, 55, { align: "center" });
+              
+              // Número do recibo
+              const receiptNumber = Date.now().toString().slice(-6);
+              doc.setFontSize(12);
+              doc.setFont("helvetica", "normal");
+              doc.text(`Recibo Nº: ${receiptNumber}`, 170, 65, { align: "right" });
+              
+              // Linha decorativa
+              doc.setDrawColor(...secondaryColor);
+              doc.setLineWidth(2);
+              doc.line(20, 70, 190, 70);
+              
+              // Seção de dados do cliente
+              doc.setFillColor(...lightGray);
+              doc.rect(20, 80, 170, 25, 'F');
+              
+              doc.setTextColor(...primaryColor);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text("DADOS DO RECIBO", 25, 90);
+              
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(12);
+              doc.text(`Data: ${new Date(data.date).toLocaleDateString('pt-BR')}`, 25, 98);
+              doc.text(`Recebemos de: ${data.buyerName}`, 120, 98);
+              
+              // Dados do produto
+              const totalValue = (productValue * data.quantity).toFixed(2);
+              
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(13);
+              doc.text("DESCRIÇÃO DA VENDA", 25, 120);
+              
+              // Tabela de produto
+              doc.setDrawColor(200, 200, 200);
+              doc.setLineWidth(0.5);
+              
+              // Cabeçalho da tabela
+              doc.setFillColor(...primaryColor);
+              doc.rect(25, 125, 165, 10, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(11);
+              doc.text("PRODUTO", 30, 132);
+              doc.text("QUANTIDADE", 100, 132);
+              doc.text("VALOR UNIT.", 135, 132);
+              doc.text("TOTAL", 170, 132);
+              
+              // Dados da tabela
+              doc.setFillColor(255, 255, 255);
+              doc.rect(25, 135, 165, 12, 'F');
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(11);
+              doc.text(data.productName, 30, 142);
+              doc.text(data.quantity.toString(), 100, 142);
+              doc.text(`R$ ${productValue.toFixed(2).replace('.', ',')}`, 135, 142);
+              doc.text(`R$ ${totalValue.replace('.', ',')}`, 170, 142);
+              
+              // Bordas da tabela
+              doc.rect(25, 125, 165, 22);
+              doc.line(95, 125, 95, 147);
+              doc.line(130, 125, 130, 147);
+              doc.line(165, 125, 165, 147);
+              doc.line(25, 135, 190, 135);
+              
+              // Valor total destacado
+              doc.setFillColor(...secondaryColor);
+              doc.rect(25, 155, 165, 15, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(14);
+              doc.text(`VALOR TOTAL: R$ ${totalValue.replace('.', ',')}`, 107, 165, { align: "center" });
+              
+              // Valor por extenso
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(11);
+              const valorExtenso = `(${numeroParaExtenso(parseFloat(totalValue))})`;
+              doc.text(valorExtenso, 105, 180, { align: "center" });
+              
+              // Seção de assinaturas
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(10);
+              doc.text("Para maior clareza, firmo o presente recibo.", 105, 200, { align: "center" });
+              
+              // Linhas de assinatura
+              doc.setDrawColor(0, 0, 0);
+              doc.setLineWidth(0.5);
+              doc.line(30, 220, 90, 220);
+              doc.line(120, 220, 180, 220);
+              
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(10);
+              doc.text("Assinatura do Recebedor", 60, 230, { align: "center" });
+              doc.text("Rodeio Agronegócio", 150, 230, { align: "center" });
+              
+              // Rodapé
+              doc.setDrawColor(...primaryColor);
+              doc.setLineWidth(1);
+              doc.line(20, 250, 190, 250);
+              
+              doc.setTextColor(...primaryColor);
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(9);
+              doc.text("Este recibo tem validade fiscal conforme legislação vigente.", 105, 260, { align: "center" });
+              doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 270, { align: "center" });
+              
+              // Salvar PDF
+              const fileName = `Recibo_${data.buyerName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+              doc.save(fileName);
+              
+              // Continuar com o salvamento no Firebase...
+              saveReceiptData();
+            }
+            
+            function numeroParaExtenso(valor) {
+              // Função simples para converter número em extenso (versão básica)
+              const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+              const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+              const especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+              
+              const inteiro = Math.floor(valor);
+              const centavos = Math.round((valor - inteiro) * 100);
+              
+              let resultado = '';
+              
+              if (inteiro === 0) {
+                resultado = 'zero reais';
+              } else if (inteiro === 1) {
+                resultado = 'um real';
+              } else if (inteiro < 10) {
+                resultado = unidades[inteiro] + ' reais';
+              } else if (inteiro < 20) {
+                resultado = especiais[inteiro - 10] + ' reais';
+              } else if (inteiro < 100) {
+                const dez = Math.floor(inteiro / 10);
+                const uni = inteiro % 10;
+                resultado = dezenas[dez] + (uni > 0 ? ' e ' + unidades[uni] : '') + ' reais';
+              } else {
+                resultado = inteiro + ' reais'; // Simplificado para valores maiores
+              }
+              
+              if (centavos > 0) {
+                if (centavos === 1) {
+                  resultado += ' e um centavo';
+                } else if (centavos < 10) {
+                  resultado += ' e ' + unidades[centavos] + ' centavos';
+                } else if (centavos < 20) {
+                  resultado += ' e ' + especiais[centavos - 10] + ' centavos';
+                } else {
+                  const dezCent = Math.floor(centavos / 10);
+                  const uniCent = centavos % 10;
+                  resultado += ' e ' + dezenas[dezCent] + (uniCent > 0 ? ' e ' + unidades[uniCent] : '') + ' centavos';
+                }
+              }
+              
+              return resultado;
+            }
+            
+            async function saveReceiptData() {
+              const totalValue = (productValue * data.quantity).toFixed(2);
+              
+              // Salvar dados no Firebase incluindo informações do recibo
+              const receiptData = {
+                clientName: data.clientName,
+                productName: data.productName,
+                date: data.date,
+                entryQuantity: 0,
+                exitQuantity: data.quantity,
+                saldo: -data.quantity,
+                soldTo: data.buyerName,
+                isReceipt: true,
+                unitValue: productValue,
+                totalValue: parseFloat(totalValue),
+                receiptNumber: Date.now().toString()
+              };
+              
+              try {
+                const docRef = await addDoc(collection(db, 'clients'), receiptData);
+                
+                // Salvar também na coleção de recibos para relatório
+                await addDoc(collection(db, 'receipts'), {
+                  ...receiptData,
+                  clientId: docRef.id,
+                  generatedAt: new Date().toISOString()
+                });
+                
+                console.log("Recibo salvo com ID: ", docRef.id);
+                
+                // Fechar modal e limpar formulário
+                closeReceiptModal();
+                
+                // Limpar campos do formulário
+                document.getElementById('buyerName').value = '';
+                document.getElementById('buyerNameWrapper').style.display = 'none';
+                document.getElementById('quantity').value = '';
+                document.getElementById('entryButton').classList.remove('active');
+                document.getElementById('exitButton').classList.remove('active');
+                transactionType = "Entrada";
+                
+                showReceiptSuccessAlert(`Recibo gerado com sucesso! Valor total: R$ ${totalValue.replace('.', ',')}`);
+                
+              } catch (error) {
+                console.error("Erro ao salvar recibo:", error);
+                showReceiptErrorAlert("Erro ao salvar recibo no banco de dados.");
+              }
+            }
+            
+          } catch (error) {
+            console.error("Erro ao gerar recibo:", error);
+            showReceiptErrorAlert("Erro ao gerar recibo. Verifique o console para mais detalhes.");
+          }
+        }
+        
+        // Adicionar event listeners para o modal de recibo
+        document.getElementById("closeReceiptModal").addEventListener("click", closeReceiptModal);
+        document.getElementById("cancelReceiptBtn").addEventListener("click", closeReceiptModal);
+        document.getElementById("generateReceiptBtn").addEventListener("click", generateReceipt);
+        
+        // Fechar modal ao clicar fora
+        window.addEventListener("click", (event) => {
+          const receiptModal = document.getElementById("receiptModal");
+          if (event.target === receiptModal) {
+            closeReceiptModal();
+          }
+        });
+        
+        // Permitir gerar recibo ao pressionar Enter no campo de valor
+        document.getElementById("productValue").addEventListener("keypress", (event) => {
+          if (event.key === "Enter") {
+            generateReceipt();
+          }
+        });
+        
+        // Funções para alertas customizados de recibo
+        function showReceiptSuccessAlert(message) {
+          const alertContainer = document.createElement('div');
+          alertContainer.className = 'receipt-alert success';
+          alertContainer.innerHTML = `
+            <div class="receipt-alert-content">
+              <div class="receipt-alert-icon">✓</div>
+              <div class="receipt-alert-message">${message}</div>
+              <button class="receipt-alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+          `;
+          document.body.appendChild(alertContainer);
+          
+          // Auto-remove após 5 segundos
+          setTimeout(() => {
+            if (alertContainer.parentElement) {
+              alertContainer.remove();
+            }
+          }, 5000);
+        }
+        
+        function showReceiptErrorAlert(message) {
+          const alertContainer = document.createElement('div');
+          alertContainer.className = 'receipt-alert error';
+          alertContainer.innerHTML = `
+            <div class="receipt-alert-content">
+              <div class="receipt-alert-icon">⚠</div>
+              <div class="receipt-alert-message">${message}</div>
+              <button class="receipt-alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+          `;
+          document.body.appendChild(alertContainer);
+          
+          // Auto-remove após 7 segundos para erros
+          setTimeout(() => {
+            if (alertContainer.parentElement) {
+              alertContainer.remove();
+            }
+          }, 7000);
+        }
+
+        window.showReceiptModal = showReceiptModal;
+        window.closeReceiptModal = closeReceiptModal;
+        window.generateReceipt = generateReceipt;
+        window.showReceiptSuccessAlert = showReceiptSuccessAlert;
+        window.showReceiptErrorAlert = showReceiptErrorAlert;
       });
 
      // Função para registrar todas as saídas do carrinho no Firebase
@@ -349,9 +729,12 @@
         };
 
         try {
-
-
-
+          // Verificar se é RODEIO AGRONEGOCIO e tem comprador para gerar recibo
+          if (clientName === 'RODEIO AGRONEGOCIO' && buyerName.trim() !== '') {
+            // Mostrar modal para inserir valor e gerar recibo
+            showReceiptModal(clientName, productName, quantity, date, buyerName);
+            return; // Não salvar ainda, aguardar o recibo
+          }
           
           const docRef = await addDoc(collection(db, 'clients'), client);
           console.log("Cliente salvo no Firestore com ID: ", docRef.id);
@@ -733,13 +1116,14 @@
   <div class="logo-container">
       <img src="img/Sem título(1).png" alt="Logo Rodeio Agronegócio" class="logo">
   </div>
-  <nav>
-      <ul class="navbar">
-          <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
-          <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
-          <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
-      </ul>
-  </nav>
+    <nav>
+        <ul class="navbar">
+            <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
+            <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
+            <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+            <li><a href="relatorio-vendas.html"><span class="material-icons">receipt</span>Vendas</a></li>
+        </ul>
+    </nav>
   <div class="header-spacer"></div>
 </header>
 
@@ -847,6 +1231,32 @@
     </div>
   </div>
 
+  <!-- Modal de Recibo -->
+  <div id="receiptModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Gerar Recibo de Venda</h2>
+        <span class="close-modal" id="closeReceiptModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="receipt-info">
+          <p><strong>Cliente:</strong> <span id="receiptClient"></span></p>
+          <p><strong>Comprador:</strong> <span id="receiptBuyer"></span></p>
+          <p><strong>Produto:</strong> <span id="receiptProduct"></span></p>
+          <p><strong>Quantidade:</strong> <span id="receiptQuantity"></span></p>
+          <p><strong>Data:</strong> <span id="receiptDate"></span></p>
+        </div>
+        <div class="value-input-section">
+          <label for="productValue">Valor do Produto (R$):</label>
+          <input type="number" id="productValue" step="0.01" min="0" placeholder="0,00" required>
+        </div>
+        <div class="modal-buttons">
+          <button id="generateReceiptBtn" class="action-btn">Gerar Recibo</button>
+          <button id="cancelReceiptBtn" class="cancel-btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer>

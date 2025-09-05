@@ -220,6 +220,13 @@
 
     <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Estilos para PDF -->
+    <link rel="stylesheet" href="pdf-modal.css">
+    
+    <!-- Scripts para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 </head>
 
@@ -876,6 +883,7 @@
             <li><a href="index.html"><span class="material-icons">person_add</span>Cadastro</a></li>
             <li><a href="cliente.html"><i class="fi fi-ss-member-list"></i>Geral</a></li>
             <li><a href="consolidado.html"><span class="material-icons">trending_up</span> Relatório</a></li>
+            <li><a href="relatorio-vendas.html"><span class="material-icons">receipt</span>Vendas</a></li>
         </ul>
     </nav>
     <div class="header-spacer"></div>
@@ -983,6 +991,7 @@
     </div>
 
 
+
     <!-- Tabela Detalhada -->
     <h2>Tabela Detalhada</h2>
     <div class="table-wrapper">
@@ -1006,6 +1015,11 @@
     <footer>
         <p>© 2024 Rodeio Agronegócio - Todos os direitos reservados</p>
     </footer>
+    
+    <!-- Scripts PDF carregados após o DOM -->
+    <script src="pdf-fallback.js"></script>
+    <script src="pdf-generator.js"></script>
+    <script src="pdf-modal.js"></script>
 </body>
 
 </html>
