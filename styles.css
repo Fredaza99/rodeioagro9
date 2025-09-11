@@ -94,6 +94,309 @@ h1, h2 {
     transition: background-color 0.3s;
 }
 
+/* Estilos para seção de recibo */
+#reciboSection {
+    background-color: #f8f9fa;
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#reciboSection h3 {
+    color: #28a745;
+    margin-top: 0;
+    text-align: center;
+}
+
+#adicionarAoCarrinhoRecibo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    padding: 12px 20px;
+    background-color: #28a745 !important;
+    color: white !important;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    margin: 10px 0;
+}
+
+#adicionarAoCarrinhoRecibo:hover {
+    background-color: #218838 !important;
+}
+
+#gerarReciboBtn {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    padding: 12px 20px;
+    background-color: #007bff !important;
+    color: white !important;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    margin: 10px 0;
+    width: 100%;
+}
+
+#gerarReciboBtn:hover {
+    background-color: #0056b3 !important;
+}
+
+#listaCarrinhoRecibo {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+    min-height: 50px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#listaCarrinhoRecibo li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin: 5px 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+}
+
+#productValueInput {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #28a745;
+    border-radius: 5px;
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+/* Estilos para modal de recibo melhorado */
+.products-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.products-section h4 {
+    color: #495057;
+    margin-top: 0;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.receipt-products-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.receipt-products-list li {
+    background-color: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.add-product-section {
+    background-color: #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.add-product-section h4 {
+    color: #495057;
+    margin-top: 0;
+    border-bottom: 2px solid #adb5bd;
+    padding-bottom: 8px;
+}
+
+.add-product-section .form-group {
+    margin: 10px 0;
+}
+
+.add-product-section input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+#addProductToReceiptBtn {
+    background-color: #17a2b8 !important;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+#addProductToReceiptBtn:hover {
+    background-color: #138496 !important;
+}
+
+/* Estilos para modal de imagem */
+.image-modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+}
+
+.image-modal-body {
+    padding: 20px;
+    text-align: center;
+    max-height: 70vh;
+    overflow: auto;
+}
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.modal-image {
+    max-width: 100%;
+    max-height: 60vh;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    object-fit: contain;
+}
+
+#imageModalOkBtn {
+    background-color: #28a745 !important;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin: 10px;
+}
+
+#imageModalOkBtn:hover {
+    background-color: #218838 !important;
+}
+
+/* Estilos para modal de alerta customizado */
+.custom-alert-modal {
+    z-index: 10000;
+}
+
+.custom-alert-content {
+    max-width: 450px;
+    width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: none;
+    overflow: hidden;
+}
+
+.custom-alert-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.custom-alert-header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.custom-alert-body {
+    padding: 25px 20px;
+    text-align: center;
+    background: white;
+}
+
+.custom-alert-body p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    font-weight: 500;
+}
+
+.custom-alert-buttons {
+    padding: 15px 20px 20px;
+    text-align: center;
+    background: white;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.alert-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.alert-ok-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.alert-ok-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.alert-cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.alert-cancel-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+/* Ícones por tipo de alerta */
+.alert-icon.success { color: #28a745; }
+.alert-icon.error { color: #dc3545; }
+.alert-icon.warning { color: #ffc107; }
+.alert-icon.info { color: #17a2b8; }
+
 .navbar {
     list-style: none;
     margin: none;

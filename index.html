@@ -42,6 +42,7 @@
     // Transaction type (Entry or Exit)
     let transactionType = "Entrada";
     let carrinhoSaida = [];
+    let carrinhoRecibo = []; // Carrinho para múltiplos produtos no recibo
       
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -88,6 +89,40 @@
           botaoComprovante.addEventListener("click", gerarComprovante);
         } else {
           console.log("Erro: Botão 'finalizarSaida' não encontrado.");
+        }
+        
+        // Adicionar evento ao botão de adicionar ao carrinho de recibo
+        const botaoCarrinhoRecibo = document.getElementById("adicionarAoCarrinhoRecibo");
+        if (botaoCarrinhoRecibo) {
+          botaoCarrinhoRecibo.addEventListener("click", adicionarProdutoAoCarrinhoRecibo);
+        }
+        
+        // Adicionar evento ao botão de gerar recibo direto
+        const botaoGerarRecibo = document.getElementById("gerarReciboBtn");
+        if (botaoGerarRecibo) {
+          botaoGerarRecibo.addEventListener("click", () => {
+            const clientName = document.getElementById("clientNameDisplay").value.trim();
+            const buyerName = document.getElementById("buyerName").value.trim();
+            const date = document.getElementById('date').value;
+            
+            if (carrinhoRecibo.length === 0) {
+              showCustomAlert("Adicione pelo menos um produto ao carrinho de recibo.", "warning");
+              return;
+            }
+            
+            if (!buyerName) {
+              showCustomAlert("Preencha o nome do comprador para gerar o recibo.", "warning");
+              return;
+            }
+            
+            showReceiptModal(clientName, date, buyerName);
+          });
+        }
+        
+        // Monitorar mudanças no campo de cliente para mostrar/ocultar seção de recibo
+        const clientNameInput = document.getElementById("clientNameDisplay");
+        if (clientNameInput) {
+          clientNameInput.addEventListener('input', toggleReciboSection);
         }
 
         // ✅ 5. Atualizar a interface do carrinho
@@ -216,32 +251,101 @@
         
         window.gerarComprovante = gerarComprovante;
         
-        // Funções para o modal de recibo
-        function showReceiptModal(clientName, productName, quantity, date, buyerName) {
+        // Função para adicionar produto ao carrinho de recibo
+        function adicionarProdutoAoCarrinhoRecibo() {
+          const produto = document.getElementById("productNameDisplay").value.trim();
+          const quantidade = parseInt(document.getElementById("quantity").value);
+          const valor = parseFloat(document.getElementById("productValueInput").value);
+          
+          if (!produto || isNaN(quantidade) || quantidade <= 0) {
+            showCustomAlert("Preencha corretamente o nome do produto e a quantidade.", "warning");
+            return;
+          }
+          
+          if (isNaN(valor) || valor <= 0) {
+            showCustomAlert("Preencha um valor válido para o produto.", "warning");
+            return;
+          }
+          
+          carrinhoRecibo.push({ produto, quantidade, valor });
+          atualizarCarrinhoRecibo();
+          
+          // Limpar campos
+          document.getElementById("productNameDisplay").value = "";
+          document.getElementById("quantity").value = "";
+          document.getElementById("productValueInput").value = "";
+          
+          showCustomAlert(`Produto "${produto}" adicionado ao carrinho de recibo!`, "success");
+        }
+        
+        // Função para atualizar interface do carrinho de recibo
+        function atualizarCarrinhoRecibo() {
+          const carrinhoLista = document.getElementById("listaCarrinhoRecibo");
+          carrinhoLista.innerHTML = "";
+          
+          carrinhoRecibo.forEach((item, index) => {
+            const li = document.createElement("li");
+            li.classList.add("carrinho-item");
+            
+            const produtoInfo = document.createElement("span");
+            produtoInfo.classList.add("carrinho-produto");
+            produtoInfo.textContent = `${item.produto} - ${item.quantidade} unidades - R$ ${item.valor.toFixed(2).replace('.', ',')}`;
+            
+            const btnRemover = document.createElement("button");
+            btnRemover.classList.add("btn-remover");
+            btnRemover.textContent = "❌";
+            btnRemover.onclick = () => removerItemDoCarrinhoRecibo(index);
+            
+            li.appendChild(produtoInfo);
+            li.appendChild(btnRemover);
+            carrinhoLista.appendChild(li);
+          });
+        }
+        
+        // Função para remover item do carrinho de recibo
+        function removerItemDoCarrinhoRecibo(index) {
+          carrinhoRecibo.splice(index, 1);
+          atualizarCarrinhoRecibo();
+        }
+        
+        // Funções para o modal de recibo (modificada para múltiplos produtos)
+        function showReceiptModal(clientName, date, buyerName) {
           const modal = document.getElementById("receiptModal");
           
           // Preencher informações do recibo
           document.getElementById("receiptClient").textContent = clientName;
           document.getElementById("receiptBuyer").textContent = buyerName;
-          document.getElementById("receiptProduct").textContent = productName;
-          document.getElementById("receiptQuantity").textContent = quantity;
           document.getElementById("receiptDate").textContent = new Date(date).toLocaleDateString('pt-BR');
           
-          // Limpar campo de valor
-          document.getElementById("productValue").value = "";
+          // Atualizar lista de produtos no modal
+          atualizarListaProdutosRecibo();
           
           // Mostrar modal
           modal.style.display = "block";
-          document.getElementById("productValue").focus();
           
           // Armazenar dados temporariamente
           window.tempReceiptData = {
             clientName,
-            productName,
-            quantity,
             date,
             buyerName
           };
+        }
+        
+        // Função para atualizar lista de produtos no modal de recibo
+        function atualizarListaProdutosRecibo() {
+          const produtosList = document.getElementById("receiptProductsList");
+          produtosList.innerHTML = "";
+          
+          if (carrinhoRecibo.length === 0) {
+            produtosList.innerHTML = "<li>Nenhum produto adicionado</li>";
+            return;
+          }
+          
+          carrinhoRecibo.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.produto} - ${item.quantidade} unidades - R$ ${item.valor.toFixed(2).replace('.', ',')}`;
+            produtosList.appendChild(li);
+          });
         }
         
         function closeReceiptModal() {
@@ -251,16 +355,14 @@
         }
         
         async function generateReceipt() {
-          const productValue = parseFloat(document.getElementById("productValue").value);
-          
-          if (!productValue || productValue <= 0) {
-            alert("Por favor, insira um valor válido para o produto.");
+          if (carrinhoRecibo.length === 0) {
+            showCustomAlert("Adicione pelo menos um produto ao carrinho antes de gerar o recibo.", "warning");
             return;
           }
           
           const data = window.tempReceiptData;
           if (!data) {
-            alert("Erro: dados do recibo não encontrados.");
+            showCustomAlert("Erro: dados do recibo não encontrados.", "error");
             return;
           }
           
@@ -340,87 +442,87 @@
               doc.text(`Data: ${new Date(data.date).toLocaleDateString('pt-BR')}`, 25, 98);
               doc.text(`Recebemos de: ${data.buyerName}`, 120, 98);
               
-              // Dados do produto
-              const totalValue = (productValue * data.quantity).toFixed(2);
+              // Calcular valor total de todos os produtos
+              let totalValue = 0;
+              carrinhoRecibo.forEach(item => {
+                totalValue += item.valor * item.quantidade;
+              });
+              totalValue = totalValue.toFixed(2);
               
               doc.setFont("helvetica", "bold");
               doc.setFontSize(13);
               doc.text("DESCRIÇÃO DA VENDA", 25, 120);
               
-              // Tabela de produto
-              doc.setDrawColor(200, 200, 200);
-              doc.setLineWidth(0.5);
+              // Preparar dados para a tabela
+              const tableColumn = ["Produto", "Quantidade", "Valor Unit.", "Total"];
+              const tableRows = [];
               
-              // Cabeçalho da tabela
-              doc.setFillColor(...primaryColor);
-              doc.rect(25, 125, 165, 10, 'F');
-              doc.setTextColor(255, 255, 255);
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(11);
-              doc.text("PRODUTO", 30, 132);
-              doc.text("QUANTIDADE", 100, 132);
-              doc.text("VALOR UNIT.", 135, 132);
-              doc.text("TOTAL", 170, 132);
+              // Adicionar itens do carrinho à tabela
+              carrinhoRecibo.forEach(item => {
+                const itemTotal = (item.valor * item.quantidade).toFixed(2);
+                const itemData = [
+                  item.produto,
+                  item.quantidade.toString(),
+                  `R$ ${item.valor.toFixed(2).replace('.', ',')}`,
+                  `R$ ${itemTotal.replace('.', ',')}`
+                ];
+                tableRows.push(itemData);
+              });
               
-              // Dados da tabela
-              doc.setFillColor(255, 255, 255);
-              doc.rect(25, 135, 165, 12, 'F');
-              doc.setTextColor(0, 0, 0);
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(11);
-              doc.text(data.productName, 30, 142);
-              doc.text(data.quantity.toString(), 100, 142);
-              doc.text(`R$ ${productValue.toFixed(2).replace('.', ',')}`, 135, 142);
-              doc.text(`R$ ${totalValue.replace('.', ',')}`, 170, 142);
+              // Gerar a tabela no PDF
+              doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 125,
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: primaryColor }
+              });
               
-              // Bordas da tabela
-              doc.rect(25, 125, 165, 22);
-              doc.line(95, 125, 95, 147);
-              doc.line(130, 125, 130, 147);
-              doc.line(165, 125, 165, 147);
-              doc.line(25, 135, 190, 135);
+              // Ajustar posição do valor total
+              const finalTableY = doc.lastAutoTable.finalY;
               
               // Valor total destacado
               doc.setFillColor(...secondaryColor);
-              doc.rect(25, 155, 165, 15, 'F');
+              doc.rect(25, finalTableY + 10, 165, 15, 'F');
               doc.setTextColor(255, 255, 255);
               doc.setFont("helvetica", "bold");
               doc.setFontSize(14);
-              doc.text(`VALOR TOTAL: R$ ${totalValue.replace('.', ',')}`, 107, 165, { align: "center" });
+              doc.text(`VALOR TOTAL: R$ ${totalValue.replace('.', ',')}`, 107, finalTableY + 20, { align: "center" });
               
               // Valor por extenso
               doc.setTextColor(0, 0, 0);
               doc.setFont("helvetica", "italic");
               doc.setFontSize(11);
               const valorExtenso = `(${numeroParaExtenso(parseFloat(totalValue))})`;
-              doc.text(valorExtenso, 105, 180, { align: "center" });
+              doc.text(valorExtenso, 105, finalTableY + 35, { align: "center" });
               
               // Seção de assinaturas
               doc.setFont("helvetica", "normal");
               doc.setFontSize(10);
-              doc.text("Para maior clareza, firmo o presente recibo.", 105, 200, { align: "center" });
+              doc.text("Para maior clareza, firmo o presente recibo.", 105, finalTableY + 55, { align: "center" });
               
               // Linhas de assinatura
               doc.setDrawColor(0, 0, 0);
               doc.setLineWidth(0.5);
-              doc.line(30, 220, 90, 220);
-              doc.line(120, 220, 180, 220);
+              doc.line(30, finalTableY + 75, 90, finalTableY + 75);
+              doc.line(120, finalTableY + 75, 180, finalTableY + 75);
               
               doc.setFont("helvetica", "bold");
               doc.setFontSize(10);
-              doc.text("Assinatura do Recebedor", 60, 230, { align: "center" });
-              doc.text("Rodeio Agronegócio", 150, 230, { align: "center" });
+              doc.text("Assinatura do Recebedor", 60, finalTableY + 85, { align: "center" });
+              doc.text("Rodeio Agronegócio", 150, finalTableY + 85, { align: "center" });
               
               // Rodapé
               doc.setDrawColor(...primaryColor);
               doc.setLineWidth(1);
-              doc.line(20, 250, 190, 250);
+              doc.line(20, finalTableY + 105, 190, finalTableY + 105);
               
               doc.setTextColor(...primaryColor);
               doc.setFont("helvetica", "italic");
               doc.setFontSize(9);
-              doc.text("Este recibo tem validade fiscal conforme legislação vigente.", 105, 260, { align: "center" });
-              doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, 270, { align: "center" });
+              doc.text("Este recibo tem validade fiscal conforme legislação vigente.", 105, finalTableY + 115, { align: "center" });
+              doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 105, finalTableY + 125, { align: "center" });
               
               // Salvar PDF
               const fileName = `Recibo_${data.buyerName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`;
@@ -475,37 +577,49 @@
             }
             
             async function saveReceiptData() {
-              const totalValue = (productValue * data.quantity).toFixed(2);
+              let totalValue = 0;
+              carrinhoRecibo.forEach(item => {
+                totalValue += item.valor * item.quantidade;
+              });
+              totalValue = totalValue.toFixed(2);
               
-              // Salvar dados no Firebase incluindo informações do recibo
-              const receiptData = {
-                clientName: data.clientName,
-                productName: data.productName,
-                date: data.date,
-                entryQuantity: 0,
-                exitQuantity: data.quantity,
-                saldo: -data.quantity,
-                soldTo: data.buyerName,
-                isReceipt: true,
-                unitValue: productValue,
-                totalValue: parseFloat(totalValue),
-                receiptNumber: Date.now().toString()
-              };
+              const receiptNumber = Date.now().toString();
               
               try {
-                const docRef = await addDoc(collection(db, 'clients'), receiptData);
+                // Salvar cada produto do carrinho no Firebase
+                for (const item of carrinhoRecibo) {
+                  const receiptData = {
+                    clientName: data.clientName,
+                    productName: item.produto,
+                    date: data.date,
+                    entryQuantity: 0,
+                    exitQuantity: item.quantidade,
+                    saldo: -item.quantidade,
+                    soldTo: data.buyerName,
+                    isReceipt: true,
+                    unitValue: item.valor,
+                    totalValue: item.valor * item.quantidade,
+                    receiptNumber: receiptNumber
+                  };
+                  
+                  const docRef = await addDoc(collection(db, 'clients'), receiptData);
+                  
+                  // Salvar também na coleção de recibos para relatório
+                  await addDoc(collection(db, 'receipts'), {
+                    ...receiptData,
+                    clientId: docRef.id,
+                    generatedAt: new Date().toISOString()
+                  });
+                }
                 
-                // Salvar também na coleção de recibos para relatório
-                await addDoc(collection(db, 'receipts'), {
-                  ...receiptData,
-                  clientId: docRef.id,
-                  generatedAt: new Date().toISOString()
-                });
-                
-                console.log("Recibo salvo com ID: ", docRef.id);
+                console.log("Recibo com múltiplos produtos salvo com sucesso!");
                 
                 // Fechar modal e limpar formulário
                 closeReceiptModal();
+                
+                // Limpar carrinho de recibo
+                carrinhoRecibo = [];
+                atualizarCarrinhoRecibo();
                 
                 // Limpar campos do formulário
                 document.getElementById('buyerName').value = '';
@@ -534,20 +648,65 @@
         document.getElementById("cancelReceiptBtn").addEventListener("click", closeReceiptModal);
         document.getElementById("generateReceiptBtn").addEventListener("click", generateReceipt);
         
+        // Event listener para adicionar produto no modal
+        document.getElementById("addProductToReceiptBtn").addEventListener("click", () => {
+          const produto = document.getElementById("modalProductName").value.trim();
+          const quantidade = parseInt(document.getElementById("modalQuantity").value);
+          const valor = parseFloat(document.getElementById("modalProductValue").value);
+          
+          if (!produto || isNaN(quantidade) || quantidade <= 0) {
+            showCustomAlert("Preencha corretamente o nome do produto e a quantidade.", "warning");
+            return;
+          }
+          
+          if (isNaN(valor) || valor <= 0) {
+            showCustomAlert("Preencha um valor válido para o produto.", "warning");
+            return;
+          }
+          
+          carrinhoRecibo.push({ produto, quantidade, valor });
+          atualizarListaProdutosRecibo();
+          
+          // Limpar campos do modal
+          document.getElementById("modalProductName").value = "";
+          document.getElementById("modalQuantity").value = "";
+          document.getElementById("modalProductValue").value = "";
+          
+          showCustomAlert(`Produto "${produto}" adicionado ao recibo com sucesso!`, "success");
+        });
+        
+        // Event listeners para modal de seleção de produtos do recibo
+        document.getElementById("openModalProductBtn").addEventListener("click", openReceiptProductModal);
+        document.getElementById("closeReceiptProductModal").addEventListener("click", closeReceiptProductModal);
+        document.getElementById("modalReceiptProductSearch").addEventListener("input", filterReceiptModalProducts);
+        document.getElementById("addNewReceiptProductModal").addEventListener("click", addNewReceiptProductFromModal);
+        
         // Fechar modal ao clicar fora
         window.addEventListener("click", (event) => {
           const receiptModal = document.getElementById("receiptModal");
+          const receiptProductModal = document.getElementById("receiptProductModal");
+          
           if (event.target === receiptModal) {
             closeReceiptModal();
+          } else if (event.target === receiptProductModal) {
+            closeReceiptProductModal();
           }
         });
         
-        // Permitir gerar recibo ao pressionar Enter no campo de valor
-        document.getElementById("productValue").addEventListener("keypress", (event) => {
-          if (event.key === "Enter") {
-            generateReceipt();
+        // Função para mostrar/ocultar seção de recibo
+        function toggleReciboSection() {
+          const clientName = document.getElementById("clientNameDisplay").value.trim().toUpperCase();
+          const reciboSection = document.getElementById("reciboSection");
+          
+          if (clientName === 'RODEIO AGRONEGOCIO' || clientName === 'RODEIO AGRONEGÓCIO') {
+            reciboSection.style.display = 'block';
+          } else {
+            reciboSection.style.display = 'none';
+            // Limpar carrinho de recibo se mudou de cliente
+            carrinhoRecibo = [];
+            atualizarCarrinhoRecibo();
           }
-        });
+        }
         
         // Funções para alertas customizados de recibo
         function showReceiptSuccessAlert(message) {
@@ -595,6 +754,223 @@
         window.generateReceipt = generateReceipt;
         window.showReceiptSuccessAlert = showReceiptSuccessAlert;
         window.showReceiptErrorAlert = showReceiptErrorAlert;
+        window.adicionarProdutoAoCarrinhoRecibo = adicionarProdutoAoCarrinhoRecibo;
+        window.atualizarCarrinhoRecibo = atualizarCarrinhoRecibo;
+        window.removerItemDoCarrinhoRecibo = removerItemDoCarrinhoRecibo;
+        window.toggleReciboSection = toggleReciboSection;
+        
+        // Funções para modal de seleção de produtos do recibo
+        function openReceiptProductModal() {
+          const modal = document.getElementById("receiptProductModal");
+          modal.style.display = "block";
+          document.getElementById("modalReceiptProductSearch").focus();
+          document.getElementById("modalReceiptProductSearch").value = "";
+          populateReceiptProductList(window.productsList || []);
+          filterReceiptModalProducts();
+        }
+        
+        function closeReceiptProductModal() {
+          const modal = document.getElementById("receiptProductModal");
+          modal.style.display = "none";
+        }
+        
+        function populateReceiptProductList(products) {
+          const productList = document.getElementById("receiptProductList");
+          productList.innerHTML = "";
+          
+          products.forEach(product => {
+            const li = document.createElement("li");
+            li.textContent = product;
+            li.addEventListener("click", () => selectReceiptProduct(product));
+            productList.appendChild(li);
+          });
+        }
+        
+        function selectReceiptProduct(productName) {
+          document.getElementById("modalProductName").value = productName;
+          closeReceiptProductModal();
+        }
+        
+        function filterReceiptModalProducts() {
+          const searchTerm = document.getElementById("modalReceiptProductSearch").value.toLowerCase();
+          const filteredProducts = (window.productsList || []).filter(product => 
+            product.toLowerCase().includes(searchTerm)
+          );
+          
+          populateReceiptProductList(filteredProducts);
+          
+          // Mostrar ou esconder a seção de novo produto
+          const newProductSection = document.querySelector("#receiptProductModal .new-client-section");
+          if (searchTerm && filteredProducts.length === 0) {
+            newProductSection.style.display = "flex";
+            document.getElementById("newReceiptProductName").value = searchTerm;
+          } else {
+            newProductSection.style.display = "";
+          }
+        }
+        
+        function addNewReceiptProductFromModal() {
+          const newProductName = document.getElementById("newReceiptProductName").value.trim();
+          if (newProductName) {
+            // Adicionar à lista global de produtos
+            if (!window.productsList) window.productsList = [];
+            window.productsList.push(newProductName);
+            window.productsList.sort();
+            
+            // Selecionar o novo produto
+            selectReceiptProduct(newProductName);
+            
+            // Fechar o modal
+            closeReceiptProductModal();
+            
+            showCustomAlert(`Produto "${newProductName}" adicionado à lista com sucesso!`, "success");
+          }
+        }
+        
+        // Função para alertas personalizados de recibo
+        function showReceiptCustomAlert(message, type = "info") {
+          // Remover alertas anteriores
+          const existingAlerts = document.querySelectorAll('.receipt-custom-alert');
+          existingAlerts.forEach(alert => alert.remove());
+          
+          const alertContainer = document.createElement('div');
+          alertContainer.className = `receipt-custom-alert ${type}`;
+          
+          const iconMap = {
+            success: '✓',
+            error: '⚠',
+            warning: '⚠',
+            info: 'ℹ'
+          };
+          
+          const colorMap = {
+            success: '#28a745',
+            error: '#dc3545',
+            warning: '#ffc107',
+            info: '#17a2b8'
+          };
+          
+          alertContainer.innerHTML = `
+            <div class="receipt-alert-content" style="background-color: ${colorMap[type]}; color: white; padding: 15px; border-radius: 8px; margin: 10px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; font-family: 'Montserrat', sans-serif; font-weight: bold;">
+              <div style="display: flex; align-items: center;">
+                <div style="font-size: 18px; margin-right: 10px;">${iconMap[type]}</div>
+                <div>${message}</div>
+              </div>
+              <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 0 5px;">×</button>
+            </div>
+          `;
+          
+          // Adicionar ao corpo da página
+          document.body.appendChild(alertContainer);
+          
+          // Auto-remover após 4 segundos
+          setTimeout(() => {
+            if (alertContainer.parentElement) {
+              alertContainer.remove();
+            }
+          }, 4000);
+        }
+        
+        window.openReceiptProductModal = openReceiptProductModal;
+        window.closeReceiptProductModal = closeReceiptProductModal;
+        window.selectReceiptProduct = selectReceiptProduct;
+        window.showReceiptCustomAlert = showReceiptCustomAlert;
+        
+        // Funções para modal de imagem
+        function openImageModal(imageSrc, title = "Visualizar Imagem") {
+          const modal = document.getElementById("imageModal");
+          const modalImage = document.getElementById("modalImage");
+          const modalTitle = document.querySelector("#imageModal .modal-header h2");
+          
+          modalImage.src = imageSrc;
+          modalTitle.textContent = title;
+          modal.style.display = "block";
+        }
+        
+        function closeImageModal() {
+          const modal = document.getElementById("imageModal");
+          modal.style.display = "none";
+        }
+        
+        // Event listeners para modal de imagem
+        document.getElementById("closeImageModal").addEventListener("click", closeImageModal);
+        document.getElementById("imageModalOkBtn").addEventListener("click", closeImageModal);
+        
+        // Fechar modal de imagem ao clicar fora
+        window.addEventListener("click", (event) => {
+          const receiptModal = document.getElementById("receiptModal");
+          const receiptProductModal = document.getElementById("receiptProductModal");
+          const imageModal = document.getElementById("imageModal");
+          
+          if (event.target === receiptModal) {
+            closeReceiptModal();
+          } else if (event.target === receiptProductModal) {
+            closeReceiptProductModal();
+          } else if (event.target === imageModal) {
+            closeImageModal();
+          }
+        });
+        
+        window.openImageModal = openImageModal;
+        window.closeImageModal = closeImageModal;
+        
+        // Funções para modal de alerta customizado
+        function showCustomAlert(message, type = "warning", showCancel = false) {
+          return new Promise((resolve) => {
+            const modal = document.getElementById("customAlertModal");
+            const messageEl = document.getElementById("customAlertMessage");
+            const titleEl = document.getElementById("customAlertTitle");
+            const iconEl = document.getElementById("customAlertIcon");
+            const okBtn = document.getElementById("customAlertOkBtn");
+            const cancelBtn = document.getElementById("customAlertCancelBtn");
+            
+            // Configurar conteúdo
+            messageEl.textContent = message;
+            
+            // Configurar ícone e título por tipo
+            const config = {
+              success: { icon: "✓", title: "Sucesso", class: "success" },
+              error: { icon: "✗", title: "Erro", class: "error" },
+              warning: { icon: "⚠", title: "Atenção", class: "warning" },
+              info: { icon: "ℹ", title: "Informação", class: "info" }
+            };
+            
+            const alertConfig = config[type] || config.warning;
+            iconEl.textContent = alertConfig.icon;
+            iconEl.className = `alert-icon ${alertConfig.class}`;
+            titleEl.textContent = alertConfig.title;
+            
+            // Mostrar/ocultar botão cancelar
+            if (showCancel) {
+              cancelBtn.style.display = "inline-block";
+            } else {
+              cancelBtn.style.display = "none";
+            }
+            
+            // Mostrar modal
+            modal.style.display = "block";
+            
+            // Event listeners únicos
+            const handleOk = () => {
+              modal.style.display = "none";
+              okBtn.removeEventListener("click", handleOk);
+              cancelBtn.removeEventListener("click", handleCancel);
+              resolve(true);
+            };
+            
+            const handleCancel = () => {
+              modal.style.display = "none";
+              okBtn.removeEventListener("click", handleOk);
+              cancelBtn.removeEventListener("click", handleCancel);
+              resolve(false);
+            };
+            
+            okBtn.addEventListener("click", handleOk);
+            cancelBtn.addEventListener("click", handleCancel);
+          });
+        }
+        
+        window.showCustomAlert = showCustomAlert;
       });
 
      // Função para registrar todas as saídas do carrinho no Firebase
@@ -731,8 +1107,17 @@
         try {
           // Verificar se é RODEIO AGRONEGOCIO e tem comprador para gerar recibo
           if (clientName === 'RODEIO AGRONEGOCIO' && buyerName.trim() !== '') {
-            // Mostrar modal para inserir valor e gerar recibo
-            showReceiptModal(clientName, productName, quantity, date, buyerName);
+            // Adicionar produto ao carrinho de recibo
+            const valor = parseFloat(prompt("Digite o valor unitário do produto:"));
+            if (isNaN(valor) || valor <= 0) {
+              showCustomAlert("Valor inválido. Operação cancelada.", "error");
+              return;
+            }
+            
+            carrinhoRecibo.push({ produto: productName, quantidade: quantity, valor: valor });
+            
+            // Mostrar modal para gerar recibo com múltiplos produtos
+            showReceiptModal(clientName, date, buyerName);
             return; // Não salvar ainda, aguardar o recibo
           }
           
@@ -899,6 +1284,7 @@
         // Função para selecionar um cliente da lista
         function selectClient(clientName) {
           document.getElementById("clientNameDisplay").value = clientName;
+          toggleReciboSection(); // Verificar se deve mostrar seção de recibo
           closeClientModal();
         }
         
@@ -1173,6 +1559,18 @@
       <button type="button" id="adicionarAoCarrinho">Adicionar Retirada</button>
     </div>
     
+    <!-- Seção para Carrinho de Recibo (visível quando RODEIO AGRONEGOCIO está selecionado) -->
+    <div id="reciboSection" style="display: none;">
+      <h3>Produtos para Recibo 📝</h3>
+      <div class="form-group">
+        <label>Valor Unitário (R$):</label>
+        <input type="number" id="productValueInput" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <button type="button" id="adicionarAoCarrinhoRecibo">Adicionar ao Recibo</button>
+      <ul id="listaCarrinhoRecibo"></ul>
+      <button type="button" id="gerarReciboBtn">Gerar Recibo</button>
+    </div>
+    
     <h3>Produtos Retirados ⬇️</h3>
 
     <ul id="listaCarrinho"></ul>
@@ -1242,18 +1640,97 @@
         <div class="receipt-info">
           <p><strong>Cliente:</strong> <span id="receiptClient"></span></p>
           <p><strong>Comprador:</strong> <span id="receiptBuyer"></span></p>
-          <p><strong>Produto:</strong> <span id="receiptProduct"></span></p>
-          <p><strong>Quantidade:</strong> <span id="receiptQuantity"></span></p>
           <p><strong>Data:</strong> <span id="receiptDate"></span></p>
         </div>
-        <div class="value-input-section">
-          <label for="productValue">Valor do Produto (R$):</label>
-          <input type="number" id="productValue" step="0.01" min="0" placeholder="0,00" required>
+        
+        <div class="products-section">
+          <h4>Produtos no Recibo:</h4>
+          <ul id="receiptProductsList" class="receipt-products-list">
+            <li>Nenhum produto adicionado</li>
+          </ul>
         </div>
+        
+        <div class="add-product-section">
+          <h4>Adicionar Mais Produtos:</h4>
+          <div class="form-group">
+            <label>Produto:</label>
+            <div class="product-selection">
+              <input type="text" id="modalProductName" placeholder="Nome do produto" required>
+              <button type="button" id="openModalProductBtn" class="act-botao">Selecionar</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Quantidade:</label>
+            <input type="number" id="modalQuantity" min="1" placeholder="Quantidade">
+          </div>
+          <div class="form-group">
+            <label>Valor Unitário (R$):</label>
+            <input type="number" id="modalProductValue" step="0.01" min="0" placeholder="0,00">
+          </div>
+          <button id="addProductToReceiptBtn" class="action-btn">Adicionar Produto</button>
+        </div>
+        
         <div class="modal-buttons">
           <button id="generateReceiptBtn" class="action-btn">Gerar Recibo</button>
           <button id="cancelReceiptBtn" class="cancel-btn">Cancelar</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Seleção de Produtos para Recibo -->
+  <div id="receiptProductModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Selecionar Produto para Recibo</h2>
+        <span class="close-modal" id="closeReceiptProductModal">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="search-box">
+          <input type="text" id="modalReceiptProductSearch" placeholder="Digite para buscar produto...">
+        </div>
+        <div class="client-list-container">
+          <ul id="receiptProductList"></ul>
+        </div>
+        <div class="new-client-section">
+          <input type="text" id="newReceiptProductName" placeholder="Nome do novo produto">
+          <button id="addNewReceiptProductModal" class="action-btn">Adicionar Novo Produto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Alerta Customizado -->
+  <div id="customAlertModal" class="modal custom-alert-modal">
+    <div class="modal-content custom-alert-content">
+      <div class="custom-alert-header">
+        <div class="alert-icon" id="customAlertIcon">⚠</div>
+        <h3 id="customAlertTitle">Atenção</h3>
+      </div>
+      <div class="custom-alert-body">
+        <p id="customAlertMessage">Mensagem do alerta</p>
+      </div>
+      <div class="custom-alert-buttons">
+        <button id="customAlertOkBtn" class="alert-btn alert-ok-btn">OK</button>
+        <button id="customAlertCancelBtn" class="alert-btn alert-cancel-btn" style="display: none;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Imagem -->
+  <div id="imageModal" class="modal">
+    <div class="modal-content image-modal-content">
+      <div class="modal-header">
+        <h2>Visualizar Imagem</h2>
+        <span class="close-modal" id="closeImageModal">&times;</span>
+      </div>
+      <div class="modal-body image-modal-body">
+        <div class="image-container">
+          <img id="modalImage" src="" alt="Imagem" class="modal-image">
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button id="imageModalOkBtn" class="action-btn">OK</button>
       </div>
     </div>
   </div>
